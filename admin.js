@@ -210,9 +210,6 @@ async function loadAdminEvents() {
     `;
   }).join("");
 
-  document.querySelectorAll(".edit-event-button").forEach(button => {
-    button.addEventListener("click", () => openEventEditor(button.dataset.eventId));
-  });
 }
 
 function resetEventForm() {
@@ -304,6 +301,33 @@ document.getElementById("newEventButton").addEventListener("click", () => openEv
 document.getElementById("backToDashboard").addEventListener("click", async () => {
   showView("dashboard");
   await loadAdminEvents();
+});
+
+// Use one permanent click handler for event cards.
+// This keeps Edit working even after the event list is re-rendered.
+eventsEl.addEventListener("click", async (event) => {
+  const editButton = event.target.closest(".edit-event-button");
+  if (!editButton) return;
+
+  const eventId = editButton.dataset.eventId;
+  if (!eventId) {
+    setStatus(dashboardStatus, "Could not open event: missing event ID.", true);
+    return;
+  }
+
+  editButton.disabled = true;
+  const originalText = editButton.textContent;
+  editButton.textContent = "Opening…";
+
+  try {
+    await openEventEditor(eventId);
+  } catch (error) {
+    showView("dashboard");
+    setStatus(dashboardStatus, `Could not open event: ${error.message}`, true);
+  } finally {
+    editButton.disabled = false;
+    editButton.textContent = originalText;
+  }
 });
 
 function boolString(value) {
