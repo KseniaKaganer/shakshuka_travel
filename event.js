@@ -5,6 +5,9 @@ const eventId = params.get("id");
 const statusEl = document.getElementById("status");
 const eventEl = document.getElementById("event");
 
+let client = null;
+let participantNamesLoaded = false;
+
 function formatDate(dateString) {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
@@ -16,7 +19,8 @@ function formatDateRange(start, end) {
 }
 
 function setText(id, value, fallback = "—") {
-  document.getElementById(id).textContent = value || fallback;
+  const el = document.getElementById(id);
+  if (el) el.textContent = value || fallback;
 }
 
 function escapeHtml(value = "") {
@@ -26,6 +30,134 @@ function escapeHtml(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function showParticipantStatus(message = "", isError = false) {
+  const el = document.getElementById("participantLoginStatus");
+  if (!message) {
+    el.textContent = "";
+    el.classList.add("hidden");
+    el.classList.remove("error");
+    return;
+  }
+  el.textContent = message;
+  el.classList.remove("hidden");
+  el.classList.toggle("error", isError);
+}
+
+function setChecklistState(id, done) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = done ? "✓" : "○";
+  el.classList.toggle("done", Boolean(done));
+}
+
+async function loadParticipantNames() {
+  if (participantNamesLoaded) return;
+
+  const select = document.getElementById("participantSelect");
+  select.disabled = true;
+  select.innerHTML = '<option value="">Loading participants…</option>';
+
+  const { data, error } = await client.rpc("get_event_participant_names", {
+    p_event_id: eventId
+  });
+
+  select.disabled = false;
+
+  if (error) {
+    select.innerHTML = '<option value="">Could not load participants</option>';
+    showParticipantStatus(`Could not load participants: ${error.message}`, true);
+    return;
+  }
+
+  select.innerHTML = '<option value="">Select your name…</option>';
+
+  (data || []).forEach(person => {
+    const option = document.createElement("option");
+    option.value = person.participant_id;
+    option.textContent = person.display_name;
+    select.appendChild(option);
+  });
+
+  if (!data?.length) {
+    select.innerHTML = '<option value="">No participants added yet</option>';
+  }
+
+  participantNamesLoaded = true;
+}
+
+function openParticipantLogin() {
+  document.getElementById("openParticipantLogin").classList.add("hidden");
+  document.getElementById("participantLoginPanel").classList.remove("hidden");
+  showParticipantStatus("");
+  loadParticipantNames();
+}
+
+function closeParticipantLogin() {
+  document.getElementById("participantLoginPanel").classList.add("hidden");
+  document.getElementById("openParticipantLogin").classList.remove("hidden");
+  document.getElementById("participantPhone").value = "";
+  showParticipantStatus("");
+}
+
+async function participantSignIn() {
+  const participantId = document.getElementById("participantSelect").value;
+  const phone = document.getElementById("participantPhone").value.trim();
+  const button = document.getElementById("participantSignIn");
+
+  if (!participantId) {
+    showParticipantStatus("Please select your name.", true);
+    return;
+  }
+
+  if (!phone) {
+    showParticipantStatus("Please enter your phone number.", true);
+    return;
+  }
+
+  button.disabled = true;
+  const oldText = button.textContent;
+  button.textContent = "Checking…";
+  showParticipantStatus("");
+
+  const { data, error } = await client.rpc("get_participant_event_access", {
+    p_event_id: eventId,
+    p_participant_id: participantId,
+    p_phone: phone
+  });
+
+  button.disabled = false;
+  button.textContent = oldText;
+
+  if (error) {
+    showParticipantStatus(`Could not sign in: ${error.message}`, true);
+    return;
+  }
+
+  if (!data?.ok) {
+    showParticipantStatus("The phone number does not match this participant.", true);
+    return;
+  }
+
+  document.getElementById("participantLoginPanel").classList.add("hidden");
+  document.getElementById("openParticipantLogin").classList.add("hidden");
+  document.getElementById("participantDashboard").classList.remove("hidden");
+
+  setText("participantWelcomeName", `Welcome, ${data.display_name}`, "Welcome");
+  setChecklistState("checkFlight", data.flight_done);
+  setChecklistState("checkInsurance", data.insurance_done);
+  setChecklistState("checkReserve", data.reserve_done);
+  setChecklistState("checkLicense", data.license_done);
+
+  document.getElementById("participantPhone").value = "";
+}
+
+function participantSignOut() {
+  document.getElementById("participantDashboard").classList.add("hidden");
+  document.getElementById("participantSelect").value = "";
+  document.getElementById("openParticipantLogin").classList.remove("hidden");
+  showParticipantStatus("");
 }
 
 async function loadEvent() {
@@ -41,7 +173,7 @@ async function loadEvent() {
     return;
   }
 
-  const client = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+  client = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
 
   const { data: event, error } = await client
     .from("events")
@@ -53,14 +185,14 @@ async function loadEvent() {
       venue,
       additional_location_info,
       description,
-      meeting_info,
       status,
       locations (
         name,
         city,
         country,
         dropzone,
-        address
+        address,
+        venue_type
       )
     `)
     .eq("id", eventId)
@@ -94,7 +226,11 @@ async function loadEvent() {
   setText("eventLocation", locationLine);
 
   setText("eventDescription", event.description);
-  setText("eventVenue", [event.venue, loc.dropzone, loc.address].filter(Boolean).join("\n"));
+
+  const venueLines = [event.venue, loc.dropzone, loc.address]
+    .filter(Boolean)
+    .filter((value, index, all) => all.indexOf(value) === index);
+  setText("eventVenue", venueLines.join("\n"));
   setText("eventLocationInfo", event.additional_location_info);
 
   const linksEl = document.getElementById("eventLinks");
@@ -110,5 +246,14 @@ async function loadEvent() {
     }</div>`;
   }
 }
+
+document.getElementById("openParticipantLogin").addEventListener("click", openParticipantLogin);
+document.getElementById("cancelParticipantLogin").addEventListener("click", closeParticipantLogin);
+document.getElementById("participantSignIn").addEventListener("click", participantSignIn);
+document.getElementById("participantSignOut").addEventListener("click", participantSignOut);
+
+document.getElementById("participantPhone").addEventListener("keydown", event => {
+  if (event.key === "Enter") participantSignIn();
+});
 
 loadEvent();
