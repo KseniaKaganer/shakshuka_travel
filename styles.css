@@ -1113,3 +1113,96 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     margin-right: 6px;
   }
 }
+
+
+/* ---------- V6 Payment layout ---------- */
+
+.payment-section {
+  display: grid;
+  gap: 8px;
+}
+
+.coach-payment-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+
+.coach-payment-title {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.payment-row-no-label {
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
+}
+
+.participant-payment-status {
+  margin-top: 18px;
+}
+
+.readonly-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.readonly-payment-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.readonly-payment-card > strong {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.readonly-payment-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.readonly-payment-values > div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.readonly-payment-values span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.readonly-payment-values b {
+  font-size: 14px;
+}
+
+.readonly-payment-values > div:last-child b {
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .readonly-payment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .readonly-payment-values {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .payment-row-no-label {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

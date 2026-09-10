@@ -61,6 +61,35 @@ function combineMinutes(hours, minutes) {
   return Math.max(0, (Number(hours) || 0) * 60 + (Number(minutes) || 0));
 }
 
+function moneyNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : 0;
+}
+
+function formatMoney(value) {
+  return moneyNumber(value).toFixed(2);
+}
+
+function renderPaymentStatus(data) {
+  const paymentTotal = moneyNumber(data.payment_total);
+  const paymentPaid = moneyNumber(data.payment_paid);
+  const coachTotal = moneyNumber(data.coach_tickets_total);
+  const coachPaid = moneyNumber(data.coach_tickets_paid);
+
+  setText("selfPaymentTotal", formatMoney(paymentTotal), "0.00");
+  setText("selfPaymentPaid", formatMoney(paymentPaid), "0.00");
+  setText("selfPaymentLeft", formatMoney(Math.max(0, paymentTotal - paymentPaid)), "0.00");
+
+  setText("selfCoachTotal", formatMoney(coachTotal), "0.00");
+  setText("selfCoachPaid", formatMoney(coachPaid), "0.00");
+  setText("selfCoachLeft", formatMoney(Math.max(0, coachTotal - coachPaid)), "0.00");
+
+  const coachCard = document.getElementById("selfCoachPaymentCard");
+  if (coachCard) {
+    coachCard.classList.toggle("hidden", (data.event_type || loadedEvent?.event_type) === "tunnel");
+  }
+}
+
 function showLoginScreen() {
   eventEl.classList.add("hidden");
   sessionIndicator.classList.add("hidden");
@@ -137,6 +166,7 @@ function showLoggedInView(data) {
   setText("participantSessionName", data.display_name, "");
   setText("participantWelcomeName", `Welcome, ${data.display_name}`, "Welcome");
   renderParticipantFields(data);
+  renderPaymentStatus(data);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -213,6 +243,7 @@ async function saveParticipantProfile() {
 
     participantAccess = { ...participantAccess, ...data };
     renderParticipantFields(participantAccess);
+    renderPaymentStatus(participantAccess);
     showSaveStatus("Saved.");
     setTimeout(() => showSaveStatus(""), 2200);
   } catch (error) {

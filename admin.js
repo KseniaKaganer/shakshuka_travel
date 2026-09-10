@@ -799,9 +799,9 @@ function exportParticipantsToSpreadsheet() {
     formatMoney(p.paymentTotal),
     formatMoney(p.paymentPaid),
     formatMoney(calculateLeft(p.paymentTotal, p.paymentPaid)),
-    eventType === "tunnel" ? "" : formatMoney(p.coachTotal),
-    eventType === "tunnel" ? "" : formatMoney(p.coachPaid),
-    eventType === "tunnel" ? "" : formatMoney(calculateLeft(p.coachTotal, p.coachPaid))
+    formatMoney(p.coachTotal),
+    formatMoney(p.coachPaid),
+    formatMoney(calculateLeft(p.coachTotal, p.coachPaid))
   ]);
 
   const csv = "\ufeff" + [headers, ...rows]

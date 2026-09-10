@@ -328,16 +328,14 @@
           </div>
         </div>
 
-        <div class="payment-table">
-          <div class="payment-row payment-row-head">
-            <span></span>
+        <div class="payment-section">
+          <div class="payment-row payment-row-head payment-row-no-label">
             <span>Total</span>
             <span>Paid</span>
             <span>Left to pay</span>
           </div>
 
-          <div class="payment-row">
-            <strong>Participant</strong>
+          <div class="payment-row payment-row-no-label">
             <label class="payment-field">
               <input id="modalPaymentTotal" type="number" min="0" step="0.01" value="0" />
             </label>
@@ -346,9 +344,18 @@
             </label>
             <output id="modalPaymentLeft" class="payment-left">0.00</output>
           </div>
+        </div>
 
-          <div id="coachTicketsPaymentRow" class="payment-row">
-            <strong>Coach tickets</strong>
+        <div id="coachTicketsPaymentRow" class="coach-payment-section">
+          <strong class="coach-payment-title">Coach tickets</strong>
+
+          <div class="payment-row payment-row-head payment-row-no-label">
+            <span>Total</span>
+            <span>Paid</span>
+            <span>Left to pay</span>
+          </div>
+
+          <div class="payment-row payment-row-no-label">
             <label class="payment-field">
               <input id="modalCoachTotal" type="number" min="0" step="0.01" value="0" />
             </label>
