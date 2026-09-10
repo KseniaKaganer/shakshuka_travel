@@ -1,6 +1,6 @@
 // Paste ONLY your public Supabase Project URL and publishable/anon key here.
 // Never place your database password or service_role key in GitHub.
 window.SHAKSHUKA_CONFIG = {
-  supabaseUrl: "PASTE_YOUR_SUPABASE_URL_HERE",
-  supabaseAnonKey: "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"
+  supabaseUrl: "https://qxcgqljvalywtensfhwm.supabase.co",
+  supabaseAnonKey: "sb_publishable_BGXP_Bf51J6bfIynSIHEEg_NlvU5cOn"
 };
