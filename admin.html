@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SHAKSHUKA TRAVEL • Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <header class="topbar admin-topbar">
+    <a class="back-link" href="index.html">← Public site</a>
+    <div class="brand-small">SHAKSHUKA TRAVEL <span class="admin-badge">ADMIN</span></div>
+    <button id="signOutButton" class="ghost-button hidden" type="button">Sign out</button>
+  </header>
+
+  <main class="page admin-page">
+    <section id="loginView" class="auth-shell">
+      <div class="panel auth-card">
+        <div class="eyebrow">SEQUENCE • BODY FLIGHT ACADEMY</div>
+        <h1 class="admin-title">Admin login</h1>
+        <p class="muted">For SHAKSHUKA TRAVEL administrators only.</p>
+
+        <form id="loginForm" class="form-stack">
+          <label class="field">
+            <span>Email</span>
+            <input id="loginEmail" type="email" autocomplete="email" required />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input id="loginPassword" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary-button full-button" type="submit">Sign in</button>
+        </form>
+        <div id="loginStatus" class="status compact-status"></div>
+      </div>
+    </section>
+
+    <section id="dashboardView" class="hidden">
+      <div class="admin-heading-row">
+        <div>
+          <div class="eyebrow">ADMIN DASHBOARD</div>
+          <h1 class="admin-title dashboard-title">Travel Events</h1>
+          <p class="muted">Create and manage travel events and participants.</p>
+        </div>
+        <button id="newEventButton" class="primary-button" type="button">+ Create new event</button>
+      </div>
+
+      <div id="dashboardStatus" class="status compact-status"></div>
+      <div id="adminEvents" class="admin-event-list"></div>
+    </section>
+
+    <section id="editorView" class="hidden">
+      <div class="editor-toolbar">
+        <button id="backToDashboard" class="ghost-button" type="button">← Back to events</button>
+        <div class="editor-actions">
+          <button id="saveDraftButton" class="ghost-button" type="button">Save draft</button>
+          <button id="publishButton" class="primary-button" type="button">Publish event</button>
+        </div>
+      </div>
+
+      <div class="admin-heading-row editor-heading">
+        <div>
+          <div id="editorEyebrow" class="eyebrow">NEW EVENT</div>
+          <h1 id="editorTitle" class="admin-title dashboard-title">Create travel event</h1>
+        </div>
+      </div>
+
+      <form id="eventForm" class="editor-grid" onsubmit="return false;">
+        <section class="panel form-panel editor-main">
+          <h2>Event details</h2>
+
+          <label class="field">
+            <span>Event title *</span>
+            <input id="eventNameInput" type="text" placeholder="SHAKSHUKA Spain" required />
+          </label>
+
+          <div class="two-columns">
+            <label class="field">
+              <span>Start date *</span>
+              <input id="startDateInput" type="date" required />
+            </label>
+            <label class="field">
+              <span>End date *</span>
+              <input id="endDateInput" type="date" required />
+            </label>
+          </div>
+
+          <div class="location-picker-row">
+            <label class="field grow-field">
+              <span>Location</span>
+              <select id="locationSelect">
+                <option value="">No location selected</option>
+              </select>
+            </label>
+            <button id="showLocationFormButton" class="ghost-button field-button" type="button">+ New location</button>
+          </div>
+
+          <div id="newLocationBox" class="subpanel hidden">
+            <div class="subpanel-head">
+              <strong>Add a location</strong>
+              <button id="cancelLocationButton" class="icon-button" type="button" aria-label="Close">×</button>
+            </div>
+            <div class="two-columns">
+              <label class="field"><span>Name *</span><input id="locationNameInput" type="text" placeholder="SkyTime" /></label>
+              <label class="field"><span>Country</span><input id="locationCountryInput" type="text" placeholder="Spain" /></label>
+              <label class="field"><span>City</span><input id="locationCityInput" type="text" placeholder="Castellón" /></label>
+              <label class="field"><span>Dropzone</span><input id="locationDropzoneInput" type="text" placeholder="SkyTime" /></label>
+            </div>
+            <label class="field"><span>Address</span><input id="locationAddressInput" type="text" /></label>
+            <button id="addLocationButton" class="secondary-button" type="button">Add location</button>
+          </div>
+
+          <label class="field">
+            <span>Venue / dropzone</span>
+            <input id="venueInput" type="text" placeholder="SkyTime" />
+          </label>
+
+          <label class="field">
+            <span>Extra location information</span>
+            <textarea id="locationInfoInput" rows="4" placeholder="Meeting point, transport notes, hotel area…"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Event description</span>
+            <textarea id="descriptionInput" rows="6" placeholder="What the event is about, schedule, what is included…"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Meeting information</span>
+            <textarea id="meetingInfoInput" rows="5" placeholder="Arrival time, meeting location, first briefing…"></textarea>
+          </label>
+        </section>
+
+        <aside class="panel form-panel editor-side">
+          <div class="participants-header">
+            <div>
+              <h2>Participants</h2>
+              <p class="muted small-text">Add everyone joining this event.</p>
+            </div>
+            <span id="participantCount" class="count-pill">0</span>
+          </div>
+
+          <div id="participantsList" class="participants-editor-list"></div>
+          <button id="addParticipantButton" class="secondary-button full-button" type="button">+ Add participant</button>
+        </aside>
+      </form>
+
+      <div id="editorStatus" class="status compact-status"></div>
+    </section>
+  </main>
+
+  <template id="participantRowTemplate">
+    <div class="participant-row">
+      <div class="participant-row-top">
+        <strong class="participant-number">Participant</strong>
+        <button class="remove-participant icon-button" type="button" aria-label="Remove participant">×</button>
+      </div>
+      <label class="field"><span>Name *</span><input class="participant-name" type="text" required /></label>
+      <label class="field"><span>Phone</span><input class="participant-phone" type="tel" placeholder="+972…" /></label>
+      <label class="field"><span>Email</span><input class="participant-email" type="email" /></label>
+      <input class="participant-id" type="hidden" />
+      <input class="membership-id" type="hidden" />
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

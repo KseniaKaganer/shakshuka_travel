@@ -60,3 +60,21 @@ Build the secure admin page:
 - Jumps/logbook
 - Payments
 - Accommodation/travel details
+
+## Admin dashboard
+
+The repository now also includes:
+
+- `admin.html` — secure admin login + event editor
+- `admin.js` — create/edit events, locations and participants
+- `database/admin-setup.sql` — admin table, grants and RLS policies
+
+### One-time Supabase setup
+
+1. Run `database/admin-setup.sql` in **SQL Editor**.
+2. Go to **Authentication → Users** and create an email/password user for each admin.
+3. Copy each Auth user's UUID.
+4. In SQL Editor insert the admins into `public.admin_users` using the examples at the bottom of `admin-setup.sql`.
+5. Open `admin.html` on the deployed website and sign in.
+
+Do not enable anonymous INSERT/UPDATE access for events or participants.
