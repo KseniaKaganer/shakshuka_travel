@@ -96,7 +96,6 @@ async function loadEvent() {
   setText("eventDescription", event.description);
   setText("eventVenue", [event.venue, loc.dropzone, loc.address].filter(Boolean).join("\n"));
   setText("eventLocationInfo", event.additional_location_info);
-  setText("eventMeetingInfo", event.meeting_info);
 
   const linksEl = document.getElementById("eventLinks");
   if (!links?.length) {

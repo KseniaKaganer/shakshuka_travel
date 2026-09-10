@@ -210,6 +210,9 @@ async function loadAdminEvents() {
     `;
   }).join("");
 
+  document.querySelectorAll(".edit-event-button").forEach(button => {
+    button.addEventListener("click", () => openEventEditor(button.dataset.eventId));
+  });
 }
 
 function resetEventForm() {
@@ -256,7 +259,6 @@ async function openEventEditor(eventId = null) {
   document.getElementById("venueInput").value = event.venue || "";
   document.getElementById("locationInfoInput").value = event.additional_location_info || "";
   document.getElementById("descriptionInput").value = event.description || "";
-  document.getElementById("meetingInfoInput").value = event.meeting_info || "";
 
   const { data: memberships, error: membershipError } = await client
     .from("event_participants")
@@ -301,33 +303,6 @@ document.getElementById("newEventButton").addEventListener("click", () => openEv
 document.getElementById("backToDashboard").addEventListener("click", async () => {
   showView("dashboard");
   await loadAdminEvents();
-});
-
-// Use one permanent click handler for event cards.
-// This keeps Edit working even after the event list is re-rendered.
-eventsEl.addEventListener("click", async (event) => {
-  const editButton = event.target.closest(".edit-event-button");
-  if (!editButton) return;
-
-  const eventId = editButton.dataset.eventId;
-  if (!eventId) {
-    setStatus(dashboardStatus, "Could not open event: missing event ID.", true);
-    return;
-  }
-
-  editButton.disabled = true;
-  const originalText = editButton.textContent;
-  editButton.textContent = "Opening…";
-
-  try {
-    await openEventEditor(eventId);
-  } catch (error) {
-    showView("dashboard");
-    setStatus(dashboardStatus, `Could not open event: ${error.message}`, true);
-  } finally {
-    editButton.disabled = false;
-    editButton.textContent = originalText;
-  }
 });
 
 function boolString(value) {
@@ -581,7 +556,7 @@ async function saveEvent(status) {
       venue: document.getElementById("venueInput").value.trim() || null,
       additional_location_info: document.getElementById("locationInfoInput").value.trim() || null,
       description: document.getElementById("descriptionInput").value.trim() || null,
-      meeting_info: document.getElementById("meetingInfoInput").value.trim() || null,
+      meeting_info: null,
       status
     };
 
