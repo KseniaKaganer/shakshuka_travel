@@ -163,7 +163,12 @@
               <h2>Participants</h2>
               <p class="muted small-text">Add everyone joining this event.</p>
             </div>
-            <span id="participantCount" class="count-pill">0</span>
+            <div class="participants-header-actions">
+              <button id="exportParticipantsButton" class="secondary-button compact-export-button" type="button" title="Export participant data to spreadsheet">
+                ⇩ Export
+              </button>
+              <span id="participantCount" class="count-pill">0</span>
+            </div>
           </div>
 
           <div id="participantsList" class="participants-editor-list"></div>
@@ -203,6 +208,10 @@
       <input class="participant-canopy-size" type="hidden" />
       <input class="participant-water-training" type="hidden" value="false" />
       <input class="participant-canopy-course" type="hidden" value="false" />
+      <input class="participant-payment-paid" type="hidden" value="0" />
+      <input class="participant-payment-total" type="hidden" value="0" />
+      <input class="participant-coach-paid" type="hidden" value="0" />
+      <input class="participant-coach-total" type="hidden" value="0" />
       <input class="participant-id" type="hidden" />
       <input class="membership-id" type="hidden" />
     </div>
@@ -307,6 +316,47 @@
               <input id="modalSkydiveTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
             </div>
           </label>
+        </div>
+      </div>
+
+
+      <div class="payment-box">
+        <div class="payment-box-head">
+          <div>
+            <h3>Payment</h3>
+            <p class="muted small-text">Left to pay is calculated automatically.</p>
+          </div>
+        </div>
+
+        <div class="payment-table">
+          <div class="payment-row payment-row-head">
+            <span></span>
+            <span>Total</span>
+            <span>Paid</span>
+            <span>Left to pay</span>
+          </div>
+
+          <div class="payment-row">
+            <strong>Participant</strong>
+            <label class="payment-field">
+              <input id="modalPaymentTotal" type="number" min="0" step="0.01" value="0" />
+            </label>
+            <label class="payment-field">
+              <input id="modalPaymentPaid" type="number" min="0" step="0.01" value="0" />
+            </label>
+            <output id="modalPaymentLeft" class="payment-left">0.00</output>
+          </div>
+
+          <div class="payment-row">
+            <strong>Coach tickets</strong>
+            <label class="payment-field">
+              <input id="modalCoachTotal" type="number" min="0" step="0.01" value="0" />
+            </label>
+            <label class="payment-field">
+              <input id="modalCoachPaid" type="number" min="0" step="0.01" value="0" />
+            </label>
+            <output id="modalCoachLeft" class="payment-left">0.00</output>
+          </div>
         </div>
       </div>
 

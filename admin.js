@@ -37,6 +37,13 @@ const modalCanopyCourseDone = document.getElementById("modalCanopyCourseDone");
 const tunnelParticipantFields = document.getElementById("tunnelParticipantFields");
 const skydiveParticipantFields = document.getElementById("skydiveParticipantFields");
 const participantEventTypeBadge = document.getElementById("participantEventTypeBadge");
+const modalPaymentTotal = document.getElementById("modalPaymentTotal");
+const modalPaymentPaid = document.getElementById("modalPaymentPaid");
+const modalPaymentLeft = document.getElementById("modalPaymentLeft");
+const modalCoachTotal = document.getElementById("modalCoachTotal");
+const modalCoachPaid = document.getElementById("modalCoachPaid");
+const modalCoachLeft = document.getElementById("modalCoachLeft");
+const exportParticipantsButton = document.getElementById("exportParticipantsButton");
 
 let currentEventId = null;
 let removedMembershipIds = [];
@@ -259,6 +266,32 @@ function combineMinutes(hours, minutes) {
   return Math.max(0, (Number(hours) || 0) * 60 + (Number(minutes) || 0));
 }
 
+function moneyNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : 0;
+}
+
+function calculateLeft(total, paid) {
+  return Math.max(0, moneyNumber(total) - moneyNumber(paid));
+}
+
+function formatMoney(value) {
+  return moneyNumber(value).toFixed(2);
+}
+
+function updatePaymentCalculations() {
+  if (modalPaymentLeft) {
+    modalPaymentLeft.textContent = formatMoney(calculateLeft(modalPaymentTotal.value, modalPaymentPaid.value));
+  }
+  if (modalCoachLeft) {
+    modalCoachLeft.textContent = formatMoney(calculateLeft(modalCoachTotal.value, modalCoachPaid.value));
+  }
+}
+
+[modalPaymentTotal, modalPaymentPaid, modalCoachTotal, modalCoachPaid].forEach(input => {
+  input?.addEventListener("input", updatePaymentCalculations);
+});
+
 function resetEventForm() {
   currentEventId = null;
   removedMembershipIds = [];
@@ -322,6 +355,10 @@ document.getElementById("descriptionInput").value = event.description || "";
       canopy_size,
       water_training_done,
       canopy_course_done,
+      payment_paid,
+      payment_total,
+      coach_tickets_paid,
+      coach_tickets_total,
       participants(id,display_name,phone,email,notes)
     `)
     .eq("event_id", eventId)
@@ -353,7 +390,11 @@ document.getElementById("descriptionInput").value = event.description || "";
       tunnelMinutes: membership.tunnel_minutes_total,
       canopySize: membership.canopy_size,
       waterTrainingDone: membership.water_training_done,
-      canopyCourseDone: membership.canopy_course_done
+      canopyCourseDone: membership.canopy_course_done,
+      paymentPaid: membership.payment_paid,
+      paymentTotal: membership.payment_total,
+      coachPaid: membership.coach_tickets_paid,
+      coachTotal: membership.coach_tickets_total
     });
   });
 
@@ -423,6 +464,12 @@ function openParticipantModal(row) {
   modalWaterTrainingDone.checked = row.querySelector(".participant-water-training").value === "true";
   modalCanopyCourseDone.checked = row.querySelector(".participant-canopy-course").value === "true";
 
+  modalPaymentPaid.value = row.querySelector(".participant-payment-paid").value || "0";
+  modalPaymentTotal.value = row.querySelector(".participant-payment-total").value || "0";
+  modalCoachPaid.value = row.querySelector(".participant-coach-paid").value || "0";
+  modalCoachTotal.value = row.querySelector(".participant-coach-total").value || "0";
+  updatePaymentCalculations();
+
   const time = splitMinutes(row.querySelector(".participant-tunnel-minutes").value);
   modalTunnelHours.value = time.hours || "";
   modalTunnelMinutes.value = time.minutes || "";
@@ -458,6 +505,10 @@ function addParticipantRow(data = {}, openImmediately = false) {
   row.querySelector(".participant-canopy-size").value = data.canopySize ?? "";
   row.querySelector(".participant-water-training").value = boolString(data.waterTrainingDone);
   row.querySelector(".participant-canopy-course").value = boolString(data.canopyCourseDone);
+  row.querySelector(".participant-payment-paid").value = moneyNumber(data.paymentPaid);
+  row.querySelector(".participant-payment-total").value = moneyNumber(data.paymentTotal);
+  row.querySelector(".participant-coach-paid").value = moneyNumber(data.coachPaid);
+  row.querySelector(".participant-coach-total").value = moneyNumber(data.coachTotal);
   row.querySelector(".participant-id").value = data.participantId || "";
   row.querySelector(".membership-id").value = data.membershipId || "";
 
@@ -508,6 +559,10 @@ document.getElementById("acceptParticipantEdit").addEventListener("click", () =>
   editingParticipantRow.querySelector(".participant-canopy-size").value = modalCanopySize.value;
   editingParticipantRow.querySelector(".participant-water-training").value = boolString(modalWaterTrainingDone.checked);
   editingParticipantRow.querySelector(".participant-canopy-course").value = boolString(modalCanopyCourseDone.checked);
+  editingParticipantRow.querySelector(".participant-payment-paid").value = moneyNumber(modalPaymentPaid.value);
+  editingParticipantRow.querySelector(".participant-payment-total").value = moneyNumber(modalPaymentTotal.value);
+  editingParticipantRow.querySelector(".participant-coach-paid").value = moneyNumber(modalCoachPaid.value);
+  editingParticipantRow.querySelector(".participant-coach-total").value = moneyNumber(modalCoachTotal.value);
 
   const tunnelMinutesTotal = getEventType() === "tunnel"
     ? combineMinutes(modalTunnelHours.value, modalTunnelMinutes.value)
@@ -650,10 +705,112 @@ function readParticipantRows() {
     canopySize: row.querySelector(".participant-canopy-size").value === "" ? null : Number(row.querySelector(".participant-canopy-size").value),
     waterTrainingDone: row.querySelector(".participant-water-training").value === "true",
     canopyCourseDone: row.querySelector(".participant-canopy-course").value === "true",
+    paymentPaid: moneyNumber(row.querySelector(".participant-payment-paid").value),
+    paymentTotal: moneyNumber(row.querySelector(".participant-payment-total").value),
+    coachPaid: moneyNumber(row.querySelector(".participant-coach-paid").value),
+    coachTotal: moneyNumber(row.querySelector(".participant-coach-total").value),
     participantId: row.querySelector(".participant-id").value || null,
     membershipId: row.querySelector(".membership-id").value || null
   }));
 }
+
+function csvEscape(value) {
+  const text = value == null ? "" : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function formatMinutesForExport(totalMinutes) {
+  const total = Math.max(0, Number(totalMinutes) || 0);
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  return `${hours}:${String(minutes).padStart(2, "0")}`;
+}
+
+function exportParticipantsToSpreadsheet() {
+  const participants = readParticipantRows();
+
+  if (!participants.length) {
+    setStatus(editorStatus, "There are no participants to export.", true);
+    return;
+  }
+
+  const eventName = document.getElementById("eventNameInput").value.trim() || "SHAKSHUKA Event";
+  const eventType = getEventType();
+
+  const headers = [
+    "Event",
+    "Event type",
+    "Name",
+    "Phone",
+    "Email",
+    "Notes",
+    "Flights",
+    "Insurance",
+    "Passport",
+    "Jersey",
+    "License",
+    "Reserve date",
+    "Last jump",
+    "Number of jumps",
+    "Total tunnel time",
+    "Canopy size",
+    "Water training",
+    "Canopy course",
+    "Participant total",
+    "Participant paid",
+    "Participant left to pay",
+    "Coach tickets total",
+    "Coach tickets paid",
+    "Coach tickets left to pay"
+  ];
+
+  const rows = participants.map(p => [
+    eventName,
+    eventType,
+    p.name,
+    p.phone,
+    p.email,
+    p.notes,
+    p.flightDone ? "Yes" : "No",
+    p.insuranceDone ? "Yes" : "No",
+    p.passportDone ? "Yes" : "No",
+    p.jerseyDone ? "Yes" : "No",
+    p.licenseText,
+    p.reserveDate ? formatDate(p.reserveDate) : "",
+    p.lastJumpDate ? formatDate(p.lastJumpDate) : "",
+    p.numberJumps ?? "",
+    formatMinutesForExport(p.tunnelMinutes),
+    p.canopySize ?? "",
+    p.waterTrainingDone ? "Yes" : "No",
+    p.canopyCourseDone ? "Yes" : "No",
+    formatMoney(p.paymentTotal),
+    formatMoney(p.paymentPaid),
+    formatMoney(calculateLeft(p.paymentTotal, p.paymentPaid)),
+    formatMoney(p.coachTotal),
+    formatMoney(p.coachPaid),
+    formatMoney(calculateLeft(p.coachTotal, p.coachPaid))
+  ]);
+
+  const csv = "\ufeff" + [headers, ...rows]
+    .map(row => row.map(csvEscape).join(","))
+    .join("\r\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safeName = eventName.replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "event";
+
+  link.href = url;
+  link.download = `${safeName}_participants.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  setStatus(editorStatus, "Participant spreadsheet exported.");
+}
+
+exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsheet);
 
 async function saveEvent(status) {
   const name = document.getElementById("eventNameInput").value.trim();
@@ -747,7 +904,11 @@ description: document.getElementById("descriptionInput").value.trim() || null,
         tunnel_minutes_total: participant.tunnelMinutes,
         canopy_size: participant.canopySize,
         water_training_done: participant.waterTrainingDone,
-        canopy_course_done: participant.canopyCourseDone
+        canopy_course_done: participant.canopyCourseDone,
+        payment_paid: participant.paymentPaid,
+        payment_total: participant.paymentTotal,
+        coach_tickets_paid: participant.coachPaid,
+        coach_tickets_total: participant.coachTotal
       };
 
       if (participant.membershipId) {

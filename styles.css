@@ -1001,3 +1001,115 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* ---------- Payments + participant spreadsheet export ---------- */
+
+.participants-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.compact-export-button {
+  padding: 8px 11px;
+  min-height: 34px;
+  white-space: nowrap;
+}
+
+.payment-box {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(242, 169, 59, .28);
+  border-radius: 14px;
+  background: rgba(242, 169, 59, .035);
+}
+
+.payment-box-head h3 {
+  margin: 0 0 3px;
+}
+
+.payment-box-head p {
+  margin: 0 0 14px;
+}
+
+.payment-table {
+  display: grid;
+  gap: 8px;
+}
+
+.payment-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.1fr) repeat(3, minmax(90px, 1fr));
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-row-head {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 0 4px;
+}
+
+.payment-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.payment-left {
+  display: flex;
+  align-items: center;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  font-weight: 800;
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .participants-header {
+    align-items: flex-start;
+  }
+
+  .participants-header-actions {
+    flex-direction: column-reverse;
+    align-items: flex-end;
+  }
+
+  .payment-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .payment-row-head {
+    display: none;
+  }
+
+  .payment-row strong {
+    margin-bottom: 4px;
+  }
+
+  .payment-field::before {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .payment-row .payment-field:nth-child(2)::before { content: "Total"; }
+  .payment-row .payment-field:nth-child(3)::before { content: "Paid"; }
+
+  .payment-left::before {
+    content: "Left to pay: ";
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: 6px;
+  }
+}
