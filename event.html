@@ -10,10 +10,52 @@
   <header class="topbar">
     <a class="back-link" href="index.html">← All events</a>
     <div class="brand-small">SHAKSHUKA TRAVEL</div>
+
+    <div id="participantSessionIndicator" class="participant-session-indicator hidden">
+      <span class="participant-session-dot" aria-hidden="true"></span>
+      <div>
+        <strong>Logged in</strong>
+        <span id="participantSessionName"></span>
+      </div>
+      <button id="participantSignOut" class="ghost-button compact-button" type="button">Exit</button>
+    </div>
   </header>
 
   <main class="page">
     <div id="status" class="status">Loading event…</div>
+
+    <section id="participantLoginScreen" class="participant-login-screen hidden">
+      <div class="participant-login-card">
+        <div class="eyebrow">SHAKSHUKA TRAVEL</div>
+        <h1 id="loginEventName">Participant login</h1>
+        <p class="participant-login-subtitle">
+          Select your name and enter your phone number to access this event.
+        </p>
+
+        <label class="field">
+          <span>Your name</span>
+          <select id="participantSelect">
+            <option value="">Loading participants…</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Phone number</span>
+          <input
+            id="participantPhone"
+            type="tel"
+            autocomplete="tel"
+            placeholder="05X-XXXXXXX"
+          />
+        </label>
+
+        <div id="participantLoginStatus" class="status compact-status hidden"></div>
+
+        <button id="participantSignIn" class="primary-button participant-login-submit" type="button">
+          Enter my event
+        </button>
+      </div>
+    </section>
 
     <article id="event" class="event-detail hidden">
       <div class="event-detail__top">
@@ -42,77 +84,33 @@
         </section>
       </div>
 
-      <section class="participant-entry panel accent-panel">
-        <div class="participant-portal-head">
+      <section class="panel participant-dashboard-panel">
+        <div class="participant-welcome">
           <div>
-            <h3>Participant area</h3>
-            <p id="participantPortalIntro">
-              Select your name and enter your phone number to access your event.
-            </p>
-          </div>
-          <button id="openParticipantLogin" class="primary-button" type="button">
-            Enter my event
-          </button>
-        </div>
-
-        <div id="participantLoginPanel" class="participant-login-panel hidden">
-          <label class="field">
-            <span>Your name</span>
-            <select id="participantSelect">
-              <option value="">Select your name…</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Phone number</span>
-            <input
-              id="participantPhone"
-              type="tel"
-              autocomplete="tel"
-              placeholder="05X-XXXXXXX"
-            />
-          </label>
-
-          <div id="participantLoginStatus" class="status compact-status hidden"></div>
-
-          <div class="participant-login-actions">
-            <button id="cancelParticipantLogin" class="ghost-button" type="button">Cancel</button>
-            <button id="participantSignIn" class="primary-button" type="button">Enter</button>
+            <div class="eyebrow">PARTICIPANT</div>
+            <h3 id="participantWelcomeName">Welcome</h3>
           </div>
         </div>
 
-        <div id="participantDashboard" class="participant-dashboard hidden">
-          <div class="participant-welcome">
-            <div>
-              <div class="eyebrow">PARTICIPANT</div>
-              <h3 id="participantWelcomeName">Welcome</h3>
+        <div class="participant-checklist">
+          <h4>Before travel checklist</h4>
+          <div class="participant-checklist-grid">
+            <div class="participant-check-item">
+              <span id="checkFlight" class="check-state">○</span>
+              <span>Flight</span>
             </div>
-            <button id="participantSignOut" class="ghost-button" type="button">Exit</button>
-          </div>
-
-          <div class="participant-checklist">
-            <h4>Before travel checklist</h4>
-            <div class="participant-checklist-grid">
-              <div class="participant-check-item">
-                <span id="checkFlight" class="check-state">○</span>
-                <span>Flight</span>
-              </div>
-              <div class="participant-check-item">
-                <span id="checkInsurance" class="check-state">○</span>
-                <span>Insurance</span>
-              </div>
-              <div class="participant-check-item">
-                <span id="checkReserve" class="check-state">○</span>
-                <span>Reserve</span>
-              </div>
-              <div class="participant-check-item">
-                <span id="checkLicense" class="check-state">○</span>
-                <span>License</span>
-              </div>
+            <div class="participant-check-item">
+              <span id="checkInsurance" class="check-state">○</span>
+              <span>Insurance</span>
             </div>
-            <p class="participant-checklist-note">
-              Checklist items are managed by the SHAKSHUKA TRAVEL admins.
-            </p>
+            <div class="participant-check-item">
+              <span id="checkReserve" class="check-state">○</span>
+              <span>Reserve</span>
+            </div>
+            <div class="participant-check-item">
+              <span id="checkLicense" class="check-state">○</span>
+              <span>License</span>
+            </div>
           </div>
         </div>
       </section>

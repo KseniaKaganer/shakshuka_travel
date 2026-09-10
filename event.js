@@ -3,10 +3,12 @@ const params = new URLSearchParams(window.location.search);
 const eventId = params.get("id");
 
 const statusEl = document.getElementById("status");
+const loginScreen = document.getElementById("participantLoginScreen");
 const eventEl = document.getElementById("event");
+const sessionIndicator = document.getElementById("participantSessionIndicator");
 
 let client = null;
-let participantNamesLoaded = false;
+let loadedEvent = null;
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -32,14 +34,16 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function showParticipantStatus(message = "", isError = false) {
+function showLoginStatus(message = "", isError = false) {
   const el = document.getElementById("participantLoginStatus");
+
   if (!message) {
     el.textContent = "";
     el.classList.add("hidden");
     el.classList.remove("error");
     return;
   }
+
   el.textContent = message;
   el.classList.remove("hidden");
   el.classList.toggle("error", isError);
@@ -48,13 +52,12 @@ function showParticipantStatus(message = "", isError = false) {
 function setChecklistState(id, done) {
   const el = document.getElementById(id);
   if (!el) return;
+
   el.textContent = done ? "✓" : "○";
   el.classList.toggle("done", Boolean(done));
 }
 
 async function loadParticipantNames() {
-  if (participantNamesLoaded) return;
-
   const select = document.getElementById("participantSelect");
   select.disabled = true;
   select.innerHTML = '<option value="">Loading participants…</option>';
@@ -67,7 +70,7 @@ async function loadParticipantNames() {
 
   if (error) {
     select.innerHTML = '<option value="">Could not load participants</option>';
-    showParticipantStatus(`Could not load participants: ${error.message}`, true);
+    showLoginStatus(`Could not load participants: ${error.message}`, true);
     return;
   }
 
@@ -83,22 +86,32 @@ async function loadParticipantNames() {
   if (!data?.length) {
     select.innerHTML = '<option value="">No participants added yet</option>';
   }
-
-  participantNamesLoaded = true;
 }
 
-function openParticipantLogin() {
-  document.getElementById("openParticipantLogin").classList.add("hidden");
-  document.getElementById("participantLoginPanel").classList.remove("hidden");
-  showParticipantStatus("");
-  loadParticipantNames();
-}
+function showLoggedOutView() {
+  eventEl.classList.add("hidden");
+  sessionIndicator.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
 
-function closeParticipantLogin() {
-  document.getElementById("participantLoginPanel").classList.add("hidden");
-  document.getElementById("openParticipantLogin").classList.remove("hidden");
+  document.getElementById("participantSelect").value = "";
   document.getElementById("participantPhone").value = "";
-  showParticipantStatus("");
+  showLoginStatus("");
+}
+
+function showLoggedInView(accessData) {
+  loginScreen.classList.add("hidden");
+  eventEl.classList.remove("hidden");
+  sessionIndicator.classList.remove("hidden");
+
+  setText("participantSessionName", accessData.display_name, "");
+  setText("participantWelcomeName", `Welcome, ${accessData.display_name}`, "Welcome");
+
+  setChecklistState("checkFlight", accessData.flight_done);
+  setChecklistState("checkInsurance", accessData.insurance_done);
+  setChecklistState("checkReserve", accessData.reserve_done);
+  setChecklistState("checkLicense", accessData.license_done);
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function participantSignIn() {
@@ -107,19 +120,19 @@ async function participantSignIn() {
   const button = document.getElementById("participantSignIn");
 
   if (!participantId) {
-    showParticipantStatus("Please select your name.", true);
+    showLoginStatus("Please select your name.", true);
     return;
   }
 
   if (!phone) {
-    showParticipantStatus("Please enter your phone number.", true);
+    showLoginStatus("Please enter your phone number.", true);
     return;
   }
 
   button.disabled = true;
-  const oldText = button.textContent;
+  const previousText = button.textContent;
   button.textContent = "Checking…";
-  showParticipantStatus("");
+  showLoginStatus("");
 
   const { data, error } = await client.rpc("get_participant_event_access", {
     p_event_id: eventId,
@@ -128,36 +141,23 @@ async function participantSignIn() {
   });
 
   button.disabled = false;
-  button.textContent = oldText;
+  button.textContent = previousText;
 
   if (error) {
-    showParticipantStatus(`Could not sign in: ${error.message}`, true);
+    showLoginStatus(`Could not sign in: ${error.message}`, true);
     return;
   }
 
   if (!data?.ok) {
-    showParticipantStatus("The phone number does not match this participant.", true);
+    showLoginStatus("The phone number does not match this participant.", true);
     return;
   }
 
-  document.getElementById("participantLoginPanel").classList.add("hidden");
-  document.getElementById("openParticipantLogin").classList.add("hidden");
-  document.getElementById("participantDashboard").classList.remove("hidden");
-
-  setText("participantWelcomeName", `Welcome, ${data.display_name}`, "Welcome");
-  setChecklistState("checkFlight", data.flight_done);
-  setChecklistState("checkInsurance", data.insurance_done);
-  setChecklistState("checkReserve", data.reserve_done);
-  setChecklistState("checkLicense", data.license_done);
-
-  document.getElementById("participantPhone").value = "";
+  showLoggedInView(data);
 }
 
 function participantSignOut() {
-  document.getElementById("participantDashboard").classList.add("hidden");
-  document.getElementById("participantSelect").value = "";
-  document.getElementById("openParticipantLogin").classList.remove("hidden");
-  showParticipantStatus("");
+  showLoggedOutView();
 }
 
 async function loadEvent() {
@@ -205,6 +205,8 @@ async function loadEvent() {
     return;
   }
 
+  loadedEvent = event;
+
   const { data: links } = await client
     .from("event_links")
     .select("title,url,category,sort_order")
@@ -213,8 +215,8 @@ async function loadEvent() {
     .order("sort_order", { ascending: true });
 
   statusEl.remove();
-  eventEl.classList.remove("hidden");
 
+  setText("loginEventName", event.name, "Participant login");
   setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
   setText("eventName", event.name);
 
@@ -223,17 +225,19 @@ async function loadEvent() {
     .filter(Boolean)
     .filter((value, index, all) => all.indexOf(value) === index)
     .join(" • ");
-  setText("eventLocation", locationLine);
 
+  setText("eventLocation", locationLine);
   setText("eventDescription", event.description);
 
   const venueLines = [event.venue, loc.dropzone, loc.address]
     .filter(Boolean)
     .filter((value, index, all) => all.indexOf(value) === index);
+
   setText("eventVenue", venueLines.join("\n"));
   setText("eventLocationInfo", event.additional_location_info);
 
   const linksEl = document.getElementById("eventLinks");
+
   if (!links?.length) {
     linksEl.innerHTML = "<p>—</p>";
   } else {
@@ -245,10 +249,11 @@ async function loadEvent() {
       `).join("")
     }</div>`;
   }
+
+  await loadParticipantNames();
+  showLoggedOutView();
 }
 
-document.getElementById("openParticipantLogin").addEventListener("click", openParticipantLogin);
-document.getElementById("cancelParticipantLogin").addEventListener("click", closeParticipantLogin);
 document.getElementById("participantSignIn").addEventListener("click", participantSignIn);
 document.getElementById("participantSignOut").addEventListener("click", participantSignOut);
 

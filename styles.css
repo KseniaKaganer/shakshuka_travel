@@ -739,3 +739,93 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* ---------- Login-first participant event page ---------- */
+
+.participant-session-indicator {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.participant-session-indicator > div {
+  display: grid;
+  line-height: 1.2;
+}
+
+.participant-session-indicator strong {
+  font-size: 12px;
+}
+
+.participant-session-indicator #participantSessionName {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.participant-session-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #2ea043;
+  box-shadow: 0 0 0 3px rgba(46, 160, 67, .16);
+  flex: 0 0 auto;
+}
+
+.compact-button {
+  padding: 8px 11px;
+}
+
+.participant-login-screen {
+  min-height: calc(100vh - 170px);
+  display: grid;
+  place-items: center;
+  padding: 28px 0;
+}
+
+.participant-login-card {
+  width: min(100%, 460px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 30px;
+}
+
+.participant-login-card h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(32px, 5vw, 46px);
+}
+
+.participant-login-subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+
+.participant-login-card .field {
+  margin-bottom: 16px;
+}
+
+.participant-login-submit {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.participant-dashboard-panel {
+  margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+  .participant-session-indicator #participantSessionName {
+    display: none;
+  }
+
+  .participant-session-indicator {
+    gap: 7px;
+  }
+
+  .participant-login-card {
+    padding: 22px;
+  }
+}
