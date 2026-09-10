@@ -14,10 +14,21 @@ const eventsEl = document.getElementById("adminEvents");
 const locationSelect = document.getElementById("locationSelect");
 const participantsList = document.getElementById("participantsList");
 const participantTemplate = document.getElementById("participantRowTemplate");
+const participantModal = document.getElementById("participantModal");
+const modalParticipantName = document.getElementById("modalParticipantName");
+const modalParticipantPhone = document.getElementById("modalParticipantPhone");
+const modalParticipantEmail = document.getElementById("modalParticipantEmail");
+const modalParticipantNotes = document.getElementById("modalParticipantNotes");
+const modalFlightDone = document.getElementById("modalFlightDone");
+const modalInsuranceDone = document.getElementById("modalInsuranceDone");
+const modalReserveDone = document.getElementById("modalReserveDone");
+const modalLicenseDone = document.getElementById("modalLicenseDone");
 
 let currentEventId = null;
 let removedMembershipIds = [];
 let locations = [];
+let editingParticipantRow = null;
+let editingLocationId = null;
 
 function escapeHtml(value = "") {
   return String(value)
@@ -120,7 +131,7 @@ signOutButton.addEventListener("click", async () => {
 async function loadLocations() {
   const { data, error } = await client
     .from("locations")
-    .select("id,name,country,city,dropzone,address,active")
+    .select("id,name,country,city,dropzone,address,active,venue_type")
     .order("country", { ascending: true })
     .order("name", { ascending: true });
 
@@ -222,7 +233,6 @@ async function openEventEditor(eventId = null) {
   showView("editor");
 
   if (!eventId) {
-    addParticipantRow();
     return;
   }
 
@@ -256,7 +266,11 @@ async function openEventEditor(eventId = null) {
     .select(`
       id,
       participant_id,
-      participants(id,display_name,phone,email)
+      flight_done,
+      insurance_done,
+      reserve_done,
+      license_done,
+      participants(id,display_name,phone,email,notes)
     `)
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
@@ -274,7 +288,12 @@ async function openEventEditor(eventId = null) {
       phone: participant.phone,
       email: participant.email,
       participantId: participant.id,
-      membershipId: membership.id
+      membershipId: membership.id,
+      notes: participant.notes,
+      flightDone: membership.flight_done,
+      insuranceDone: membership.insurance_done,
+      reserveDone: membership.reserve_done,
+      licenseDone: membership.license_done
     });
   });
 
@@ -287,15 +306,52 @@ document.getElementById("backToDashboard").addEventListener("click", async () =>
   await loadAdminEvents();
 });
 
-function addParticipantRow(data = {}) {
+function boolString(value) {
+  return value === true || value === "true" ? "true" : "false";
+}
+
+function updateParticipantSummary(row) {
+  const name = row.querySelector(".participant-name").value.trim() || "New participant";
+  const phone = row.querySelector(".participant-phone").value.trim();
+  row.querySelector(".participant-summary-name").textContent = name;
+  row.querySelector(".participant-summary-phone").textContent = phone;
+}
+
+function openParticipantModal(row) {
+  editingParticipantRow = row;
+  modalParticipantName.value = row.querySelector(".participant-name").value;
+  modalParticipantPhone.value = row.querySelector(".participant-phone").value;
+  modalParticipantEmail.value = row.querySelector(".participant-email").value;
+  modalParticipantNotes.value = row.querySelector(".participant-notes").value;
+  modalFlightDone.checked = row.querySelector(".participant-flight").value === "true";
+  modalInsuranceDone.checked = row.querySelector(".participant-insurance").value === "true";
+  modalReserveDone.checked = row.querySelector(".participant-reserve").value === "true";
+  modalLicenseDone.checked = row.querySelector(".participant-license").value === "true";
+  participantModal.classList.remove("hidden");
+  setTimeout(() => modalParticipantName.focus(), 0);
+}
+
+function closeParticipantModal() {
+  participantModal.classList.add("hidden");
+  editingParticipantRow = null;
+}
+
+function addParticipantRow(data = {}, openImmediately = false) {
   const fragment = participantTemplate.content.cloneNode(true);
   const row = fragment.querySelector(".participant-row");
   row.querySelector(".participant-name").value = data.name || "";
   row.querySelector(".participant-phone").value = data.phone || "";
   row.querySelector(".participant-email").value = data.email || "";
+  row.querySelector(".participant-notes").value = data.notes || "";
+  row.querySelector(".participant-flight").value = boolString(data.flightDone);
+  row.querySelector(".participant-insurance").value = boolString(data.insuranceDone);
+  row.querySelector(".participant-reserve").value = boolString(data.reserveDone);
+  row.querySelector(".participant-license").value = boolString(data.licenseDone);
   row.querySelector(".participant-id").value = data.participantId || "";
   row.querySelector(".membership-id").value = data.membershipId || "";
 
+  row.querySelector(".edit-participant").addEventListener("click", () => openParticipantModal(row));
+  row.querySelector(".participant-expand").addEventListener("click", () => openParticipantModal(row));
   row.querySelector(".remove-participant").addEventListener("click", () => {
     const membershipId = row.querySelector(".membership-id").value;
     if (membershipId) removedMembershipIds.push(membershipId);
@@ -304,33 +360,96 @@ function addParticipantRow(data = {}) {
   });
 
   participantsList.appendChild(fragment);
+  updateParticipantSummary(row);
   updateParticipantCount();
+  if (openImmediately) openParticipantModal(row);
 }
 
-document.getElementById("addParticipantButton").addEventListener("click", () => addParticipantRow());
+document.getElementById("addParticipantButton").addEventListener("click", () => addParticipantRow({}, true));
+
+document.getElementById("closeParticipantModal").addEventListener("click", closeParticipantModal);
+document.getElementById("cancelParticipantEdit").addEventListener("click", closeParticipantModal);
+participantModal.addEventListener("click", event => {
+  if (event.target === participantModal) closeParticipantModal();
+});
+
+document.getElementById("acceptParticipantEdit").addEventListener("click", () => {
+  if (!editingParticipantRow) return;
+  const name = modalParticipantName.value.trim();
+  const phone = modalParticipantPhone.value.trim();
+  if (!name || !phone) {
+    setStatus(editorStatus, "Participant name and phone are required.", true);
+    return;
+  }
+
+  editingParticipantRow.querySelector(".participant-name").value = name;
+  editingParticipantRow.querySelector(".participant-phone").value = phone;
+  editingParticipantRow.querySelector(".participant-email").value = modalParticipantEmail.value.trim();
+  editingParticipantRow.querySelector(".participant-notes").value = modalParticipantNotes.value.trim();
+  editingParticipantRow.querySelector(".participant-flight").value = boolString(modalFlightDone.checked);
+  editingParticipantRow.querySelector(".participant-insurance").value = boolString(modalInsuranceDone.checked);
+  editingParticipantRow.querySelector(".participant-reserve").value = boolString(modalReserveDone.checked);
+  editingParticipantRow.querySelector(".participant-license").value = boolString(modalLicenseDone.checked);
+  updateParticipantSummary(editingParticipantRow);
+  setStatus(editorStatus, "");
+  closeParticipantModal();
+});
 
 function updateParticipantCount() {
   const rows = [...participantsList.querySelectorAll(".participant-row")];
   document.getElementById("participantCount").textContent = rows.length;
-  rows.forEach((row, index) => {
-    row.querySelector(".participant-number").textContent = `Participant ${index + 1}`;
-  });
 }
 
-function showNewLocationForm() {
-  document.getElementById("newLocationBox").classList.remove("hidden");
+function showNewLocationForm(mode = "new") {
+  const box = document.getElementById("newLocationBox");
+  box.classList.remove("hidden");
+  editingLocationId = mode === "edit" ? locationSelect.value : null;
+
+  const deleteButton = document.getElementById("deleteLocationButton");
+  if (editingLocationId) {
+    const location = locations.find(item => item.id === editingLocationId);
+    if (!location) return;
+    document.getElementById("locationFormTitle").textContent = "Edit location";
+    document.getElementById("locationNameInput").value = location.name || "";
+    document.getElementById("locationCountryInput").value = location.country || "";
+    document.getElementById("locationCityInput").value = location.city || "";
+    document.getElementById("locationTypeInput").value = location.venue_type || "dropzone";
+    document.getElementById("locationAddressInput").value = location.address || "";
+    deleteButton.classList.remove("hidden");
+  } else {
+    document.getElementById("locationFormTitle").textContent = "Add a location";
+    ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput"]
+      .forEach(id => document.getElementById(id).value = "");
+    document.getElementById("locationTypeInput").value = "dropzone";
+    deleteButton.classList.add("hidden");
+  }
 }
 
 function hideNewLocationForm() {
   document.getElementById("newLocationBox").classList.add("hidden");
-  ["locationNameInput", "locationCountryInput", "locationCityInput", "locationDropzoneInput", "locationAddressInput"]
+  editingLocationId = null;
+  ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput"]
     .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("locationTypeInput").value = "dropzone";
+  document.getElementById("deleteLocationButton").classList.add("hidden");
 }
 
-document.getElementById("showLocationFormButton").addEventListener("click", showNewLocationForm);
+document.getElementById("showLocationFormButton").addEventListener("click", () => showNewLocationForm("new"));
+document.getElementById("editLocationButton").addEventListener("click", () => {
+  if (!locationSelect.value) {
+    setStatus(editorStatus, "Select a location first, then click Edit.", true);
+    return;
+  }
+  showNewLocationForm("edit");
+});
+document.getElementById("clearLocationButton").addEventListener("click", () => {
+  locationSelect.value = "";
+  hideNewLocationForm();
+  setStatus(editorStatus, "Location removed from this event. Save the event to keep the change.");
+});
 document.getElementById("cancelLocationButton").addEventListener("click", hideNewLocationForm);
 
-document.getElementById("addLocationButton").addEventListener("click", async () => {
+document.getElementById("saveLocationButton").addEventListener("click", async () => {
   const name = document.getElementById("locationNameInput").value.trim();
   if (!name) {
     setStatus(editorStatus, "Location name is required.", true);
@@ -341,21 +460,53 @@ document.getElementById("addLocationButton").addEventListener("click", async () 
     name,
     country: document.getElementById("locationCountryInput").value.trim() || null,
     city: document.getElementById("locationCityInput").value.trim() || null,
-    dropzone: document.getElementById("locationDropzoneInput").value.trim() || null,
+    venue_type: document.getElementById("locationTypeInput").value,
     address: document.getElementById("locationAddressInput").value.trim() || null,
     active: true
   };
 
-  const { data, error } = await client.from("locations").insert(payload).select().single();
-  if (error) {
-    setStatus(editorStatus, `Could not add location: ${error.message}`, true);
-    return;
+  if (editingLocationId) {
+    const { data, error } = await client.from("locations").update(payload).eq("id", editingLocationId).select().single();
+    if (error) {
+      setStatus(editorStatus, `Could not update location: ${error.message}`, true);
+      return;
+    }
+    locations = locations.map(item => item.id === data.id ? data : item);
+    renderLocationOptions(data.id);
+    setStatus(editorStatus, "Location updated.");
+  } else {
+    const { data, error } = await client.from("locations").insert(payload).select().single();
+    if (error) {
+      setStatus(editorStatus, `Could not add location: ${error.message}`, true);
+      return;
+    }
+    locations.push(data);
+    renderLocationOptions(data.id);
+    setStatus(editorStatus, "Location added.");
   }
-
-  locations.push(data);
-  renderLocationOptions(data.id);
   hideNewLocationForm();
-  setStatus(editorStatus, "Location added.");
+});
+
+document.getElementById("deleteLocationButton").addEventListener("click", async () => {
+  if (!editingLocationId) return;
+  const location = locations.find(item => item.id === editingLocationId);
+  const label = location?.name || "this location";
+  if (!window.confirm(`Delete ${label} from the saved locations list? Existing events using it will keep their reference unless the database prevents deletion.`)) return;
+
+  const { error } = await client.from("locations").delete().eq("id", editingLocationId);
+  if (error) {
+    // If referenced by an event, soft-hide it instead of losing historical data.
+    const { error: deactivateError } = await client.from("locations").update({ active: false }).eq("id", editingLocationId);
+    if (deactivateError) {
+      setStatus(editorStatus, `Could not remove location: ${deactivateError.message}`, true);
+      return;
+    }
+  }
+  locations = locations.filter(item => item.id !== editingLocationId);
+  locationSelect.value = "";
+  renderLocationOptions("");
+  hideNewLocationForm();
+  setStatus(editorStatus, "Location removed from the saved list.");
 });
 
 function readParticipantRows() {
@@ -363,6 +514,11 @@ function readParticipantRows() {
     name: row.querySelector(".participant-name").value.trim(),
     phone: row.querySelector(".participant-phone").value.trim(),
     email: row.querySelector(".participant-email").value.trim(),
+    notes: row.querySelector(".participant-notes").value.trim(),
+    flightDone: row.querySelector(".participant-flight").value === "true",
+    insuranceDone: row.querySelector(".participant-insurance").value === "true",
+    reserveDone: row.querySelector(".participant-reserve").value === "true",
+    licenseDone: row.querySelector(".participant-license").value === "true",
     participantId: row.querySelector(".participant-id").value || null,
     membershipId: row.querySelector(".membership-id").value || null
   }));
@@ -383,8 +539,8 @@ async function saveEvent(status) {
   }
 
   const participants = readParticipantRows();
-  if (participants.some(p => !p.name)) {
-    setStatus(editorStatus, "Every participant row needs a name, or remove the empty row.", true);
+  if (participants.some(p => !p.name || !p.phone)) {
+    setStatus(editorStatus, "Every participant needs a name and phone number.", true);
     return;
   }
 
@@ -429,7 +585,8 @@ async function saveEvent(status) {
           .update({
             display_name: participant.name,
             phone: participant.phone || null,
-            email: participant.email || null
+            email: participant.email || null,
+            notes: participant.notes || null
           })
           .eq("id", participantId);
         if (error) throw error;
@@ -439,7 +596,8 @@ async function saveEvent(status) {
           .insert({
             display_name: participant.name,
             phone: participant.phone || null,
-            email: participant.email || null
+            email: participant.email || null,
+            notes: participant.notes || null
           })
           .select("id")
           .single();
@@ -447,10 +605,28 @@ async function saveEvent(status) {
         participantId = data.id;
       }
 
-      if (!participant.membershipId) {
+      const membershipPayload = {
+        flight_done: participant.flightDone,
+        insurance_done: participant.insuranceDone,
+        reserve_done: participant.reserveDone,
+        license_done: participant.licenseDone
+      };
+
+      if (participant.membershipId) {
         const { error } = await client
           .from("event_participants")
-          .insert({ event_id: currentEventId, participant_id: participantId, participant_status: "active" });
+          .update(membershipPayload)
+          .eq("id", participant.membershipId);
+        if (error) throw error;
+      } else {
+        const { error } = await client
+          .from("event_participants")
+          .insert({
+            event_id: currentEventId,
+            participant_id: participantId,
+            participant_status: "active",
+            ...membershipPayload
+          });
         if (error) throw error;
       }
     }

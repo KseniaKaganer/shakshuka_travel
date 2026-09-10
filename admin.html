@@ -101,27 +101,40 @@
                 <option value="">No location selected</option>
               </select>
             </label>
-            <button id="showLocationFormButton" class="ghost-button field-button" type="button">+ New location</button>
+            <div class="location-actions">
+              <button id="showLocationFormButton" class="ghost-button field-button" type="button">+ New</button>
+              <button id="editLocationButton" class="ghost-button field-button" type="button">✎ Edit</button>
+              <button id="clearLocationButton" class="ghost-button field-button" type="button">Remove</button>
+            </div>
           </div>
 
           <div id="newLocationBox" class="subpanel hidden">
             <div class="subpanel-head">
-              <strong>Add a location</strong>
+              <strong id="locationFormTitle">Add a location</strong>
               <button id="cancelLocationButton" class="icon-button" type="button" aria-label="Close">×</button>
             </div>
             <div class="two-columns">
-              <label class="field"><span>Name *</span><input id="locationNameInput" type="text" placeholder="SkyTime" /></label>
+              <label class="field"><span>Name *</span><input id="locationNameInput" type="text" placeholder="Windobona Madrid" /></label>
+              <label class="field"><span>Type *</span>
+                <select id="locationTypeInput">
+                  <option value="dropzone">Drop zone</option>
+                  <option value="tunnel">Tunnel</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
               <label class="field"><span>Country</span><input id="locationCountryInput" type="text" placeholder="Spain" /></label>
-              <label class="field"><span>City</span><input id="locationCityInput" type="text" placeholder="Castellón" /></label>
-              <label class="field"><span>Dropzone</span><input id="locationDropzoneInput" type="text" placeholder="SkyTime" /></label>
+              <label class="field"><span>City</span><input id="locationCityInput" type="text" placeholder="Madrid" /></label>
             </div>
             <label class="field"><span>Address</span><input id="locationAddressInput" type="text" /></label>
-            <button id="addLocationButton" class="secondary-button" type="button">Add location</button>
+            <div class="location-form-actions">
+              <button id="saveLocationButton" class="secondary-button" type="button">Save location</button>
+              <button id="deleteLocationButton" class="danger-button hidden" type="button">Delete saved location</button>
+            </div>
           </div>
 
           <label class="field">
-            <span>Venue / dropzone</span>
-            <input id="venueInput" type="text" placeholder="SkyTime" />
+            <span>Venue / drop zone / tunnel</span>
+            <input id="venueInput" type="text" placeholder="SkyTime or Windobona" />
           </label>
 
           <label class="field">
@@ -159,18 +172,64 @@
   </main>
 
   <template id="participantRowTemplate">
-    <div class="participant-row">
-      <div class="participant-row-top">
-        <strong class="participant-number">Participant</strong>
-        <button class="remove-participant icon-button" type="button" aria-label="Remove participant">×</button>
+    <div class="participant-row participant-collapsed">
+      <div class="participant-summary">
+        <button class="participant-expand" type="button" aria-label="Open participant">
+          <span class="participant-summary-name">New participant</span>
+          <span class="participant-summary-phone muted"></span>
+        </button>
+        <div class="participant-summary-actions">
+          <button class="edit-participant icon-button" type="button" aria-label="Edit participant" title="Edit participant">✎</button>
+          <button class="remove-participant icon-button" type="button" aria-label="Remove participant" title="Remove participant">×</button>
+        </div>
       </div>
-      <label class="field"><span>Name *</span><input class="participant-name" type="text" required /></label>
-      <label class="field"><span>Phone</span><input class="participant-phone" type="tel" placeholder="+972…" /></label>
-      <label class="field"><span>Email</span><input class="participant-email" type="email" /></label>
+      <input class="participant-name" type="hidden" />
+      <input class="participant-phone" type="hidden" />
+      <input class="participant-email" type="hidden" />
+      <input class="participant-notes" type="hidden" />
+      <input class="participant-flight" type="hidden" value="false" />
+      <input class="participant-insurance" type="hidden" value="false" />
+      <input class="participant-reserve" type="hidden" value="false" />
+      <input class="participant-license" type="hidden" value="false" />
       <input class="participant-id" type="hidden" />
       <input class="membership-id" type="hidden" />
     </div>
   </template>
+
+  <div id="participantModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="participantModalTitle">
+    <div class="modal-card participant-modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">PARTICIPANT</div>
+          <h2 id="participantModalTitle">Participant details</h2>
+        </div>
+        <button id="closeParticipantModal" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div class="two-columns">
+        <label class="field"><span>Name *</span><input id="modalParticipantName" type="text" /></label>
+        <label class="field"><span>Phone *</span><input id="modalParticipantPhone" type="tel" placeholder="+972…" /></label>
+      </div>
+      <label class="field"><span>Email</span><input id="modalParticipantEmail" type="email" /></label>
+      <label class="field"><span>Notes</span><textarea id="modalParticipantNotes" rows="3" placeholder="Anything useful about this participant…"></textarea></label>
+
+      <div class="checklist-box">
+        <div>
+          <h3>Before travel checklist</h3>
+          <p class="muted small-text">You can mark items as they are completed. We can add more items later.</p>
+        </div>
+        <label class="check-row"><input id="modalFlightDone" type="checkbox" /><span>Flight</span></label>
+        <label class="check-row"><input id="modalInsuranceDone" type="checkbox" /><span>Insurance</span></label>
+        <label class="check-row"><input id="modalReserveDone" type="checkbox" /><span>Reserve</span></label>
+        <label class="check-row"><input id="modalLicenseDone" type="checkbox" /><span>License</span></label>
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancelParticipantEdit" class="ghost-button" type="button">Cancel</button>
+        <button id="acceptParticipantEdit" class="primary-button" type="button">✓ Done</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
