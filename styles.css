@@ -122,7 +122,7 @@ h1 {
 }
 
 .status.error { color: #ff8a8a; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 .topbar {
   min-height: 72px;
@@ -368,7 +368,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   display: grid;
   gap: 14px;
 }
-.subpanel.hidden { display: none; }
+.subpanel.hidden { display: none !important; }
 .icon-button {
   width: 32px;
   height: 32px;
@@ -413,4 +413,47 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   .admin-event-actions { flex-direction: column; }
   .admin-event-actions > * { width: 100%; }
   .admin-corner-link { top: 12px; right: 12px; }
+}
+
+
+/* Admin session indicator */
+.admin-session-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.logged-in-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.logged-in-indicator > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.logged-in-email {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.online-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #56d364;
+  box-shadow: 0 0 0 3px rgba(86, 211, 100, .12);
+  flex: 0 0 auto;
+}
+
+@media (max-width: 700px) {
+  .logged-in-email { display: none; }
+  .admin-session-area { gap: 8px; }
 }

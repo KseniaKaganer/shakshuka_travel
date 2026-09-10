@@ -5,6 +5,8 @@ const loginView = document.getElementById("loginView");
 const dashboardView = document.getElementById("dashboardView");
 const editorView = document.getElementById("editorView");
 const signOutButton = document.getElementById("signOutButton");
+const loggedInIndicator = document.getElementById("loggedInIndicator");
+const loggedInEmail = document.getElementById("loggedInEmail");
 const loginStatus = document.getElementById("loginStatus");
 const dashboardStatus = document.getElementById("dashboardStatus");
 const editorStatus = document.getElementById("editorStatus");
@@ -46,8 +48,17 @@ function showView(view) {
   loginView.classList.toggle("hidden", view !== "login");
   dashboardView.classList.toggle("hidden", view !== "dashboard");
   editorView.classList.toggle("hidden", view !== "editor");
-  signOutButton.classList.toggle("hidden", view === "login");
+
+  const isLoggedInView = view !== "login";
+  signOutButton.classList.toggle("hidden", !isLoggedInView);
+  loggedInIndicator.classList.toggle("hidden", !isLoggedInView);
+
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function updateLoggedInIndicator() {
+  const { data: { user } } = await client.auth.getUser();
+  loggedInEmail.textContent = user?.email || "";
 }
 
 async function isCurrentUserAdmin() {
@@ -70,6 +81,7 @@ async function routeForSession() {
     return;
   }
 
+  await updateLoggedInIndicator();
   showView("dashboard");
   await Promise.all([loadLocations(), loadAdminEvents()]);
 }
@@ -94,12 +106,14 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
   }
 
   setStatus(loginStatus, "");
+  await updateLoggedInIndicator();
   showView("dashboard");
   await Promise.all([loadLocations(), loadAdminEvents()]);
 });
 
 signOutButton.addEventListener("click", async () => {
   await client.auth.signOut();
+  loggedInEmail.textContent = "";
   showView("login");
 });
 

@@ -10,7 +10,16 @@
   <header class="topbar admin-topbar">
     <a class="back-link" href="index.html">← Public site</a>
     <div class="brand-small">SHAKSHUKA TRAVEL <span class="admin-badge">ADMIN</span></div>
-    <button id="signOutButton" class="ghost-button hidden" type="button">Sign out</button>
+    <div class="admin-session-area">
+      <div id="loggedInIndicator" class="logged-in-indicator hidden">
+        <span class="online-dot" aria-hidden="true"></span>
+        <span>
+          <strong>Logged in</strong>
+          <span id="loggedInEmail" class="logged-in-email"></span>
+        </span>
+      </div>
+      <button id="signOutButton" class="ghost-button hidden" type="button">Sign out</button>
+    </div>
   </header>
 
   <main class="page admin-page">
