@@ -27,11 +27,15 @@ function setText(id, value, fallback = "—") {
   if (el) el.textContent = value || fallback;
 }
 
-function escapeHtml(value = "") {
-  return String(value)
-    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function showStatus(message, isError = false) {
+  if (!statusEl) return;
+  statusEl.textContent = message;
+  statusEl.classList.toggle("error", isError);
+  statusEl.classList.remove("hidden");
+}
+
+function hideStatus() {
+  if (statusEl) statusEl.classList.add("hidden");
 }
 
 function showLoginStatus(message = "", isError = false) {
@@ -46,7 +50,6 @@ function showSaveStatus(message = "", isError = false) {
   el.textContent = message;
   el.classList.toggle("hidden", !message);
   el.classList.toggle("error", isError);
-  el.classList.toggle("success", Boolean(message) && !isError);
 }
 
 function splitMinutes(totalMinutes) {
@@ -58,42 +61,44 @@ function combineMinutes(hours, minutes) {
   return Math.max(0, (Number(hours) || 0) * 60 + (Number(minutes) || 0));
 }
 
+function showLoginScreen() {
+  eventEl.classList.add("hidden");
+  sessionIndicator.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+  hideStatus();
+}
+
 async function loadParticipantNames() {
   const select = document.getElementById("participantSelect");
   select.disabled = true;
   select.innerHTML = '<option value="">Loading participants…</option>';
 
-  const { data, error } = await client.rpc("get_event_participant_names", { p_event_id: eventId });
-  select.disabled = false;
+  try {
+    const { data, error } = await client.rpc("get_event_participant_names", {
+      p_event_id: eventId
+    });
 
-  if (error) {
+    if (error) throw error;
+
+    select.innerHTML = '<option value="">Select your name…</option>';
+
+    (data || []).forEach(person => {
+      const option = document.createElement("option");
+      option.value = person.participant_id;
+      option.textContent = person.display_name;
+      select.appendChild(option);
+    });
+
+    if (!data?.length) {
+      select.innerHTML = '<option value="">No participants added yet</option>';
+    }
+  } catch (error) {
+    console.error("Could not load participant names:", error);
     select.innerHTML = '<option value="">Could not load participants</option>';
     showLoginStatus(`Could not load participants: ${error.message}`, true);
-    console.error("Participant list error:", error);
-    return;
+  } finally {
+    select.disabled = false;
   }
-
-  select.innerHTML = '<option value="">Select your name…</option>';
-  (data || []).forEach(person => {
-    const option = document.createElement("option");
-    option.value = person.participant_id;
-    option.textContent = person.display_name;
-    select.appendChild(option);
-  });
-
-  if (!data?.length) select.innerHTML = '<option value="">No participants added yet</option>';
-}
-
-function showLoggedOutView() {
-  participantAccess = null;
-  participantPhoneForSession = "";
-  eventEl.classList.add("hidden");
-  sessionIndicator.classList.add("hidden");
-  loginScreen.classList.remove("hidden");
-  document.getElementById("participantSelect").value = "";
-  document.getElementById("participantPhone").value = "";
-  showLoginStatus("");
-  showSaveStatus("");
 }
 
 function renderParticipantFields(data) {
@@ -107,11 +112,11 @@ function renderParticipantFields(data) {
   document.getElementById("selfInsuranceDone").checked = Boolean(data.insurance_done);
   document.getElementById("selfPassportDone").checked = Boolean(data.passport_done);
 
-  const tunnelTime = splitMinutes(data.tunnel_minutes_total);
-  document.getElementById("selfTunnelHours").value = tunnelTime.hours || "";
-  document.getElementById("selfTunnelMinutes").value = tunnelTime.minutes || "";
-  document.getElementById("selfSkydiveTunnelHours").value = tunnelTime.hours || "";
-  document.getElementById("selfSkydiveTunnelMinutes").value = tunnelTime.minutes || "";
+  const time = splitMinutes(data.tunnel_minutes_total);
+  document.getElementById("selfTunnelHours").value = time.hours || "";
+  document.getElementById("selfTunnelMinutes").value = time.minutes || "";
+  document.getElementById("selfSkydiveTunnelHours").value = time.hours || "";
+  document.getElementById("selfSkydiveTunnelMinutes").value = time.minutes || "";
 
   document.getElementById("selfJerseyDone").checked = Boolean(data.jersey_done);
   document.getElementById("selfLicenseText").value = data.license_text || "";
@@ -140,18 +145,11 @@ async function participantSignIn() {
   const phone = document.getElementById("participantPhone").value.trim();
   const button = document.getElementById("participantSignIn");
 
-  if (!participantId) {
-    showLoginStatus("Please select your name.", true);
-    return;
-  }
-
-  if (!phone) {
-    showLoginStatus("Please enter your phone number.", true);
-    return;
-  }
+  if (!participantId) return showLoginStatus("Please select your name.", true);
+  if (!phone) return showLoginStatus("Please enter your phone number.", true);
 
   button.disabled = true;
-  const previousText = button.textContent;
+  const oldText = button.textContent;
   button.textContent = "Checking…";
   showLoginStatus("");
 
@@ -162,11 +160,7 @@ async function participantSignIn() {
       p_phone: phone
     });
 
-    if (error) {
-      showLoginStatus(`Could not sign in: ${error.message}`, true);
-      return;
-    }
-
+    if (error) throw error;
     if (!data?.ok) {
       showLoginStatus("The phone number does not match this participant.", true);
       return;
@@ -175,10 +169,11 @@ async function participantSignIn() {
     participantPhoneForSession = phone;
     showLoggedInView(data);
   } catch (error) {
+    console.error("Participant login failed:", error);
     showLoginStatus(`Could not sign in: ${error.message}`, true);
   } finally {
     button.disabled = false;
-    button.textContent = previousText;
+    button.textContent = oldText;
   }
 }
 
@@ -196,106 +191,120 @@ async function saveParticipantProfile() {
     ? combineMinutes(document.getElementById("selfTunnelHours").value, document.getElementById("selfTunnelMinutes").value)
     : combineMinutes(document.getElementById("selfSkydiveTunnelHours").value, document.getElementById("selfSkydiveTunnelMinutes").value);
 
-  const args = {
-    p_event_id: eventId,
-    p_participant_id: participantAccess.participant_id,
-    p_phone: participantPhoneForSession,
-    p_passport_done: document.getElementById("selfPassportDone").checked,
-    p_tunnel_minutes_total: tunnelMinutes,
-    p_jersey_done: type === "skydive" ? document.getElementById("selfJerseyDone").checked : null,
-    p_last_jump_date: type === "skydive" ? (document.getElementById("selfLastJumpDate").value || null) : null,
-    p_number_of_jumps: type === "skydive" && document.getElementById("selfNumberJumps").value !== ""
-      ? Number(document.getElementById("selfNumberJumps").value) : null,
-    p_canopy_size: type === "skydive" && document.getElementById("selfCanopySize").value !== ""
-      ? Number(document.getElementById("selfCanopySize").value) : null,
-    p_water_training_done: type === "skydive" ? document.getElementById("selfWaterTrainingDone").checked : null,
-    p_canopy_course_done: type === "skydive" ? document.getElementById("selfCanopyCourseDone").checked : null
-  };
+  try {
+    const { data, error } = await client.rpc("update_participant_self_fields", {
+      p_event_id: eventId,
+      p_participant_id: participantAccess.participant_id,
+      p_phone: participantPhoneForSession,
+      p_passport_done: document.getElementById("selfPassportDone").checked,
+      p_tunnel_minutes_total: tunnelMinutes,
+      p_jersey_done: type === "skydive" ? document.getElementById("selfJerseyDone").checked : null,
+      p_last_jump_date: type === "skydive" ? (document.getElementById("selfLastJumpDate").value || null) : null,
+      p_number_of_jumps: type === "skydive" && document.getElementById("selfNumberJumps").value !== ""
+        ? Number(document.getElementById("selfNumberJumps").value) : null,
+      p_canopy_size: type === "skydive" && document.getElementById("selfCanopySize").value !== ""
+        ? Number(document.getElementById("selfCanopySize").value) : null,
+      p_water_training_done: type === "skydive" ? document.getElementById("selfWaterTrainingDone").checked : null,
+      p_canopy_course_done: type === "skydive" ? document.getElementById("selfCanopyCourseDone").checked : null
+    });
 
-  const { data, error } = await client.rpc("update_participant_self_fields", args);
+    if (error) throw error;
+    if (!data?.ok) throw new Error("Could not verify participant login.");
 
-  button.disabled = false;
-  button.textContent = oldText;
-
-  if (error) return showSaveStatus(`Could not save: ${error.message}`, true);
-  if (!data?.ok) return showSaveStatus("Could not verify your participant login.", true);
-
-  participantAccess = { ...participantAccess, ...data };
-  renderParticipantFields(participantAccess);
-  showSaveStatus("Saved.");
-  setTimeout(() => showSaveStatus(""), 2500);
+    participantAccess = { ...participantAccess, ...data };
+    renderParticipantFields(participantAccess);
+    showSaveStatus("Saved.");
+    setTimeout(() => showSaveStatus(""), 2200);
+  } catch (error) {
+    console.error("Participant save failed:", error);
+    showSaveStatus(`Could not save: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = oldText;
+  }
 }
 
 function participantSignOut() {
-  showLoggedOutView();
+  participantAccess = null;
+  participantPhoneForSession = "";
+  document.getElementById("participantPhone").value = "";
+  document.getElementById("participantSelect").value = "";
+  showLoginStatus("");
+  showLoginScreen();
 }
 
 async function loadEvent() {
-  if (!eventId) {
-    statusEl.textContent = "Event not found.";
-    statusEl.classList.add("error");
-    return;
+  try {
+    if (!eventId) throw new Error("Event ID is missing.");
+
+    if (!config?.supabaseUrl || !config?.supabaseAnonKey || config.supabaseUrl.includes("PASTE_")) {
+      throw new Error("Supabase configuration is missing.");
+    }
+
+    if (!window.supabase) {
+      throw new Error("Supabase library did not load. Refresh the page.");
+    }
+
+    client = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+    const { data: event, error } = await client
+      .from("events")
+      .select(`
+        id,
+        name,
+        start_date,
+        end_date,
+        event_type,
+        venue,
+        description,
+        status,
+        locations (
+          name,
+          city,
+          country,
+          dropzone,
+          address,
+          venue_type
+        )
+      `)
+      .eq("id", eventId)
+      .eq("status", "published")
+      .single();
+
+    if (error) throw error;
+    if (!event) throw new Error("Event not found.");
+
+    loadedEvent = event;
+
+    setText("loginEventName", event.name, "Participant login");
+    setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
+    setText("eventName", event.name);
+
+    const loc = event.locations || {};
+    const locationLine = [loc.name, loc.city, loc.country]
+      .filter(Boolean)
+      .filter((value, index, all) => all.indexOf(value) === index)
+      .join(" • ");
+
+    setText("eventLocation", locationLine);
+    setText("eventDescription", event.description);
+
+    const venueLines = [event.venue, loc.dropzone, loc.address]
+      .filter(Boolean)
+      .filter((value, index, all) => all.indexOf(value) === index);
+
+    setText("eventVenue", venueLines.join("\n"));
+
+    // Show the login page immediately. Participant names load after it is visible.
+    showLoginScreen();
+    await loadParticipantNames();
+
+  } catch (error) {
+    console.error("Event page failed to load:", error);
+    loginScreen.classList.add("hidden");
+    eventEl.classList.add("hidden");
+    showStatus(`Could not load event: ${error.message}`, true);
   }
-
-  if (!config?.supabaseUrl || config.supabaseUrl.includes("PASTE_")) {
-    statusEl.textContent = "Add your Supabase URL and anon key in supabase-config.js.";
-    statusEl.classList.add("error");
-    return;
-  }
-
-  client = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-
-  const { data: event, error } = await client
-    .from("events")
-    .select(`
-      id,name,start_date,end_date,event_type,venue,additional_location_info,description,status,
-      locations(name,city,country,dropzone,address,venue_type)
-    `)
-    .eq("id", eventId)
-    .eq("status", "published")
-    .single();
-
-  if (error || !event) {
-    statusEl.textContent = "This event is unavailable or has not been published.";
-    statusEl.classList.add("error");
-    return;
-  }
-
-  loadedEvent = event;
-
-  const { data: links } = await client
-    .from("event_links")
-    .select("title,url,category,sort_order")
-    .eq("event_id", eventId)
-    .eq("visible_to_participants", true)
-    .order("sort_order", { ascending: true });
-
-  statusEl.remove();
-  setText("loginEventName", event.name, "Participant login");
-  setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
-  setText("eventName", event.name);
-
-  const loc = event.locations || {};
-  const locationLine = [loc.name, loc.city, loc.country]
-    .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index).join(" • ");
-  setText("eventLocation", locationLine);
-  setText("eventDescription", event.description);
-
-  const venueLines = [event.venue, loc.dropzone, loc.address]
-    .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index);
-  setText("eventVenue", venueLines.join("\n"));
-  setText("eventLocationInfo", event.additional_location_info);
-
-  const linksEl = document.getElementById("eventLinks");
-  linksEl.innerHTML = !links?.length
-    ? "<p>—</p>"
-    : `<div class="link-list">${links.map(link => `
-        <a class="link-item" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">
-          ${escapeHtml(link.title)} ↗
-        </a>`).join("")}</div>`;
-
-  await loadParticipantNames();
-  showLoggedOutView();
 }
 
 document.getElementById("participantSignIn").addEventListener("click", participantSignIn);

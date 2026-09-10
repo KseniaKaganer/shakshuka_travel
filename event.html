@@ -12,7 +12,7 @@
     <div class="brand-small">SHAKSHUKA TRAVEL</div>
 
     <div id="participantSessionIndicator" class="participant-session-indicator hidden">
-      <span class="participant-session-dot" aria-hidden="true"></span>
+      <span class="participant-session-dot"></span>
       <div>
         <strong>Logged in</strong>
         <span id="participantSessionName"></span>
@@ -28,9 +28,7 @@
       <div class="participant-login-card">
         <div class="eyebrow">SHAKSHUKA TRAVEL</div>
         <h1 id="loginEventName">Participant login</h1>
-        <p class="participant-login-subtitle">
-          Select your name and enter your phone number to access this event.
-        </p>
+        <p class="participant-login-subtitle">Select your name and enter your phone number to access this event.</p>
 
         <label class="field">
           <span>Your name</span>
@@ -41,12 +39,7 @@
 
         <label class="field">
           <span>Phone number</span>
-          <input
-            id="participantPhone"
-            type="tel"
-            autocomplete="tel"
-            placeholder="05X-XXXXXXX"
-          />
+          <input id="participantPhone" type="tel" autocomplete="tel" placeholder="05X-XXXXXXX" />
         </label>
 
         <div id="participantLoginStatus" class="status compact-status hidden"></div>
@@ -75,12 +68,6 @@
         <section class="panel">
           <h3>Location</h3>
           <p id="eventVenue"></p>
-          <p id="eventLocationInfo"></p>
-        </section>
-
-        <section class="panel detail-panel-wide">
-          <h3>Useful links</h3>
-          <div id="eventLinks"></div>
         </section>
       </div>
 
@@ -94,7 +81,7 @@
           <div id="participantSaveStatus" class="status compact-status hidden"></div>
         </div>
 
-        <div id="participantTravelFields" class="participant-profile-form">
+        <div class="participant-profile-form">
           <div class="participant-section-title">
             <h4>Travel & experience information</h4>
             <p class="muted small-text">Fields marked “Admin” can only be changed by Ksenia or Ilya.</p>
@@ -105,10 +92,12 @@
               <input id="selfFlightDone" type="checkbox" disabled />
               <span><strong>Flights</strong><small>Admin</small></span>
             </label>
+
             <label class="check-row field-card readonly-field">
               <input id="selfInsuranceDone" type="checkbox" disabled />
               <span><strong>Insurance</strong><small>Admin</small></span>
             </label>
+
             <label class="check-row field-card">
               <input id="selfPassportDone" type="checkbox" />
               <span><strong>Passport</strong><small>You can edit</small></span>
