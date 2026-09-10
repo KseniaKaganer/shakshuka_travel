@@ -44,6 +44,7 @@ const modalCoachTotal = document.getElementById("modalCoachTotal");
 const modalCoachPaid = document.getElementById("modalCoachPaid");
 const modalCoachLeft = document.getElementById("modalCoachLeft");
 const exportParticipantsButton = document.getElementById("exportParticipantsButton");
+const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
 let currentEventId = null;
 let removedMembershipIds = [];
@@ -250,6 +251,16 @@ function updateParticipantModalForEventType() {
   if (participantEventTypeBadge) {
     participantEventTypeBadge.textContent = type === "tunnel" ? "TUNNEL" : "SKYDIVE";
     participantEventTypeBadge.className = `status-pill event-type-${type}`;
+  }
+
+  if (coachTicketsPaymentRow) {
+    coachTicketsPaymentRow.classList.toggle("hidden", type === "tunnel");
+  }
+
+  if (type === "tunnel") {
+    modalCoachPaid.value = "0";
+    modalCoachTotal.value = "0";
+    updatePaymentCalculations();
   }
 }
 
@@ -561,8 +572,10 @@ document.getElementById("acceptParticipantEdit").addEventListener("click", () =>
   editingParticipantRow.querySelector(".participant-canopy-course").value = boolString(modalCanopyCourseDone.checked);
   editingParticipantRow.querySelector(".participant-payment-paid").value = moneyNumber(modalPaymentPaid.value);
   editingParticipantRow.querySelector(".participant-payment-total").value = moneyNumber(modalPaymentTotal.value);
-  editingParticipantRow.querySelector(".participant-coach-paid").value = moneyNumber(modalCoachPaid.value);
-  editingParticipantRow.querySelector(".participant-coach-total").value = moneyNumber(modalCoachTotal.value);
+  editingParticipantRow.querySelector(".participant-coach-paid").value =
+    getEventType() === "tunnel" ? 0 : moneyNumber(modalCoachPaid.value);
+  editingParticipantRow.querySelector(".participant-coach-total").value =
+    getEventType() === "tunnel" ? 0 : moneyNumber(modalCoachTotal.value);
 
   const tunnelMinutesTotal = getEventType() === "tunnel"
     ? combineMinutes(modalTunnelHours.value, modalTunnelMinutes.value)
@@ -786,9 +799,9 @@ function exportParticipantsToSpreadsheet() {
     formatMoney(p.paymentTotal),
     formatMoney(p.paymentPaid),
     formatMoney(calculateLeft(p.paymentTotal, p.paymentPaid)),
-    formatMoney(p.coachTotal),
-    formatMoney(p.coachPaid),
-    formatMoney(calculateLeft(p.coachTotal, p.coachPaid))
+    eventType === "tunnel" ? "" : formatMoney(p.coachTotal),
+    eventType === "tunnel" ? "" : formatMoney(p.coachPaid),
+    eventType === "tunnel" ? "" : formatMoney(calculateLeft(p.coachTotal, p.coachPaid))
   ]);
 
   const csv = "\ufeff" + [headers, ...rows]

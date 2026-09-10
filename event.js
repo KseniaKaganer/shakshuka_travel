@@ -69,6 +69,7 @@ async function loadParticipantNames() {
   if (error) {
     select.innerHTML = '<option value="">Could not load participants</option>';
     showLoginStatus(`Could not load participants: ${error.message}`, true);
+    console.error("Participant list error:", error);
     return;
   }
 
@@ -139,28 +140,46 @@ async function participantSignIn() {
   const phone = document.getElementById("participantPhone").value.trim();
   const button = document.getElementById("participantSignIn");
 
-  if (!participantId) return showLoginStatus("Please select your name.", true);
-  if (!phone) return showLoginStatus("Please enter your phone number.", true);
+  if (!participantId) {
+    showLoginStatus("Please select your name.", true);
+    return;
+  }
+
+  if (!phone) {
+    showLoginStatus("Please enter your phone number.", true);
+    return;
+  }
 
   button.disabled = true;
   const previousText = button.textContent;
   button.textContent = "Checking…";
   showLoginStatus("");
 
-  const { data, error } = await client.rpc("get_participant_event_access", {
-    p_event_id: eventId,
-    p_participant_id: participantId,
-    p_phone: phone
-  });
+  try {
+    const { data, error } = await client.rpc("get_participant_event_access", {
+      p_event_id: eventId,
+      p_participant_id: participantId,
+      p_phone: phone
+    });
 
-  button.disabled = false;
-  button.textContent = previousText;
+    if (error) {
+      showLoginStatus(`Could not sign in: ${error.message}`, true);
+      return;
+    }
 
-  if (error) return showLoginStatus(`Could not sign in: ${error.message}`, true);
-  if (!data?.ok) return showLoginStatus("The phone number does not match this participant.", true);
+    if (!data?.ok) {
+      showLoginStatus("The phone number does not match this participant.", true);
+      return;
+    }
 
-  participantPhoneForSession = phone;
-  showLoggedInView(data);
+    participantPhoneForSession = phone;
+    showLoggedInView(data);
+  } catch (error) {
+    showLoginStatus(`Could not sign in: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = previousText;
+  }
 }
 
 async function saveParticipantProfile() {
@@ -243,7 +262,15 @@ async function loadEvent() {
   }
 
   loadedEvent = event;
-statusEl.remove();
+
+  const { data: links } = await client
+    .from("event_links")
+    .select("title,url,category,sort_order")
+    .eq("event_id", eventId)
+    .eq("visible_to_participants", true)
+    .order("sort_order", { ascending: true });
+
+  statusEl.remove();
   setText("loginEventName", event.name, "Participant login");
   setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
   setText("eventName", event.name);
@@ -257,7 +284,9 @@ statusEl.remove();
   const venueLines = [event.venue, loc.dropzone, loc.address]
     .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index);
   setText("eventVenue", venueLines.join("\n"));
-const linksEl = document.getElementById("eventLinks");
+  setText("eventLocationInfo", event.additional_location_info);
+
+  const linksEl = document.getElementById("eventLinks");
   linksEl.innerHTML = !links?.length
     ? "<p>—</p>"
     : `<div class="link-list">${links.map(link => `
