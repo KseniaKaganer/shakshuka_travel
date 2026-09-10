@@ -829,3 +829,175 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     padding: 22px;
   }
 }
+
+
+/* ---------- Event type + participant profile V3 ---------- */
+
+.event-type-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 8px;
+  padding: 5px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.event-type-option {
+  cursor: pointer;
+}
+
+.event-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.event-type-option span {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-weight: 800;
+  transition: .16s ease;
+}
+
+.event-type-option input:checked + span {
+  background: var(--accent);
+  color: #111;
+}
+
+.checklist-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checklist-permission-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 0 14px;
+}
+
+.permission-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.permission-badge.admin-only {
+  color: var(--accent);
+  border-color: rgba(242, 169, 59, .45);
+}
+
+.permission-badge.participant-edit {
+  color: #8bd49c;
+  border-color: rgba(86, 211, 100, .35);
+}
+
+.participant-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field-card {
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.field-card > span {
+  display: grid;
+  gap: 2px;
+}
+
+.field-card small,
+.field small {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 10px;
+}
+
+.admin-field {
+  border-color: rgba(242, 169, 59, .28);
+}
+
+.participant-field {
+  border-color: rgba(86, 211, 100, .20);
+}
+
+.event-specific-fields {
+  margin-top: 14px;
+}
+
+.time-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.status-pill.event-type-tunnel,
+.status-pill.event-type-skydive {
+  text-transform: uppercase;
+}
+
+.participant-profile-form {
+  display: grid;
+  gap: 18px;
+}
+
+.participant-section-title h4 {
+  margin: 0 0 4px;
+}
+
+.participant-section-title p {
+  margin: 0;
+}
+
+.readonly-field {
+  opacity: .82;
+}
+
+.readonly-field input[readonly],
+.readonly-field input:disabled {
+  cursor: default;
+}
+
+.participant-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+#participantSaveStatus {
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .participant-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .event-type-toggle {
+    width: 100%;
+  }
+
+  .time-input-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

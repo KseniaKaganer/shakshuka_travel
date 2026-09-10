@@ -21,8 +21,22 @@ const modalParticipantEmail = document.getElementById("modalParticipantEmail");
 const modalParticipantNotes = document.getElementById("modalParticipantNotes");
 const modalFlightDone = document.getElementById("modalFlightDone");
 const modalInsuranceDone = document.getElementById("modalInsuranceDone");
-const modalReserveDone = document.getElementById("modalReserveDone");
-const modalLicenseDone = document.getElementById("modalLicenseDone");
+const modalPassportDone = document.getElementById("modalPassportDone");
+const modalJerseyDone = document.getElementById("modalJerseyDone");
+const modalLicenseText = document.getElementById("modalLicenseText");
+const modalReserveDate = document.getElementById("modalReserveDate");
+const modalLastJumpDate = document.getElementById("modalLastJumpDate");
+const modalNumberJumps = document.getElementById("modalNumberJumps");
+const modalTunnelHours = document.getElementById("modalTunnelHours");
+const modalTunnelMinutes = document.getElementById("modalTunnelMinutes");
+const modalSkydiveTunnelHours = document.getElementById("modalSkydiveTunnelHours");
+const modalSkydiveTunnelMinutes = document.getElementById("modalSkydiveTunnelMinutes");
+const modalCanopySize = document.getElementById("modalCanopySize");
+const modalWaterTrainingDone = document.getElementById("modalWaterTrainingDone");
+const modalCanopyCourseDone = document.getElementById("modalCanopyCourseDone");
+const tunnelParticipantFields = document.getElementById("tunnelParticipantFields");
+const skydiveParticipantFields = document.getElementById("skydiveParticipantFields");
+const participantEventTypeBadge = document.getElementById("participantEventTypeBadge");
 
 let currentEventId = null;
 let removedMembershipIds = [];
@@ -210,15 +224,46 @@ async function loadAdminEvents() {
     `;
   }).join("");
 
-  document.querySelectorAll(".edit-event-button").forEach(button => {
-    button.addEventListener("click", () => openEventEditor(button.dataset.eventId));
-  });
+}
+
+function getEventType() {
+  return document.querySelector('input[name="eventType"]:checked')?.value || "skydive";
+}
+
+function setEventType(type = "skydive") {
+  const radio = document.querySelector(`input[name="eventType"][value="${type}"]`);
+  if (radio) radio.checked = true;
+  updateParticipantModalForEventType();
+}
+
+function updateParticipantModalForEventType() {
+  const type = getEventType();
+  if (tunnelParticipantFields) tunnelParticipantFields.classList.toggle("hidden", type !== "tunnel");
+  if (skydiveParticipantFields) skydiveParticipantFields.classList.toggle("hidden", type !== "skydive");
+  if (participantEventTypeBadge) {
+    participantEventTypeBadge.textContent = type === "tunnel" ? "TUNNEL" : "SKYDIVE";
+    participantEventTypeBadge.className = `status-pill event-type-${type}`;
+  }
+}
+
+document.querySelectorAll('input[name="eventType"]').forEach(radio => {
+  radio.addEventListener("change", updateParticipantModalForEventType);
+});
+
+function splitMinutes(totalMinutes) {
+  const total = Math.max(0, Number(totalMinutes) || 0);
+  return { hours: Math.floor(total / 60), minutes: total % 60 };
+}
+
+function combineMinutes(hours, minutes) {
+  return Math.max(0, (Number(hours) || 0) * 60 + (Number(minutes) || 0));
 }
 
 function resetEventForm() {
   currentEventId = null;
   removedMembershipIds = [];
   document.getElementById("eventForm").reset();
+  setEventType("skydive");
   participantsList.innerHTML = "";
   updateParticipantCount();
   renderLocationOptions("");
@@ -243,7 +288,7 @@ async function openEventEditor(eventId = null) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,location_id,venue,additional_location_info,description,meeting_info,status")
+    .select("id,name,start_date,end_date,event_type,location_id,venue,additional_location_info,description,status")
     .eq("id", eventId)
     .single();
 
@@ -259,6 +304,7 @@ async function openEventEditor(eventId = null) {
   document.getElementById("venueInput").value = event.venue || "";
   document.getElementById("locationInfoInput").value = event.additional_location_info || "";
   document.getElementById("descriptionInput").value = event.description || "";
+  setEventType(event.event_type || "skydive");
 
   const { data: memberships, error: membershipError } = await client
     .from("event_participants")
@@ -267,8 +313,16 @@ async function openEventEditor(eventId = null) {
       participant_id,
       flight_done,
       insurance_done,
-      reserve_done,
-      license_done,
+      passport_done,
+      jersey_done,
+      license_text,
+      reserve_date,
+      last_jump_date,
+      number_of_jumps,
+      tunnel_minutes_total,
+      canopy_size,
+      water_training_done,
+      canopy_course_done,
       participants(id,display_name,phone,email,notes)
     `)
     .eq("event_id", eventId)
@@ -291,8 +345,16 @@ async function openEventEditor(eventId = null) {
       notes: participant.notes,
       flightDone: membership.flight_done,
       insuranceDone: membership.insurance_done,
-      reserveDone: membership.reserve_done,
-      licenseDone: membership.license_done
+      passportDone: membership.passport_done,
+      jerseyDone: membership.jersey_done,
+      licenseText: membership.license_text,
+      reserveDate: membership.reserve_date,
+      lastJumpDate: membership.last_jump_date,
+      numberJumps: membership.number_of_jumps,
+      tunnelMinutes: membership.tunnel_minutes_total,
+      canopySize: membership.canopy_size,
+      waterTrainingDone: membership.water_training_done,
+      canopyCourseDone: membership.canopy_course_done
     });
   });
 
@@ -303,6 +365,33 @@ document.getElementById("newEventButton").addEventListener("click", () => openEv
 document.getElementById("backToDashboard").addEventListener("click", async () => {
   showView("dashboard");
   await loadAdminEvents();
+});
+
+// Use one permanent click handler for event cards.
+// This keeps Edit working even after the event list is re-rendered.
+eventsEl.addEventListener("click", async (event) => {
+  const editButton = event.target.closest(".edit-event-button");
+  if (!editButton) return;
+
+  const eventId = editButton.dataset.eventId;
+  if (!eventId) {
+    setStatus(dashboardStatus, "Could not open event: missing event ID.", true);
+    return;
+  }
+
+  editButton.disabled = true;
+  const originalText = editButton.textContent;
+  editButton.textContent = "Opening…";
+
+  try {
+    await openEventEditor(eventId);
+  } catch (error) {
+    showView("dashboard");
+    setStatus(dashboardStatus, `Could not open event: ${error.message}`, true);
+  } finally {
+    editButton.disabled = false;
+    editButton.textContent = originalText;
+  }
 });
 
 function boolString(value) {
@@ -322,10 +411,26 @@ function openParticipantModal(row) {
   modalParticipantPhone.value = row.querySelector(".participant-phone").value;
   modalParticipantEmail.value = row.querySelector(".participant-email").value;
   modalParticipantNotes.value = row.querySelector(".participant-notes").value;
+
   modalFlightDone.checked = row.querySelector(".participant-flight").value === "true";
   modalInsuranceDone.checked = row.querySelector(".participant-insurance").value === "true";
-  modalReserveDone.checked = row.querySelector(".participant-reserve").value === "true";
-  modalLicenseDone.checked = row.querySelector(".participant-license").value === "true";
+  modalPassportDone.checked = row.querySelector(".participant-passport").value === "true";
+  modalJerseyDone.checked = row.querySelector(".participant-jersey").value === "true";
+  modalLicenseText.value = row.querySelector(".participant-license-text").value;
+  modalReserveDate.value = row.querySelector(".participant-reserve-date").value;
+  modalLastJumpDate.value = row.querySelector(".participant-last-jump-date").value;
+  modalNumberJumps.value = row.querySelector(".participant-number-jumps").value;
+  modalCanopySize.value = row.querySelector(".participant-canopy-size").value;
+  modalWaterTrainingDone.checked = row.querySelector(".participant-water-training").value === "true";
+  modalCanopyCourseDone.checked = row.querySelector(".participant-canopy-course").value === "true";
+
+  const time = splitMinutes(row.querySelector(".participant-tunnel-minutes").value);
+  modalTunnelHours.value = time.hours || "";
+  modalTunnelMinutes.value = time.minutes || "";
+  modalSkydiveTunnelHours.value = time.hours || "";
+  modalSkydiveTunnelMinutes.value = time.minutes || "";
+
+  updateParticipantModalForEventType();
   participantModal.classList.remove("hidden");
   setTimeout(() => modalParticipantName.focus(), 0);
 }
@@ -344,8 +449,16 @@ function addParticipantRow(data = {}, openImmediately = false) {
   row.querySelector(".participant-notes").value = data.notes || "";
   row.querySelector(".participant-flight").value = boolString(data.flightDone);
   row.querySelector(".participant-insurance").value = boolString(data.insuranceDone);
-  row.querySelector(".participant-reserve").value = boolString(data.reserveDone);
-  row.querySelector(".participant-license").value = boolString(data.licenseDone);
+  row.querySelector(".participant-passport").value = boolString(data.passportDone);
+  row.querySelector(".participant-jersey").value = boolString(data.jerseyDone);
+  row.querySelector(".participant-license-text").value = data.licenseText || "";
+  row.querySelector(".participant-reserve-date").value = data.reserveDate || "";
+  row.querySelector(".participant-last-jump-date").value = data.lastJumpDate || "";
+  row.querySelector(".participant-number-jumps").value = data.numberJumps ?? "";
+  row.querySelector(".participant-tunnel-minutes").value = data.tunnelMinutes ?? 0;
+  row.querySelector(".participant-canopy-size").value = data.canopySize ?? "";
+  row.querySelector(".participant-water-training").value = boolString(data.waterTrainingDone);
+  row.querySelector(".participant-canopy-course").value = boolString(data.canopyCourseDone);
   row.querySelector(".participant-id").value = data.participantId || "";
   row.querySelector(".membership-id").value = data.membershipId || "";
 
@@ -387,8 +500,20 @@ document.getElementById("acceptParticipantEdit").addEventListener("click", () =>
   editingParticipantRow.querySelector(".participant-notes").value = modalParticipantNotes.value.trim();
   editingParticipantRow.querySelector(".participant-flight").value = boolString(modalFlightDone.checked);
   editingParticipantRow.querySelector(".participant-insurance").value = boolString(modalInsuranceDone.checked);
-  editingParticipantRow.querySelector(".participant-reserve").value = boolString(modalReserveDone.checked);
-  editingParticipantRow.querySelector(".participant-license").value = boolString(modalLicenseDone.checked);
+  editingParticipantRow.querySelector(".participant-passport").value = boolString(modalPassportDone.checked);
+  editingParticipantRow.querySelector(".participant-jersey").value = boolString(modalJerseyDone.checked);
+  editingParticipantRow.querySelector(".participant-license-text").value = modalLicenseText.value.trim();
+  editingParticipantRow.querySelector(".participant-reserve-date").value = modalReserveDate.value;
+  editingParticipantRow.querySelector(".participant-last-jump-date").value = modalLastJumpDate.value;
+  editingParticipantRow.querySelector(".participant-number-jumps").value = modalNumberJumps.value;
+  editingParticipantRow.querySelector(".participant-canopy-size").value = modalCanopySize.value;
+  editingParticipantRow.querySelector(".participant-water-training").value = boolString(modalWaterTrainingDone.checked);
+  editingParticipantRow.querySelector(".participant-canopy-course").value = boolString(modalCanopyCourseDone.checked);
+
+  const tunnelMinutesTotal = getEventType() === "tunnel"
+    ? combineMinutes(modalTunnelHours.value, modalTunnelMinutes.value)
+    : combineMinutes(modalSkydiveTunnelHours.value, modalSkydiveTunnelMinutes.value);
+  editingParticipantRow.querySelector(".participant-tunnel-minutes").value = tunnelMinutesTotal;
   updateParticipantSummary(editingParticipantRow);
   setStatus(editorStatus, "");
   closeParticipantModal();
@@ -516,8 +641,16 @@ function readParticipantRows() {
     notes: row.querySelector(".participant-notes").value.trim(),
     flightDone: row.querySelector(".participant-flight").value === "true",
     insuranceDone: row.querySelector(".participant-insurance").value === "true",
-    reserveDone: row.querySelector(".participant-reserve").value === "true",
-    licenseDone: row.querySelector(".participant-license").value === "true",
+    passportDone: row.querySelector(".participant-passport").value === "true",
+    jerseyDone: row.querySelector(".participant-jersey").value === "true",
+    licenseText: row.querySelector(".participant-license-text").value.trim(),
+    reserveDate: row.querySelector(".participant-reserve-date").value || null,
+    lastJumpDate: row.querySelector(".participant-last-jump-date").value || null,
+    numberJumps: row.querySelector(".participant-number-jumps").value === "" ? null : Number(row.querySelector(".participant-number-jumps").value),
+    tunnelMinutes: Number(row.querySelector(".participant-tunnel-minutes").value) || 0,
+    canopySize: row.querySelector(".participant-canopy-size").value === "" ? null : Number(row.querySelector(".participant-canopy-size").value),
+    waterTrainingDone: row.querySelector(".participant-water-training").value === "true",
+    canopyCourseDone: row.querySelector(".participant-canopy-course").value === "true",
     participantId: row.querySelector(".participant-id").value || null,
     membershipId: row.querySelector(".membership-id").value || null
   }));
@@ -552,11 +685,11 @@ async function saveEvent(status) {
       name,
       start_date: startDate,
       end_date: endDate,
+      event_type: getEventType(),
       location_id: locationSelect.value || null,
       venue: document.getElementById("venueInput").value.trim() || null,
       additional_location_info: document.getElementById("locationInfoInput").value.trim() || null,
       description: document.getElementById("descriptionInput").value.trim() || null,
-      meeting_info: null,
       status
     };
 
@@ -607,8 +740,16 @@ async function saveEvent(status) {
       const membershipPayload = {
         flight_done: participant.flightDone,
         insurance_done: participant.insuranceDone,
-        reserve_done: participant.reserveDone,
-        license_done: participant.licenseDone
+        passport_done: participant.passportDone,
+        jersey_done: participant.jerseyDone,
+        license_text: participant.licenseText || null,
+        reserve_date: participant.reserveDate,
+        last_jump_date: participant.lastJumpDate,
+        number_of_jumps: participant.numberJumps,
+        tunnel_minutes_total: participant.tunnelMinutes,
+        canopy_size: participant.canopySize,
+        water_training_done: participant.waterTrainingDone,
+        canopy_course_done: participant.canopyCourseDone
       };
 
       if (participant.membershipId) {

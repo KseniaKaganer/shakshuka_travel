@@ -9,6 +9,8 @@ const sessionIndicator = document.getElementById("participantSessionIndicator");
 
 let client = null;
 let loadedEvent = null;
+let participantAccess = null;
+let participantPhoneForSession = "";
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -27,34 +29,33 @@ function setText(id, value, fallback = "—") {
 
 function escapeHtml(value = "") {
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
 
 function showLoginStatus(message = "", isError = false) {
   const el = document.getElementById("participantLoginStatus");
-
-  if (!message) {
-    el.textContent = "";
-    el.classList.add("hidden");
-    el.classList.remove("error");
-    return;
-  }
-
   el.textContent = message;
-  el.classList.remove("hidden");
+  el.classList.toggle("hidden", !message);
   el.classList.toggle("error", isError);
 }
 
-function setChecklistState(id, done) {
-  const el = document.getElementById(id);
-  if (!el) return;
+function showSaveStatus(message = "", isError = false) {
+  const el = document.getElementById("participantSaveStatus");
+  el.textContent = message;
+  el.classList.toggle("hidden", !message);
+  el.classList.toggle("error", isError);
+  el.classList.toggle("success", Boolean(message) && !isError);
+}
 
-  el.textContent = done ? "✓" : "○";
-  el.classList.toggle("done", Boolean(done));
+function splitMinutes(totalMinutes) {
+  const total = Math.max(0, Number(totalMinutes) || 0);
+  return { hours: Math.floor(total / 60), minutes: total % 60 };
+}
+
+function combineMinutes(hours, minutes) {
+  return Math.max(0, (Number(hours) || 0) * 60 + (Number(minutes) || 0));
 }
 
 async function loadParticipantNames() {
@@ -62,10 +63,7 @@ async function loadParticipantNames() {
   select.disabled = true;
   select.innerHTML = '<option value="">Loading participants…</option>';
 
-  const { data, error } = await client.rpc("get_event_participant_names", {
-    p_event_id: eventId
-  });
-
+  const { data, error } = await client.rpc("get_event_participant_names", { p_event_id: eventId });
   select.disabled = false;
 
   if (error) {
@@ -75,7 +73,6 @@ async function loadParticipantNames() {
   }
 
   select.innerHTML = '<option value="">Select your name…</option>';
-
   (data || []).forEach(person => {
     const option = document.createElement("option");
     option.value = person.participant_id;
@@ -83,34 +80,57 @@ async function loadParticipantNames() {
     select.appendChild(option);
   });
 
-  if (!data?.length) {
-    select.innerHTML = '<option value="">No participants added yet</option>';
-  }
+  if (!data?.length) select.innerHTML = '<option value="">No participants added yet</option>';
 }
 
 function showLoggedOutView() {
+  participantAccess = null;
+  participantPhoneForSession = "";
   eventEl.classList.add("hidden");
   sessionIndicator.classList.add("hidden");
   loginScreen.classList.remove("hidden");
-
   document.getElementById("participantSelect").value = "";
   document.getElementById("participantPhone").value = "";
   showLoginStatus("");
+  showSaveStatus("");
 }
 
-function showLoggedInView(accessData) {
+function renderParticipantFields(data) {
+  const type = data.event_type || loadedEvent?.event_type || "skydive";
+  setText("participantEventTypeLabel", type === "tunnel" ? "Tunnel event" : "Skydive event", "");
+
+  document.getElementById("participantTunnelFields").classList.toggle("hidden", type !== "tunnel");
+  document.getElementById("participantSkydiveFields").classList.toggle("hidden", type !== "skydive");
+
+  document.getElementById("selfFlightDone").checked = Boolean(data.flight_done);
+  document.getElementById("selfInsuranceDone").checked = Boolean(data.insurance_done);
+  document.getElementById("selfPassportDone").checked = Boolean(data.passport_done);
+
+  const tunnelTime = splitMinutes(data.tunnel_minutes_total);
+  document.getElementById("selfTunnelHours").value = tunnelTime.hours || "";
+  document.getElementById("selfTunnelMinutes").value = tunnelTime.minutes || "";
+  document.getElementById("selfSkydiveTunnelHours").value = tunnelTime.hours || "";
+  document.getElementById("selfSkydiveTunnelMinutes").value = tunnelTime.minutes || "";
+
+  document.getElementById("selfJerseyDone").checked = Boolean(data.jersey_done);
+  document.getElementById("selfLicenseText").value = data.license_text || "";
+  document.getElementById("selfReserveDate").value = data.reserve_date ? formatDate(data.reserve_date) : "";
+  document.getElementById("selfLastJumpDate").value = data.last_jump_date || "";
+  document.getElementById("selfNumberJumps").value = data.number_of_jumps ?? "";
+  document.getElementById("selfCanopySize").value = data.canopy_size ?? "";
+  document.getElementById("selfWaterTrainingDone").checked = Boolean(data.water_training_done);
+  document.getElementById("selfCanopyCourseDone").checked = Boolean(data.canopy_course_done);
+}
+
+function showLoggedInView(data) {
+  participantAccess = data;
   loginScreen.classList.add("hidden");
   eventEl.classList.remove("hidden");
   sessionIndicator.classList.remove("hidden");
 
-  setText("participantSessionName", accessData.display_name, "");
-  setText("participantWelcomeName", `Welcome, ${accessData.display_name}`, "Welcome");
-
-  setChecklistState("checkFlight", accessData.flight_done);
-  setChecklistState("checkInsurance", accessData.insurance_done);
-  setChecklistState("checkReserve", accessData.reserve_done);
-  setChecklistState("checkLicense", accessData.license_done);
-
+  setText("participantSessionName", data.display_name, "");
+  setText("participantWelcomeName", `Welcome, ${data.display_name}`, "Welcome");
+  renderParticipantFields(data);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -119,15 +139,8 @@ async function participantSignIn() {
   const phone = document.getElementById("participantPhone").value.trim();
   const button = document.getElementById("participantSignIn");
 
-  if (!participantId) {
-    showLoginStatus("Please select your name.", true);
-    return;
-  }
-
-  if (!phone) {
-    showLoginStatus("Please enter your phone number.", true);
-    return;
-  }
+  if (!participantId) return showLoginStatus("Please select your name.", true);
+  if (!phone) return showLoginStatus("Please enter your phone number.", true);
 
   button.disabled = true;
   const previousText = button.textContent;
@@ -143,17 +156,55 @@ async function participantSignIn() {
   button.disabled = false;
   button.textContent = previousText;
 
-  if (error) {
-    showLoginStatus(`Could not sign in: ${error.message}`, true);
-    return;
-  }
+  if (error) return showLoginStatus(`Could not sign in: ${error.message}`, true);
+  if (!data?.ok) return showLoginStatus("The phone number does not match this participant.", true);
 
-  if (!data?.ok) {
-    showLoginStatus("The phone number does not match this participant.", true);
-    return;
-  }
-
+  participantPhoneForSession = phone;
   showLoggedInView(data);
+}
+
+async function saveParticipantProfile() {
+  if (!participantAccess?.participant_id || !participantPhoneForSession) return;
+
+  const type = participantAccess.event_type || loadedEvent?.event_type || "skydive";
+  const button = document.getElementById("saveParticipantProfile");
+  button.disabled = true;
+  const oldText = button.textContent;
+  button.textContent = "Saving…";
+  showSaveStatus("");
+
+  const tunnelMinutes = type === "tunnel"
+    ? combineMinutes(document.getElementById("selfTunnelHours").value, document.getElementById("selfTunnelMinutes").value)
+    : combineMinutes(document.getElementById("selfSkydiveTunnelHours").value, document.getElementById("selfSkydiveTunnelMinutes").value);
+
+  const args = {
+    p_event_id: eventId,
+    p_participant_id: participantAccess.participant_id,
+    p_phone: participantPhoneForSession,
+    p_passport_done: document.getElementById("selfPassportDone").checked,
+    p_tunnel_minutes_total: tunnelMinutes,
+    p_jersey_done: type === "skydive" ? document.getElementById("selfJerseyDone").checked : null,
+    p_last_jump_date: type === "skydive" ? (document.getElementById("selfLastJumpDate").value || null) : null,
+    p_number_of_jumps: type === "skydive" && document.getElementById("selfNumberJumps").value !== ""
+      ? Number(document.getElementById("selfNumberJumps").value) : null,
+    p_canopy_size: type === "skydive" && document.getElementById("selfCanopySize").value !== ""
+      ? Number(document.getElementById("selfCanopySize").value) : null,
+    p_water_training_done: type === "skydive" ? document.getElementById("selfWaterTrainingDone").checked : null,
+    p_canopy_course_done: type === "skydive" ? document.getElementById("selfCanopyCourseDone").checked : null
+  };
+
+  const { data, error } = await client.rpc("update_participant_self_fields", args);
+
+  button.disabled = false;
+  button.textContent = oldText;
+
+  if (error) return showSaveStatus(`Could not save: ${error.message}`, true);
+  if (!data?.ok) return showSaveStatus("Could not verify your participant login.", true);
+
+  participantAccess = { ...participantAccess, ...data };
+  renderParticipantFields(participantAccess);
+  showSaveStatus("Saved.");
+  setTimeout(() => showSaveStatus(""), 2500);
 }
 
 function participantSignOut() {
@@ -178,22 +229,8 @@ async function loadEvent() {
   const { data: event, error } = await client
     .from("events")
     .select(`
-      id,
-      name,
-      start_date,
-      end_date,
-      venue,
-      additional_location_info,
-      description,
-      status,
-      locations (
-        name,
-        city,
-        country,
-        dropzone,
-        address,
-        venue_type
-      )
+      id,name,start_date,end_date,event_type,venue,additional_location_info,description,status,
+      locations(name,city,country,dropzone,address,venue_type)
     `)
     .eq("id", eventId)
     .eq("status", "published")
@@ -215,40 +252,28 @@ async function loadEvent() {
     .order("sort_order", { ascending: true });
 
   statusEl.remove();
-
   setText("loginEventName", event.name, "Participant login");
   setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
   setText("eventName", event.name);
 
   const loc = event.locations || {};
   const locationLine = [loc.name, loc.city, loc.country]
-    .filter(Boolean)
-    .filter((value, index, all) => all.indexOf(value) === index)
-    .join(" • ");
-
+    .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index).join(" • ");
   setText("eventLocation", locationLine);
   setText("eventDescription", event.description);
 
   const venueLines = [event.venue, loc.dropzone, loc.address]
-    .filter(Boolean)
-    .filter((value, index, all) => all.indexOf(value) === index);
-
+    .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index);
   setText("eventVenue", venueLines.join("\n"));
   setText("eventLocationInfo", event.additional_location_info);
 
   const linksEl = document.getElementById("eventLinks");
-
-  if (!links?.length) {
-    linksEl.innerHTML = "<p>—</p>";
-  } else {
-    linksEl.innerHTML = `<div class="link-list">${
-      links.map(link => `
+  linksEl.innerHTML = !links?.length
+    ? "<p>—</p>"
+    : `<div class="link-list">${links.map(link => `
         <a class="link-item" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">
           ${escapeHtml(link.title)} ↗
-        </a>
-      `).join("")
-    }</div>`;
-  }
+        </a>`).join("")}</div>`;
 
   await loadParticipantNames();
   showLoggedOutView();
@@ -256,7 +281,7 @@ async function loadEvent() {
 
 document.getElementById("participantSignIn").addEventListener("click", participantSignIn);
 document.getElementById("participantSignOut").addEventListener("click", participantSignOut);
-
+document.getElementById("saveParticipantProfile").addEventListener("click", saveParticipantProfile);
 document.getElementById("participantPhone").addEventListener("keydown", event => {
   if (event.key === "Enter") participantSignIn();
 });

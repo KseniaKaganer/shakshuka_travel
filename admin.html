@@ -83,6 +83,20 @@
             <input id="eventNameInput" type="text" placeholder="SHAKSHUKA Spain" required />
           </label>
 
+          <div class="field">
+            <span>Event type *</span>
+            <div class="event-type-toggle" role="group" aria-label="Event type">
+              <label class="event-type-option">
+                <input id="eventTypeTunnel" type="radio" name="eventType" value="tunnel" />
+                <span>🌀 Tunnel</span>
+              </label>
+              <label class="event-type-option">
+                <input id="eventTypeSkydive" type="radio" name="eventType" value="skydive" checked />
+                <span>🪂 Skydive</span>
+              </label>
+            </div>
+          </div>
+
           <div class="two-columns">
             <label class="field">
               <span>Start date *</span>
@@ -146,11 +160,6 @@
             <span>Event description</span>
             <textarea id="descriptionInput" rows="6" placeholder="What the event is about, schedule, what is included…"></textarea>
           </label>
-
-          <label class="field">
-            <span>Meeting information</span>
-            <textarea id="meetingInfoInput" rows="5" placeholder="Arrival time, meeting location, first briefing…"></textarea>
-          </label>
         </section>
 
         <aside class="panel form-panel editor-side">
@@ -189,8 +198,16 @@
       <input class="participant-notes" type="hidden" />
       <input class="participant-flight" type="hidden" value="false" />
       <input class="participant-insurance" type="hidden" value="false" />
-      <input class="participant-reserve" type="hidden" value="false" />
-      <input class="participant-license" type="hidden" value="false" />
+      <input class="participant-passport" type="hidden" value="false" />
+      <input class="participant-jersey" type="hidden" value="false" />
+      <input class="participant-license-text" type="hidden" />
+      <input class="participant-reserve-date" type="hidden" />
+      <input class="participant-last-jump-date" type="hidden" />
+      <input class="participant-number-jumps" type="hidden" />
+      <input class="participant-tunnel-minutes" type="hidden" value="0" />
+      <input class="participant-canopy-size" type="hidden" />
+      <input class="participant-water-training" type="hidden" value="false" />
+      <input class="participant-canopy-course" type="hidden" value="false" />
       <input class="participant-id" type="hidden" />
       <input class="membership-id" type="hidden" />
     </div>
@@ -214,14 +231,88 @@
       <label class="field"><span>Notes</span><textarea id="modalParticipantNotes" rows="3" placeholder="Anything useful about this participant…"></textarea></label>
 
       <div class="checklist-box">
-        <div>
-          <h3>Before travel checklist</h3>
-          <p class="muted small-text">You can mark items as they are completed. We can add more items later.</p>
+        <div class="checklist-heading">
+          <div>
+            <h3>Participant travel information</h3>
+            <p class="muted small-text">Fields change automatically based on Tunnel or Skydive.</p>
+          </div>
+          <span id="participantEventTypeBadge" class="status-pill"></span>
         </div>
-        <label class="check-row"><input id="modalFlightDone" type="checkbox" /><span>Flight</span></label>
-        <label class="check-row"><input id="modalInsuranceDone" type="checkbox" /><span>Insurance</span></label>
-        <label class="check-row"><input id="modalReserveDone" type="checkbox" /><span>Reserve</span></label>
-        <label class="check-row"><input id="modalLicenseDone" type="checkbox" /><span>License</span></label>
+
+        <div class="checklist-permission-note">
+          <span class="permission-badge admin-only">ADMIN</span> Only Ksenia/Ilya can change these fields.
+          <span class="permission-badge participant-edit">PARTICIPANT</span> Participant can update these from their event page.
+        </div>
+
+        <div class="participant-fields-grid">
+          <label class="check-row field-card admin-field">
+            <input id="modalFlightDone" type="checkbox" />
+            <span><strong>Flights</strong><small>Admin only</small></span>
+          </label>
+          <label class="check-row field-card admin-field">
+            <input id="modalInsuranceDone" type="checkbox" />
+            <span><strong>Insurance</strong><small>Admin only</small></span>
+          </label>
+          <label class="check-row field-card participant-field">
+            <input id="modalPassportDone" type="checkbox" />
+            <span><strong>Passport</strong><small>Participant editable</small></span>
+          </label>
+        </div>
+
+        <div id="tunnelParticipantFields" class="event-specific-fields">
+          <label class="field participant-field">
+            <span>Total tunnel time <small>Participant editable</small></span>
+            <div class="time-input-row">
+              <input id="modalTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
+              <input id="modalTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
+            </div>
+          </label>
+        </div>
+
+        <div id="skydiveParticipantFields" class="event-specific-fields">
+          <div class="participant-fields-grid">
+            <label class="check-row field-card participant-field">
+              <input id="modalJerseyDone" type="checkbox" />
+              <span><strong>Jersey</strong><small>Participant editable</small></span>
+            </label>
+            <label class="field admin-field">
+              <span>License <small>Admin only</small></span>
+              <input id="modalLicenseText" type="text" maxlength="12" placeholder="e.g. A, B, C, D" />
+            </label>
+            <label class="field admin-field">
+              <span>Reserve date <small>Admin only</small></span>
+              <input id="modalReserveDate" type="date" />
+            </label>
+            <label class="field participant-field">
+              <span>Last jump <small>Participant editable</small></span>
+              <input id="modalLastJumpDate" type="date" />
+            </label>
+            <label class="field participant-field">
+              <span>Number of jumps <small>Participant editable</small></span>
+              <input id="modalNumberJumps" type="number" min="0" step="1" />
+            </label>
+            <label class="field participant-field">
+              <span>Canopy size <small>Participant editable</small></span>
+              <input id="modalCanopySize" type="number" min="1" step="1" placeholder="sq ft" />
+            </label>
+            <label class="check-row field-card participant-field">
+              <input id="modalWaterTrainingDone" type="checkbox" />
+              <span><strong>Water training</strong><small>Participant editable</small></span>
+            </label>
+            <label class="check-row field-card participant-field">
+              <input id="modalCanopyCourseDone" type="checkbox" />
+              <span><strong>Canopy course</strong><small>Participant editable</small></span>
+            </label>
+          </div>
+
+          <label class="field participant-field">
+            <span>Total tunnel time <small>Participant editable</small></span>
+            <div class="time-input-row">
+              <input id="modalSkydiveTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
+              <input id="modalSkydiveTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
+            </div>
+          </label>
+        </div>
       </div>
 
       <div class="modal-actions">
