@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SHAKSHUKA TRAVEL</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__inner">
+      <div class="eyebrow">SEQUENCE • BODY FLIGHT ACADEMY</div>
+      <h1>SHAKSHUKA TRAVEL</h1>
+      <p>Choose your travel event</p>
+      <a class="secondary-link" href="https://infoseqlife.wixsite.com/sequence/our-events" target="_blank" rel="noopener">
+        Our other events ↗
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="section-head">
+      <div>
+        <h2>Travel Events</h2>
+        <p>Events are ordered by starting date.</p>
+      </div>
+    </section>
+
+    <div id="status" class="status">Loading events…</div>
+    <div id="events" class="event-grid" aria-live="polite"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

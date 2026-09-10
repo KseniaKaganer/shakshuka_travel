@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SHAKSHUKA TRAVEL • Event</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="index.html">← All events</a>
+    <div class="brand-small">SHAKSHUKA TRAVEL</div>
+  </header>
+
+  <main class="page">
+    <div id="status" class="status">Loading event…</div>
+
+    <article id="event" class="event-detail hidden">
+      <div class="event-detail__top">
+        <div>
+          <div id="eventDates" class="date-large"></div>
+          <h1 id="eventName"></h1>
+          <div id="eventLocation" class="location"></div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <section class="panel">
+          <h3>Event information</h3>
+          <p id="eventDescription"></p>
+        </section>
+
+        <section class="panel">
+          <h3>Location</h3>
+          <p id="eventVenue"></p>
+          <p id="eventLocationInfo"></p>
+        </section>
+
+        <section class="panel">
+          <h3>Meeting information</h3>
+          <p id="eventMeetingInfo"></p>
+        </section>
+
+        <section class="panel">
+          <h3>Useful links</h3>
+          <div id="eventLinks"></div>
+        </section>
+      </div>
+
+      <section class="participant-entry panel accent-panel">
+        <h3>Participant area</h3>
+        <p>Participant name + phone login will be added in the next step.</p>
+        <button class="primary-button" disabled>Enter my event</button>
+      </section>
+    </article>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="event.js"></script>
+</body>
+</html>
