@@ -302,8 +302,7 @@ async function openEventEditor(eventId = null) {
   document.getElementById("endDateInput").value = event.end_date || "";
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
-  document.getElementById("locationInfoInput").value = event.additional_location_info || "";
-  document.getElementById("descriptionInput").value = event.description || "";
+document.getElementById("descriptionInput").value = event.description || "";
   setEventType(event.event_type || "skydive");
 
   const { data: memberships, error: membershipError } = await client
@@ -688,8 +687,7 @@ async function saveEvent(status) {
       event_type: getEventType(),
       location_id: locationSelect.value || null,
       venue: document.getElementById("venueInput").value.trim() || null,
-      additional_location_info: document.getElementById("locationInfoInput").value.trim() || null,
-      description: document.getElementById("descriptionInput").value.trim() || null,
+description: document.getElementById("descriptionInput").value.trim() || null,
       status
     };
 

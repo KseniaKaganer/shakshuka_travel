@@ -243,15 +243,7 @@ async function loadEvent() {
   }
 
   loadedEvent = event;
-
-  const { data: links } = await client
-    .from("event_links")
-    .select("title,url,category,sort_order")
-    .eq("event_id", eventId)
-    .eq("visible_to_participants", true)
-    .order("sort_order", { ascending: true });
-
-  statusEl.remove();
+statusEl.remove();
   setText("loginEventName", event.name, "Participant login");
   setText("eventDates", formatDateRange(event.start_date, event.end_date), "");
   setText("eventName", event.name);
@@ -265,9 +257,7 @@ async function loadEvent() {
   const venueLines = [event.venue, loc.dropzone, loc.address]
     .filter(Boolean).filter((value, index, all) => all.indexOf(value) === index);
   setText("eventVenue", venueLines.join("\n"));
-  setText("eventLocationInfo", event.additional_location_info);
-
-  const linksEl = document.getElementById("eventLinks");
+const linksEl = document.getElementById("eventLinks");
   linksEl.innerHTML = !links?.length
     ? "<p>—</p>"
     : `<div class="link-list">${links.map(link => `
