@@ -44,6 +44,9 @@ const modalCoachTotal = document.getElementById("modalCoachTotal");
 const modalCoachPaid = document.getElementById("modalCoachPaid");
 const modalCoachLeft = document.getElementById("modalCoachLeft");
 const exportParticipantsButton = document.getElementById("exportParticipantsButton");
+const adminLogbookList = document.getElementById("adminLogbookList");
+const addLogbookEntryButton = document.getElementById("addLogbookEntryButton");
+const logbookEntryTemplate = document.getElementById("logbookEntryTemplate");
 const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
 let currentEventId = null;
@@ -456,7 +459,84 @@ function updateParticipantSummary(row) {
   row.querySelector(".participant-summary-phone").textContent = phone;
 }
 
-function openParticipantModal(row) {
+function getRowLogbook(row) {
+  try {
+    return JSON.parse(row.querySelector(".participant-logbook-json").value || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function setRowLogbook(row, entries) {
+  row.querySelector(".participant-logbook-json").value = JSON.stringify(entries || []);
+}
+
+function readAdminLogbookEditor() {
+  return [...adminLogbookList.querySelectorAll(".admin-logbook-entry")]
+    .map(entry => ({
+      jump_date: entry.querySelector(".logbook-date").value || null,
+      jump_number: entry.querySelector(".logbook-number").value === ""
+        ? null
+        : Number(entry.querySelector(".logbook-number").value),
+      jump_type: entry.querySelector(".logbook-type").value.trim() || null,
+      notes: entry.querySelector(".logbook-notes").value.trim() || null
+    }))
+    .filter(entry => entry.jump_date || entry.jump_number != null || entry.jump_type || entry.notes);
+}
+
+function addAdminLogbookEntry(data = {}) {
+  const fragment = logbookEntryTemplate.content.cloneNode(true);
+  const entry = fragment.querySelector(".admin-logbook-entry");
+
+  entry.querySelector(".logbook-date").value = data.jump_date || "";
+  entry.querySelector(".logbook-number").value = data.jump_number ?? "";
+  entry.querySelector(".logbook-type").value = data.jump_type || "";
+  entry.querySelector(".logbook-notes").value = data.notes || "";
+
+  entry.querySelector(".remove-logbook-entry").addEventListener("click", () => entry.remove());
+  adminLogbookList.appendChild(fragment);
+}
+
+function renderAdminLogbook(entries = []) {
+  adminLogbookList.innerHTML = "";
+  if (!entries.length) {
+    adminLogbookList.innerHTML = '<p class="muted small-text admin-logbook-empty">No jumps entered yet.</p>';
+    return;
+  }
+  entries.forEach(addAdminLogbookEntry);
+}
+
+addLogbookEntryButton?.addEventListener("click", () => {
+  adminLogbookList.querySelector(".admin-logbook-empty")?.remove();
+  addAdminLogbookEntry();
+});
+
+async function loadMembershipLogbook(row) {
+  const membershipId = row.querySelector(".membership-id").value;
+  if (!membershipId) return getRowLogbook(row);
+
+  const existing = getRowLogbook(row);
+  if (row.dataset.logbookLoaded === "true") return existing;
+
+  const { data, error } = await client
+    .from("event_participant_logbook")
+    .select("id,jump_date,jump_number,jump_type,notes")
+    .eq("event_participant_id", membershipId)
+    .order("jump_date", { ascending: true })
+    .order("jump_number", { ascending: true });
+
+  if (error) {
+    setStatus(editorStatus, `Could not load logbook: ${error.message}`, true);
+    return existing;
+  }
+
+  const entries = data || [];
+  setRowLogbook(row, entries);
+  row.dataset.logbookLoaded = "true";
+  return entries;
+}
+
+async function openParticipantModal(row) {
   editingParticipantRow = row;
   modalParticipantName.value = row.querySelector(".participant-name").value;
   modalParticipantPhone.value = row.querySelector(".participant-phone").value;
@@ -486,6 +566,9 @@ function openParticipantModal(row) {
   modalTunnelMinutes.value = time.minutes || "";
   modalSkydiveTunnelHours.value = time.hours || "";
   modalSkydiveTunnelMinutes.value = time.minutes || "";
+
+  const logbookEntries = await loadMembershipLogbook(row);
+  renderAdminLogbook(logbookEntries);
 
   updateParticipantModalForEventType();
   participantModal.classList.remove("hidden");
@@ -520,6 +603,8 @@ function addParticipantRow(data = {}, openImmediately = false) {
   row.querySelector(".participant-payment-total").value = moneyNumber(data.paymentTotal);
   row.querySelector(".participant-coach-paid").value = moneyNumber(data.coachPaid);
   row.querySelector(".participant-coach-total").value = moneyNumber(data.coachTotal);
+  row.querySelector(".participant-logbook-json").value = JSON.stringify(data.logbook || []);
+  if (data.logbook) row.dataset.logbookLoaded = "true";
   row.querySelector(".participant-id").value = data.participantId || "";
   row.querySelector(".membership-id").value = data.membershipId || "";
 
@@ -576,6 +661,8 @@ document.getElementById("acceptParticipantEdit").addEventListener("click", () =>
     getEventType() === "tunnel" ? 0 : moneyNumber(modalCoachPaid.value);
   editingParticipantRow.querySelector(".participant-coach-total").value =
     getEventType() === "tunnel" ? 0 : moneyNumber(modalCoachTotal.value);
+  setRowLogbook(editingParticipantRow, readAdminLogbookEditor());
+  editingParticipantRow.dataset.logbookLoaded = "true";
 
   const tunnelMinutesTotal = getEventType() === "tunnel"
     ? combineMinutes(modalTunnelHours.value, modalTunnelMinutes.value)
@@ -722,6 +809,7 @@ function readParticipantRows() {
     paymentTotal: moneyNumber(row.querySelector(".participant-payment-total").value),
     coachPaid: moneyNumber(row.querySelector(".participant-coach-paid").value),
     coachTotal: moneyNumber(row.querySelector(".participant-coach-total").value),
+    logbook: getRowLogbook(row),
     participantId: row.querySelector(".participant-id").value || null,
     membershipId: row.querySelector(".membership-id").value || null
   }));
@@ -924,22 +1012,48 @@ description: document.getElementById("descriptionInput").value.trim() || null,
         coach_tickets_total: participant.coachTotal
       };
 
-      if (participant.membershipId) {
+      let membershipId = participant.membershipId;
+
+      if (membershipId) {
         const { error } = await client
           .from("event_participants")
           .update(membershipPayload)
-          .eq("id", participant.membershipId);
+          .eq("id", membershipId);
         if (error) throw error;
       } else {
-        const { error } = await client
+        const { data: membership, error } = await client
           .from("event_participants")
           .insert({
             event_id: currentEventId,
             participant_id: participantId,
             participant_status: "active",
             ...membershipPayload
-          });
+          })
+          .select("id")
+          .single();
         if (error) throw error;
+        membershipId = membership.id;
+      }
+
+      const { error: deleteLogbookError } = await client
+        .from("event_participant_logbook")
+        .delete()
+        .eq("event_participant_id", membershipId);
+      if (deleteLogbookError) throw deleteLogbookError;
+
+      if (participant.logbook?.length) {
+        const logRows = participant.logbook.map(entry => ({
+          event_participant_id: membershipId,
+          jump_date: entry.jump_date || null,
+          jump_number: entry.jump_number ?? null,
+          jump_type: entry.jump_type || null,
+          notes: entry.notes || null
+        }));
+
+        const { error: insertLogbookError } = await client
+          .from("event_participant_logbook")
+          .insert(logRows);
+        if (insertLogbookError) throw insertLogbookError;
       }
     }
 

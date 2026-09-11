@@ -1206,3 +1206,196 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+/* ---------- V7 participant info + logbook ---------- */
+
+.event-participant-welcome {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 7px 0 5px;
+  font-size: 15px;
+}
+
+.event-participant-welcome span {
+  color: var(--muted);
+}
+
+.event-participant-welcome strong {
+  color: var(--accent);
+}
+
+.missing-admin-info {
+  margin-top: 15px;
+  padding: 12px 14px;
+  border: 1px solid rgba(248, 81, 73, .55);
+  border-radius: 12px;
+  background: rgba(248, 81, 73, .08);
+  color: #ff8d86;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.missing-required-field {
+  border-color: rgba(248, 81, 73, .75) !important;
+  box-shadow: 0 0 0 1px rgba(248, 81, 73, .15);
+}
+
+.participant-collapsible {
+  margin-top: 18px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.participant-collapsible > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  user-select: none;
+}
+
+.participant-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.participant-collapsible > summary h3 {
+  margin: 0 0 3px;
+}
+
+.participant-collapsible > summary p {
+  margin: 0;
+}
+
+.collapse-chevron {
+  font-size: 20px;
+  color: var(--muted);
+  transition: transform .18s ease;
+}
+
+.participant-collapsible[open] .collapse-chevron {
+  transform: rotate(180deg);
+}
+
+.participant-collapse-content {
+  border-top: 1px solid var(--line);
+  padding: 18px 20px 20px;
+}
+
+.participant-admin-note {
+  margin-top: 0;
+}
+
+.participant-logbook-list {
+  display: grid;
+  gap: 10px;
+}
+
+.logbook-entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  align-items: center;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.logbook-entry-main {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.logbook-entry-main span,
+.logbook-entry-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.logbook-entry p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.admin-logbook-box {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.015);
+}
+
+.admin-logbook-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.admin-logbook-head h3,
+.admin-logbook-head p {
+  margin: 0;
+}
+
+.admin-logbook-list {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-logbook-entry {
+  display: grid;
+  grid-template-columns: 140px 100px 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.admin-logbook-entry .field {
+  margin: 0;
+}
+
+.admin-logbook-empty {
+  margin: 0;
+}
+
+@media (max-width: 850px) {
+  .admin-logbook-entry {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-logbook-entry .logbook-notes-field {
+    grid-column: 1 / -1;
+  }
+
+  .admin-logbook-entry .remove-logbook-entry {
+    align-self: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-logbook-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .logbook-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .logbook-entry-date {
+    justify-self: start;
+  }
+}

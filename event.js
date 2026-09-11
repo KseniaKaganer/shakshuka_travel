@@ -90,6 +90,98 @@ function renderPaymentStatus(data) {
   }
 }
 
+function renderMissingAdminInfo(data) {
+  const type = data.event_type || loadedEvent?.event_type || "skydive";
+  const missing = [];
+
+  if (!data.flight_done) missing.push("Flights");
+  if (!data.insurance_done) missing.push("Insurance");
+
+  if (type === "skydive") {
+    if (!String(data.license_text || "").trim()) missing.push("License");
+    if (!data.reserve_date) missing.push("Reserve date");
+  }
+
+  const box = document.getElementById("missingAdminInfo");
+  const text = document.getElementById("missingAdminInfoText");
+
+  ["selfFlightCard", "selfInsuranceCard", "selfLicenseCard", "selfReserveCard"].forEach(id => {
+    document.getElementById(id)?.classList.remove("missing-required-field");
+  });
+
+  if (!data.flight_done) document.getElementById("selfFlightCard")?.classList.add("missing-required-field");
+  if (!data.insurance_done) document.getElementById("selfInsuranceCard")?.classList.add("missing-required-field");
+  if (type === "skydive" && !String(data.license_text || "").trim()) {
+    document.getElementById("selfLicenseCard")?.classList.add("missing-required-field");
+  }
+  if (type === "skydive" && !data.reserve_date) {
+    document.getElementById("selfReserveCard")?.classList.add("missing-required-field");
+  }
+
+  if (!missing.length) {
+    box.classList.add("hidden");
+    text.textContent = "";
+    return;
+  }
+
+  text.textContent = missing.join(", ");
+  box.classList.remove("hidden");
+}
+
+function formatLogbookDate(dateString) {
+  return dateString ? formatDate(dateString) : "—";
+}
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function loadParticipantLogbook() {
+  const list = document.getElementById("participantLogbookList");
+  const status = document.getElementById("participantLogbookStatus");
+
+  if (!participantAccess?.participant_id || !participantPhoneForSession) return;
+
+  status.textContent = "Loading logbook…";
+  status.classList.remove("hidden", "error");
+
+  const { data, error } = await client.rpc("get_participant_logbook", {
+    p_event_id: eventId,
+    p_participant_id: participantAccess.participant_id,
+    p_phone: participantPhoneForSession
+  });
+
+  status.classList.add("hidden");
+
+  if (error) {
+    status.textContent = `Could not load logbook: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+    return;
+  }
+
+  if (!data?.length) {
+    list.innerHTML = '<p class="muted">No jumps entered yet.</p>';
+    return;
+  }
+
+  list.innerHTML = data.map(entry => `
+    <article class="logbook-entry">
+      <div class="logbook-entry-main">
+        <strong>${entry.jump_number != null ? `Jump #${entry.jump_number}` : "Jump"}</strong>
+        <span>${escapeHtml(entry.jump_type || "Skydive")}</span>
+      </div>
+      <div class="logbook-entry-date">${formatLogbookDate(entry.jump_date)}</div>
+      ${entry.notes ? `<p>${escapeHtml(entry.notes)}</p>` : ""}
+    </article>
+  `).join("");
+}
+
 function showLoginScreen() {
   eventEl.classList.add("hidden");
   sessionIndicator.classList.add("hidden");
@@ -164,9 +256,11 @@ function showLoggedInView(data) {
   sessionIndicator.classList.remove("hidden");
 
   setText("participantSessionName", data.display_name, "");
-  setText("participantWelcomeName", `Welcome, ${data.display_name}`, "Welcome");
+  setText("participantWelcomeName", data.display_name, "Participant");
   renderParticipantFields(data);
   renderPaymentStatus(data);
+  renderMissingAdminInfo(data);
+  loadParticipantLogbook();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -176,7 +270,7 @@ async function participantSignIn() {
   const button = document.getElementById("participantSignIn");
 
   if (!participantId) return showLoginStatus("Please select your name.", true);
-  if (!phone) return showLoginStatus("Please enter your phone number.", true);
+  if (!phone) return showLoginStatus("Please enter your password.", true);
 
   button.disabled = true;
   const oldText = button.textContent;
@@ -192,7 +286,7 @@ async function participantSignIn() {
 
     if (error) throw error;
     if (!data?.ok) {
-      showLoginStatus("The phone number does not match this participant.", true);
+      showLoginStatus("The password does not match this participant.", true);
       return;
     }
 
@@ -244,6 +338,7 @@ async function saveParticipantProfile() {
     participantAccess = { ...participantAccess, ...data };
     renderParticipantFields(participantAccess);
     renderPaymentStatus(participantAccess);
+    renderMissingAdminInfo(participantAccess);
     showSaveStatus("Saved.");
     setTimeout(() => showSaveStatus(""), 2200);
   } catch (error) {

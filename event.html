@@ -28,7 +28,7 @@
       <div class="participant-login-card">
         <div class="eyebrow">SHAKSHUKA TRAVEL</div>
         <h1 id="loginEventName">Participant login</h1>
-        <p class="participant-login-subtitle">Select your name and enter your phone number to access this event.</p>
+        <p class="participant-login-subtitle">Select your name and enter your password to access this event.</p>
 
         <label class="field">
           <span>Your name</span>
@@ -38,8 +38,8 @@
         </label>
 
         <label class="field">
-          <span>Phone number</span>
-          <input id="participantPhone" type="tel" autocomplete="tel" placeholder="05X-XXXXXXX" />
+          <span>Password</span>
+          <input id="participantPhone" type="password" autocomplete="current-password" placeholder="Password" />
         </label>
 
         <div id="participantLoginStatus" class="status compact-status hidden"></div>
@@ -55,7 +55,16 @@
         <div>
           <div id="eventDates" class="date-large"></div>
           <h1 id="eventName"></h1>
+          <div id="eventParticipantWelcome" class="event-participant-welcome">
+            <span>Welcome,</span>
+            <strong id="participantWelcomeName">Participant</strong>
+          </div>
           <div id="eventLocation" class="location"></div>
+
+          <div id="missingAdminInfo" class="missing-admin-info hidden">
+            <strong>Please provide the following information to the admin:</strong>
+            <span id="missingAdminInfoText"></span>
+          </div>
         </div>
       </div>
 
@@ -99,106 +108,125 @@
         </div>
       </section>
 
-      <section class="panel participant-dashboard-panel">
-        <div class="participant-welcome">
+      <details class="panel participant-collapsible" open>
+        <summary>
           <div>
-            <div class="eyebrow">PARTICIPANT</div>
-            <h3 id="participantWelcomeName">Welcome</h3>
+            <h3>Participant Info</h3>
             <p id="participantEventTypeLabel" class="muted small-text"></p>
           </div>
+          <span class="collapse-chevron">⌄</span>
+        </summary>
+
+        <div class="participant-collapse-content">
           <div id="participantSaveStatus" class="status compact-status hidden"></div>
-        </div>
 
-        <div class="participant-profile-form">
-          <div class="participant-section-title">
-            <h4>Travel & experience information</h4>
-            <p class="muted small-text">Fields marked “Admin” can only be changed by Ksenia or Ilya.</p>
-          </div>
+          <div class="participant-profile-form">
+            <p class="muted small-text participant-admin-note">
+              Fields marked “Admin” can only be changed by Ksenia or Ilya.
+            </p>
 
-          <div class="participant-fields-grid">
-            <label class="check-row field-card readonly-field">
-              <input id="selfFlightDone" type="checkbox" disabled />
-              <span><strong>Flights</strong><small>Admin</small></span>
-            </label>
-
-            <label class="check-row field-card readonly-field">
-              <input id="selfInsuranceDone" type="checkbox" disabled />
-              <span><strong>Insurance</strong><small>Admin</small></span>
-            </label>
-
-            <label class="check-row field-card">
-              <input id="selfPassportDone" type="checkbox" />
-              <span><strong>Passport</strong><small>You can edit</small></span>
-            </label>
-          </div>
-
-          <div id="participantTunnelFields" class="event-specific-fields">
-            <label class="field">
-              <span>Total tunnel time</span>
-              <div class="time-input-row">
-                <input id="selfTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
-                <input id="selfTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
-              </div>
-            </label>
-          </div>
-
-          <div id="participantSkydiveFields" class="event-specific-fields hidden">
             <div class="participant-fields-grid">
-              <label class="check-row field-card">
-                <input id="selfJerseyDone" type="checkbox" />
-                <span><strong>Jersey</strong><small>You can edit</small></span>
+              <label id="selfFlightCard" class="check-row field-card readonly-field">
+                <input id="selfFlightDone" type="checkbox" disabled />
+                <span><strong>Flights</strong><small>Admin</small></span>
               </label>
 
-              <label class="field readonly-field">
-                <span>License <small>Admin</small></span>
-                <input id="selfLicenseText" type="text" readonly />
-              </label>
-
-              <label class="field readonly-field">
-                <span>Reserve date <small>Admin</small></span>
-                <input id="selfReserveDate" type="text" readonly />
-              </label>
-
-              <label class="field">
-                <span>Last jump</span>
-                <input id="selfLastJumpDate" type="date" />
-              </label>
-
-              <label class="field">
-                <span>Number of jumps</span>
-                <input id="selfNumberJumps" type="number" min="0" step="1" />
-              </label>
-
-              <label class="field">
-                <span>Canopy size</span>
-                <input id="selfCanopySize" type="number" min="1" step="1" />
+              <label id="selfInsuranceCard" class="check-row field-card readonly-field">
+                <input id="selfInsuranceDone" type="checkbox" disabled />
+                <span><strong>Insurance</strong><small>Admin</small></span>
               </label>
 
               <label class="check-row field-card">
-                <input id="selfWaterTrainingDone" type="checkbox" />
-                <span><strong>Water training</strong><small>You can edit</small></span>
-              </label>
-
-              <label class="check-row field-card">
-                <input id="selfCanopyCourseDone" type="checkbox" />
-                <span><strong>Canopy course</strong><small>You can edit</small></span>
+                <input id="selfPassportDone" type="checkbox" />
+                <span><strong>Passport</strong><small>You can edit</small></span>
               </label>
             </div>
 
-            <label class="field">
-              <span>Total tunnel time</span>
-              <div class="time-input-row">
-                <input id="selfSkydiveTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
-                <input id="selfSkydiveTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
-              </div>
-            </label>
-          </div>
+            <div id="participantTunnelFields" class="event-specific-fields">
+              <label class="field">
+                <span>Total tunnel time</span>
+                <div class="time-input-row">
+                  <input id="selfTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
+                  <input id="selfTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
+                </div>
+              </label>
+            </div>
 
-          <div class="participant-profile-actions">
-            <button id="saveParticipantProfile" class="primary-button" type="button">Save my information</button>
+            <div id="participantSkydiveFields" class="event-specific-fields hidden">
+              <div class="participant-fields-grid">
+                <label class="check-row field-card">
+                  <input id="selfJerseyDone" type="checkbox" />
+                  <span><strong>Jersey</strong><small>You can edit</small></span>
+                </label>
+
+                <label id="selfLicenseCard" class="field readonly-field">
+                  <span>License <small>Admin</small></span>
+                  <input id="selfLicenseText" type="text" readonly />
+                </label>
+
+                <label id="selfReserveCard" class="field readonly-field">
+                  <span>Reserve date <small>Admin</small></span>
+                  <input id="selfReserveDate" type="text" readonly />
+                </label>
+
+                <label class="field">
+                  <span>Last jump</span>
+                  <input id="selfLastJumpDate" type="date" />
+                </label>
+
+                <label class="field">
+                  <span>Number of jumps</span>
+                  <input id="selfNumberJumps" type="number" min="0" step="1" />
+                </label>
+
+                <label class="field">
+                  <span>Canopy size</span>
+                  <input id="selfCanopySize" type="number" min="1" step="1" />
+                </label>
+
+                <label class="check-row field-card">
+                  <input id="selfWaterTrainingDone" type="checkbox" />
+                  <span><strong>Water training</strong><small>You can edit</small></span>
+                </label>
+
+                <label class="check-row field-card">
+                  <input id="selfCanopyCourseDone" type="checkbox" />
+                  <span><strong>Canopy course</strong><small>You can edit</small></span>
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Total tunnel time</span>
+                <div class="time-input-row">
+                  <input id="selfSkydiveTunnelHours" type="number" min="0" step="1" placeholder="Hours" />
+                  <input id="selfSkydiveTunnelMinutes" type="number" min="0" max="59" step="1" placeholder="Minutes" />
+                </div>
+              </label>
+            </div>
+
+            <div class="participant-profile-actions">
+              <button id="saveParticipantProfile" class="primary-button" type="button">Save my information</button>
+            </div>
           </div>
         </div>
-      </section>
+      </details>
+
+      <details class="panel participant-collapsible">
+        <summary>
+          <div>
+            <h3>Logbook</h3>
+            <p class="muted small-text">Jumps entered by the admin.</p>
+          </div>
+          <span class="collapse-chevron">⌄</span>
+        </summary>
+
+        <div class="participant-collapse-content">
+          <div id="participantLogbookStatus" class="status compact-status hidden"></div>
+          <div id="participantLogbookList" class="participant-logbook-list">
+            <p class="muted">No jumps entered yet.</p>
+          </div>
+        </div>
+      </details>
     </article>
   </main>
 
