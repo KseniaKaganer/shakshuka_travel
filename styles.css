@@ -2579,3 +2579,42 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .event-info-link:hover {
   text-decoration: underline;
 }
+
+
+/* ---------- V31 collapsible Day + Load ---------- */
+
+.logbook-collapse-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.logbook-collapse-button:hover {
+  border-color: rgba(255,255,255,.35);
+}
+
+.logbook-day-card.is-collapsed .logbook-day-body,
+.logbook-load-card.is-collapsed .logbook-load-body {
+  display: none;
+}
+
+.logbook-day-card.is-collapsed .logbook-day-header,
+.logbook-load-card.is-collapsed .logbook-load-header {
+  border-bottom: 0;
+}
+
+.selected-venue-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}

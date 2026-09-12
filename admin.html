@@ -162,35 +162,93 @@
               <strong>Event venue</strong>
             </div>
 
-            <div class="two-columns">
-              <label class="field">
-                <span>Venue type</span>
-                <select id="eventVenueTypeInput">
-                  <option value="dropzone">Drop zone</option>
-                  <option value="tunnel">Tunnel</option>
+            <div class="location-picker-row">
+              <label class="field grow-field">
+                <span>Saved venue</span>
+                <select id="venueSelect">
+                  <option value="">No venue selected</option>
                 </select>
               </label>
-
-              <label class="field">
-                <span>Venue name</span>
-                <input id="venueInput" type="text" placeholder="SkyTime / Windobona" />
-              </label>
+              <div class="location-actions">
+                <button id="showVenueFormButton" class="ghost-button field-button" type="button">+ New</button>
+                <button id="editVenueButton" class="ghost-button field-button" type="button">✎ Edit</button>
+                <button id="clearVenueButton" class="ghost-button field-button" type="button">Remove</button>
+              </div>
             </div>
 
-            <label class="field">
-              <span>Venue page link</span>
-              <input id="venueUrlInput" type="url" placeholder="https://..." />
-            </label>
+            <div id="newVenueBox" class="subpanel hidden">
+              <div class="subpanel-head">
+                <strong id="venueFormTitle">Add event venue</strong>
+                <button id="cancelVenueButton" class="icon-button" type="button" aria-label="Close">×</button>
+              </div>
 
-            <label id="dropzoneTicketPriceField" class="field">
-              <span>Ticket price</span>
-              <input id="ticketPriceInput" type="number" min="0" step="0.01" placeholder="0.00" />
-            </label>
+              <div class="two-columns">
+                <label class="field">
+                  <span>Venue name *</span>
+                  <input id="venueNameInput" type="text" placeholder="SkyTime / Windobona" />
+                </label>
 
-            <label id="tunnelTimeCostField" class="field hidden">
-              <span>Tunnel time cost</span>
-              <input id="tunnelTimeCostInput" type="number" min="0" step="0.01" placeholder="0.00" />
-            </label>
+                <label class="field">
+                  <span>Venue type *</span>
+                  <select id="venueTypeFormInput">
+                    <option value="dropzone">Drop zone</option>
+                    <option value="tunnel">Tunnel</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Venue page link</span>
+                <input id="venueWebsiteFormInput" type="url" placeholder="https://..." />
+              </label>
+
+              <label id="venueTicketPriceFormField" class="field">
+                <span>Ticket price</span>
+                <input id="venueTicketPriceFormInput" type="number" min="0" step="0.01" placeholder="0.00" />
+              </label>
+
+              <label id="venueTunnelCostFormField" class="field hidden">
+                <span>Tunnel time cost</span>
+                <input id="venueTunnelCostFormInput" type="number" min="0" step="0.01" placeholder="0.00" />
+              </label>
+
+              <div class="location-form-actions">
+                <button id="saveVenueButton" class="secondary-button" type="button">Save venue</button>
+                <button id="deleteVenueButton" class="danger-button hidden" type="button">Delete saved venue</button>
+              </div>
+            </div>
+
+            <div id="selectedVenueDetails" class="selected-venue-details hidden">
+              <div class="two-columns">
+                <label class="field">
+                  <span>Venue type</span>
+                  <select id="eventVenueTypeInput" disabled>
+                    <option value="dropzone">Drop zone</option>
+                    <option value="tunnel">Tunnel</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Venue name</span>
+                  <input id="venueInput" type="text" readonly />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Venue page link</span>
+                <input id="venueUrlInput" type="url" readonly />
+              </label>
+
+              <label id="dropzoneTicketPriceField" class="field">
+                <span>Ticket price</span>
+                <input id="ticketPriceInput" type="number" readonly />
+              </label>
+
+              <label id="tunnelTimeCostField" class="field hidden">
+                <span>Tunnel time cost</span>
+                <input id="tunnelTimeCostInput" type="number" readonly />
+              </label>
+            </div>
           </div>
 
           <label class="field">
@@ -256,7 +314,7 @@
     <section class="logbook-day-card">
       <div class="logbook-day-header">
         <div class="logbook-step-heading">
-<div>
+          <div>
             <strong class="logbook-day-display-title">Day</strong>
             <span class="logbook-day-display-date muted small-text"></span>
           </div>
@@ -265,12 +323,16 @@
         <div class="logbook-day-actions">
           <button class="secondary-button add-load-button" type="button">+ Add load</button>
           <button class="danger-ghost-button remove-day-button" type="button">Remove day</button>
+          <button class="logbook-collapse-button collapse-day-button" type="button" aria-label="Collapse day" title="Collapse day">⌃</button>
         </div>
       </div>
 
       <input class="logbook-day-date" type="hidden" />
       <input class="logbook-day-title" type="hidden" />
-      <div class="logbook-loads"></div>
+
+      <div class="logbook-day-body">
+        <div class="logbook-loads"></div>
+      </div>
     </section>
   </template>
 
@@ -278,7 +340,7 @@
     <section class="logbook-load-card">
       <div class="logbook-load-header">
         <div class="logbook-step-heading">
-<div>
+          <div>
             <strong>Load</strong>
             <span class="muted small-text">Enter load number</span>
           </div>
@@ -291,9 +353,13 @@
           </label>
           <button class="secondary-button add-group-button" type="button">+ New group</button>
           <button class="danger-ghost-button remove-load-button" type="button">Remove load</button>
+          <button class="logbook-collapse-button collapse-load-button" type="button" aria-label="Collapse load" title="Collapse load">⌃</button>
         </div>
       </div>
-      <div class="logbook-groups"></div>
+
+      <div class="logbook-load-body">
+        <div class="logbook-groups"></div>
+      </div>
     </section>
   </template>
 

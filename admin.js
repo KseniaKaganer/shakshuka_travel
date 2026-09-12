@@ -47,6 +47,23 @@ const exportParticipantsButton = document.getElementById("exportParticipantsButt
 const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
 
+const venueSelect = document.getElementById("venueSelect");
+const selectedVenueDetails = document.getElementById("selectedVenueDetails");
+const showVenueFormButton = document.getElementById("showVenueFormButton");
+const editVenueButton = document.getElementById("editVenueButton");
+const clearVenueButton = document.getElementById("clearVenueButton");
+const newVenueBox = document.getElementById("newVenueBox");
+const venueFormTitle = document.getElementById("venueFormTitle");
+const cancelVenueButton = document.getElementById("cancelVenueButton");
+const venueNameInput = document.getElementById("venueNameInput");
+const venueTypeFormInput = document.getElementById("venueTypeFormInput");
+const venueWebsiteFormInput = document.getElementById("venueWebsiteFormInput");
+const venueTicketPriceFormField = document.getElementById("venueTicketPriceFormField");
+const venueTunnelCostFormField = document.getElementById("venueTunnelCostFormField");
+const venueTicketPriceFormInput = document.getElementById("venueTicketPriceFormInput");
+const venueTunnelCostFormInput = document.getElementById("venueTunnelCostFormInput");
+const saveVenueButton = document.getElementById("saveVenueButton");
+const deleteVenueButton = document.getElementById("deleteVenueButton");
 const eventVenueTypeInput = document.getElementById("eventVenueTypeInput");
 const venueUrlInput = document.getElementById("venueUrlInput");
 const dropzoneTicketPriceField = document.getElementById("dropzoneTicketPriceField");
@@ -68,8 +85,10 @@ let currentEventStartDate = "";
 let currentEventEndDate = "";
 let removedMembershipIds = [];
 let locations = [];
+let venues = [];
 let editingParticipantRow = null;
 let editingLocationId = null;
+let editingVenueId = null;
 
 function escapeHtml(value = "") {
   return String(value)
@@ -141,7 +160,7 @@ async function routeForSession() {
 
   await updateLoggedInIndicator();
   showView("dashboard");
-  await Promise.all([loadLocations(), loadAdminEvents()]);
+  await Promise.all([loadLocations(), loadVenues(), loadAdminEvents()]);
 }
 
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
@@ -166,7 +185,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
   setStatus(loginStatus, "");
   await updateLoggedInIndicator();
   showView("dashboard");
-  await Promise.all([loadLocations(), loadAdminEvents()]);
+  await Promise.all([loadLocations(), loadVenues(), loadAdminEvents()]);
 });
 
 signOutButton.addEventListener("click", async () => {
@@ -201,6 +220,215 @@ function renderLocationOptions(selectedId = locationSelect.value) {
   }).join("");
   if (selectedId) locationSelect.value = selectedId;
 }
+
+async function loadVenues() {
+  const { data, error } = await client
+    .from("venues")
+    .select("id,name,venue_type,website_url,ticket_price,tunnel_time_cost,active")
+    .eq("active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    setStatus(dashboardStatus, `Could not load venues: ${error.message}`, true);
+    return;
+  }
+
+  venues = data || [];
+  renderVenueOptions();
+}
+
+function renderVenueOptions(selectedId = venueSelect?.value || "") {
+  if (!venueSelect) return;
+
+  venueSelect.innerHTML = `<option value="">No venue selected</option>` + venues.map(venue => {
+    const typeLabel = venue.venue_type === "tunnel" ? "Tunnel" : "Drop zone";
+    return `<option value="${venue.id}">${escapeHtml(venue.name)} • ${typeLabel}</option>`;
+  }).join("");
+
+  if (selectedId) venueSelect.value = selectedId;
+  renderSelectedVenue();
+}
+
+function updateVenueFormPriceFields() {
+  const type = venueTypeFormInput?.value || "dropzone";
+  venueTicketPriceFormField?.classList.toggle("hidden", type !== "dropzone");
+  venueTunnelCostFormField?.classList.toggle("hidden", type !== "tunnel");
+}
+
+function renderSelectedVenue() {
+  if (!venueSelect) return;
+
+  const venue = venues.find(item => item.id === venueSelect.value);
+
+  selectedVenueDetails?.classList.toggle("hidden", !venue);
+
+  if (!venue) {
+    if (eventVenueTypeInput) eventVenueTypeInput.value = getEventType() === "tunnel" ? "tunnel" : "dropzone";
+    if (document.getElementById("venueInput")) document.getElementById("venueInput").value = "";
+    if (venueUrlInput) venueUrlInput.value = "";
+    if (ticketPriceInput) ticketPriceInput.value = "";
+    if (tunnelTimeCostInput) tunnelTimeCostInput.value = "";
+    updateEventVenueFields();
+    return;
+  }
+
+  if (eventVenueTypeInput) eventVenueTypeInput.value = venue.venue_type || "dropzone";
+  document.getElementById("venueInput").value = venue.name || "";
+  if (venueUrlInput) venueUrlInput.value = venue.website_url || "";
+  if (ticketPriceInput) ticketPriceInput.value = venue.ticket_price ?? "";
+  if (tunnelTimeCostInput) tunnelTimeCostInput.value = venue.tunnel_time_cost ?? "";
+
+  updateEventVenueFields();
+}
+
+function showVenueForm(mode = "new") {
+  newVenueBox?.classList.remove("hidden");
+  editingVenueId = mode === "edit" ? venueSelect?.value || null : null;
+
+  if (editingVenueId) {
+    const venue = venues.find(item => item.id === editingVenueId);
+    if (!venue) return;
+
+    setTextById("venueFormTitle", "Edit event venue");
+    venueNameInput.value = venue.name || "";
+    venueTypeFormInput.value = venue.venue_type || "dropzone";
+    venueWebsiteFormInput.value = venue.website_url || "";
+    venueTicketPriceFormInput.value = venue.ticket_price ?? "";
+    venueTunnelCostFormInput.value = venue.tunnel_time_cost ?? "";
+    deleteVenueButton?.classList.remove("hidden");
+  } else {
+    setTextById("venueFormTitle", "Add event venue");
+    venueNameInput.value = "";
+    venueTypeFormInput.value = getEventType() === "tunnel" ? "tunnel" : "dropzone";
+    venueWebsiteFormInput.value = "";
+    venueTicketPriceFormInput.value = "";
+    venueTunnelCostFormInput.value = "";
+    deleteVenueButton?.classList.add("hidden");
+  }
+
+  updateVenueFormPriceFields();
+}
+
+function hideVenueForm() {
+  newVenueBox?.classList.add("hidden");
+  editingVenueId = null;
+  if (venueNameInput) venueNameInput.value = "";
+  if (venueWebsiteFormInput) venueWebsiteFormInput.value = "";
+  if (venueTicketPriceFormInput) venueTicketPriceFormInput.value = "";
+  if (venueTunnelCostFormInput) venueTunnelCostFormInput.value = "";
+  if (deleteVenueButton) deleteVenueButton.classList.add("hidden");
+}
+
+venueTypeFormInput?.addEventListener("change", updateVenueFormPriceFields);
+venueSelect?.addEventListener("change", renderSelectedVenue);
+showVenueFormButton?.addEventListener("click", () => showVenueForm("new"));
+
+editVenueButton?.addEventListener("click", () => {
+  if (!venueSelect?.value) {
+    setStatus(editorStatus, "Select a venue first, then click Edit.", true);
+    return;
+  }
+  showVenueForm("edit");
+});
+
+clearVenueButton?.addEventListener("click", () => {
+  if (venueSelect) venueSelect.value = "";
+  renderSelectedVenue();
+  hideVenueForm();
+  setStatus(editorStatus, "Venue removed from this event. Save the event to keep the change.");
+});
+
+cancelVenueButton?.addEventListener("click", hideVenueForm);
+
+saveVenueButton?.addEventListener("click", async () => {
+  const name = venueNameInput?.value.trim() || "";
+
+  if (!name) {
+    setStatus(editorStatus, "Venue name is required.", true);
+    return;
+  }
+
+  const venueType = venueTypeFormInput?.value || "dropzone";
+  const payload = {
+    name,
+    venue_type: venueType,
+    website_url: venueWebsiteFormInput?.value.trim() || null,
+    ticket_price: venueType === "dropzone" && venueTicketPriceFormInput?.value
+      ? Number(venueTicketPriceFormInput.value)
+      : null,
+    tunnel_time_cost: venueType === "tunnel" && venueTunnelCostFormInput?.value
+      ? Number(venueTunnelCostFormInput.value)
+      : null,
+    active: true
+  };
+
+  if (editingVenueId) {
+    const { data, error } = await client
+      .from("venues")
+      .update(payload)
+      .eq("id", editingVenueId)
+      .select()
+      .single();
+
+    if (error) {
+      setStatus(editorStatus, `Could not update venue: ${error.message}`, true);
+      return;
+    }
+
+    venues = venues.map(item => item.id === data.id ? data : item);
+    renderVenueOptions(data.id);
+    setStatus(editorStatus, "Venue updated.");
+  } else {
+    const { data, error } = await client
+      .from("venues")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) {
+      setStatus(editorStatus, `Could not add venue: ${error.message}`, true);
+      return;
+    }
+
+    venues.push(data);
+    renderVenueOptions(data.id);
+    setStatus(editorStatus, "Venue added.");
+  }
+
+  hideVenueForm();
+});
+
+deleteVenueButton?.addEventListener("click", async () => {
+  if (!editingVenueId) return;
+
+  const venue = venues.find(item => item.id === editingVenueId);
+  const label = venue?.name || "this venue";
+
+  if (!window.confirm(`Delete ${label} from the saved venues list?`)) return;
+
+  const { error } = await client.from("venues").delete().eq("id", editingVenueId);
+
+  if (error) {
+    const { error: deactivateError } = await client
+      .from("venues")
+      .update({ active: false })
+      .eq("id", editingVenueId);
+
+    if (deactivateError) {
+      setStatus(editorStatus, `Could not remove venue: ${deactivateError.message}`, true);
+      return;
+    }
+  }
+
+  venues = venues.filter(item => item.id !== editingVenueId);
+
+  if (venueSelect?.value === editingVenueId) venueSelect.value = "";
+
+  renderVenueOptions();
+  hideVenueForm();
+  setStatus(editorStatus, "Venue removed.");
+});
+
 
 async function loadAdminEvents() {
   setStatus(dashboardStatus, "Loading events…");
@@ -305,8 +533,6 @@ function updateEventVenueFields() {
   dropzoneTicketPriceField?.classList.toggle("hidden", venueType !== "dropzone");
   tunnelTimeCostField?.classList.toggle("hidden", venueType !== "tunnel");
 }
-
-eventVenueTypeInput?.addEventListener("change", updateEventVenueFields);
 
 document.querySelectorAll('input[name="eventType"]').forEach(radio => {
   radio.addEventListener("change", updateParticipantModalForEventType);
@@ -706,6 +932,16 @@ function addLogbookLoad(loadsContainer, data = {}) {
     addLogbookGroup(groups);
   });
 
+  card.querySelector(".collapse-load-button")?.addEventListener("click", () => {
+    const collapsed = card.classList.toggle("is-collapsed");
+    const button = card.querySelector(".collapse-load-button");
+    if (button) {
+      button.textContent = collapsed ? "⌄" : "⌃";
+      button.setAttribute("aria-label", collapsed ? "Expand load" : "Collapse load");
+      button.title = collapsed ? "Expand load" : "Collapse load";
+    }
+  });
+
   card.querySelector(".remove-load-button").addEventListener("click", async () => {
     card.remove();
     await persistEventLogbook("Load removed.");
@@ -743,6 +979,16 @@ function addLogbookDay(data = {}) {
   card.querySelector(".add-load-button").addEventListener("click", async () => {
     addLogbookLoad(loads);
     await persistEventLogbook("Load added.");
+  });
+
+  card.querySelector(".collapse-day-button")?.addEventListener("click", () => {
+    const collapsed = card.classList.toggle("is-collapsed");
+    const button = card.querySelector(".collapse-day-button");
+    if (button) {
+      button.textContent = collapsed ? "⌄" : "⌃";
+      button.setAttribute("aria-label", collapsed ? "Expand day" : "Collapse day");
+      button.title = collapsed ? "Expand day" : "Collapse day";
+    }
   });
 
   card.querySelector(".remove-day-button").addEventListener("click", async () => {
@@ -1042,6 +1288,9 @@ function resetEventForm() {
   refreshNewLogbookDaySelect();
   updateParticipantCount();
   renderLocationOptions("");
+  if (venueSelect) venueSelect.value = "";
+  renderSelectedVenue();
+  hideVenueForm();
   setStatus(editorStatus, "");
 
   setTextById("editorTitle", "Create Travel Event");
@@ -1063,7 +1312,7 @@ async function openEventEditor(eventId = null) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,event_type,location_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost")
+    .select("id,name,start_date,end_date,event_type,location_id,venue_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost")
     .eq("id", eventId)
     .single();
 
@@ -1081,11 +1330,22 @@ async function openEventEditor(eventId = null) {
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
-  if (eventVenueTypeInput) eventVenueTypeInput.value = event.venue_type || (event.event_type === "tunnel" ? "tunnel" : "dropzone");
-  if (venueUrlInput) venueUrlInput.value = event.venue_url || "";
-  if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
-  if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
-  updateEventVenueFields();
+  if (venueSelect) {
+    renderVenueOptions(event.venue_id || "");
+  }
+
+  if (event.venue_id) {
+    renderSelectedVenue();
+  } else {
+    // Backward compatibility for events created before saved venues existed.
+    if (eventVenueTypeInput) eventVenueTypeInput.value = event.venue_type || (event.event_type === "tunnel" ? "tunnel" : "dropzone");
+    document.getElementById("venueInput").value = event.venue || "";
+    if (venueUrlInput) venueUrlInput.value = event.venue_url || "";
+    if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
+    if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
+    selectedVenueDetails?.classList.toggle("hidden", !event.venue);
+    updateEventVenueFields();
+  }
   setEventType(event.event_type || "skydive");
 
   const { data: memberships, error: membershipError } = await client
@@ -1598,6 +1858,7 @@ async function saveEvent(status) {
       end_date: endDate,
       event_type: getEventType(),
       location_id: locationSelect.value || null,
+      venue_id: venueSelect?.value || null,
       venue: document.getElementById("venueInput").value.trim() || null,
       venue_type: eventVenueTypeInput?.value || (getEventType() === "tunnel" ? "tunnel" : "dropzone"),
       venue_url: venueUrlInput?.value.trim() || null,
