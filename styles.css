@@ -2618,3 +2618,30 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
+
+
+/* V32 compact mobile admin logbook */
+.logged-in-admin-name{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#signOutButton{position:relative;width:42px;min-width:42px;height:42px;padding:0;display:inline-grid;place-items:center}
+.signout-icon{font-size:21px;line-height:1;transform:rotate(180deg)}
+.signout-tooltip{position:absolute;right:0;top:calc(100% + 7px);z-index:20;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:#111419;color:var(--text);font-size:12px;font-weight:700;white-space:nowrap;opacity:0;pointer-events:none}
+#signOutButton:hover .signout-tooltip,#signOutButton:focus-visible .signout-tooltip{opacity:1}
+.logbook-day-header,.logbook-load-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logbook-title-with-collapse,.logbook-day-actions,.logbook-load-controls{display:flex;align-items:center;gap:7px;flex-wrap:nowrap}
+.logbook-day-display-date{display:block;margin-top:2px}
+.logbook-action-icon{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;display:inline-grid!important;place-items:center;font-size:19px;font-weight:900;border-radius:9px}
+.logbook-load-body>.load-number-field{max-width:180px;margin-bottom:12px}
+.logbook-day-card.is-collapsed .logbook-day-body,.logbook-load-card.is-collapsed .logbook-load-body{display:none!important}
+@media(max-width:600px){
+.logbook-day-header,.logbook-load-header{flex-direction:row!important;align-items:center!important}
+.logbook-day-actions,.logbook-load-controls{width:auto!important;margin-left:auto}
+.logbook-day-card,.logbook-load-card{padding-left:12px;padding-right:12px}
+.logbook-day-display-title,.logbook-load-display-title{font-size:15px}
+.logbook-day-display-date{font-size:11px}
+.logbook-collapse-button,.logbook-action-icon{width:31px!important;min-width:31px!important;height:31px!important}
+.logbook-title-with-collapse{gap:5px}
+.logbook-top-actions.logbook-day-adder{display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:end;gap:8px}
+#addLogbookDayButton{height:48px!important}
+.logged-in-admin-name{max-width:70px;font-size:12px}
+#signOutButton{width:38px;min-width:38px;height:38px}
+}

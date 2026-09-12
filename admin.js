@@ -135,7 +135,13 @@ function showView(view) {
 
 async function updateLoggedInIndicator() {
   const { data: { user } } = await client.auth.getUser();
-  if (loggedInEmail) loggedInEmail.textContent = user?.email || "";
+  if (!loggedInEmail) return;
+  const email = user?.email || "";
+  const e = email.toLowerCase();
+  const meta = user?.user_metadata?.name || user?.user_metadata?.full_name || user?.user_metadata?.display_name || "";
+  const name = meta || (e === "ksenia.kaganer@gmail.com" ? "Ksenia" : e === "ilyazabarskiy@gmail.com" ? "Ilya" : (email.split("@")[0] || "Admin"));
+  loggedInEmail.textContent = name;
+  loggedInEmail.title = email || name;
 }
 
 async function isCurrentUserAdmin() {
