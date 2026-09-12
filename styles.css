@@ -3023,3 +3023,126 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     min-height: 28px !important;
   }
 }
+
+
+/* ---------- V36 compact group card redesign ---------- */
+
+.logbook-group-summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 12px 12px !important;
+}
+
+.logbook-group-summary.hidden {
+  display: none !important;
+}
+
+.logbook-group-summary-main {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.logbook-group-summary-number {
+  flex: 0 0 auto;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,.06) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+.logbook-group-summary-info {
+  display: grid !important;
+  gap: 4px !important;
+  min-width: 0;
+  text-align: left;
+}
+
+.logbook-group-summary-coach {
+  color: var(--text) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  text-align: left;
+}
+
+.logbook-group-summary-participants {
+  color: var(--text) !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* Same visual size as the + / × buttons in Load header. */
+.compact-group-icon-actions {
+  flex: 0 0 auto;
+  align-self: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.group-summary-icon {
+  box-sizing: border-box !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 9px !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-group-summary {
+    gap: 9px !important;
+    padding: 10px !important;
+  }
+
+  .logbook-group-summary-main {
+    gap: 8px !important;
+  }
+
+  .logbook-group-summary-number,
+  .group-summary-icon {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+  }
+
+  .logbook-group-summary-coach {
+    font-size: 13px !important;
+  }
+
+  .logbook-group-summary-participants {
+    font-size: 12px !important;
+  }
+
+  .compact-group-icon-actions {
+    gap: 5px !important;
+  }
+}
