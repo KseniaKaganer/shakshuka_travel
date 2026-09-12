@@ -74,8 +74,8 @@
         </div>
       </div>
 
-      <form id="eventForm" class="editor-grid" onsubmit="return false;">
-        <details class="panel form-panel editor-main event-details-collapsible">
+      <form id="eventForm" class="editor-grid editor-grid-v13" onsubmit="return false;">
+<div class="editor-left-column"><details class="panel form-panel editor-main event-details-collapsible">
           <summary class="event-details-summary">
             <div>
               <h2>Event details</h2>
@@ -166,43 +166,26 @@
           </label>
 
           </div>
-        </details>
-
-<section id="eventLogbookSection" class="admin-event-logbook hidden">
-        <div class="admin-event-logbook-head">
-          <div>
-<h2>Logbook</h2>
-            <p class="muted">Build the event by day, load, group, participants and coach.</p>
-          </div>
-          <div class="logbook-top-actions">
+        </details><details id="eventLogbookSection" class="admin-event-logbook hidden">
+<summary class="logbook-summary"><div><h2>Logbook</h2><p class="muted small-text">Build the event by day, load, group, participants and coach.</p></div><span class="collapse-chevron">⌄</span></summary>
+<div class="logbook-collapsible-content"><div class="logbook-top-actions">
             <button id="exportLogbookButton" class="secondary-button" type="button">⇩ Export logbook</button>
             <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
-          </div>
-        </div>
-
-        <div id="eventLogbookStatus" class="status hidden"></div>
-        <div id="eventLogbookDays" class="event-logbook-days"></div>
-      </section>
-
-
-        <aside class="panel form-panel editor-side">
-          <div class="participants-header">
-            <div>
-              <h2>Participants</h2>
-              <p class="muted small-text">Add everyone joining this event.</p>
-            </div>
-            <div class="participants-header-actions">
+          </div><div id="eventLogbookStatus" class="status hidden"></div><div id="eventLogbookDays" class="event-logbook-days"></div></div>
+</details></div>
+<details class="panel form-panel editor-side participants-collapsible">
+<summary class="participants-summary"><div><h2>Participants</h2><p class="muted small-text">Add everyone joining this event.</p></div><span class="collapse-chevron">⌄</span></summary>
+<div class="participants-content"><div class="participants-header-actions">
               <button id="exportParticipantsButton" class="secondary-button compact-export-button" type="button" title="Export participant data to spreadsheet">
                 ⇩ Export
               </button>
               <span id="participantCount" class="count-pill">0</span>
             </div>
-          </div>
 
           <div id="participantsList" class="participants-editor-list"></div>
-          <button id="addParticipantButton" class="secondary-button full-button" type="button">+ Add participant</button>
-        </aside>
-      </form><div id="editorStatus" class="status compact-status"></div>
+          <button id="addParticipantButton" class="secondary-button full-button" type="button">+ Add participant</button></div>
+</details>
+</form><div id="editorStatus" class="status compact-status"></div>
     </section>
   </main>
 

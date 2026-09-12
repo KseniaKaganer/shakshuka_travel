@@ -1904,3 +1904,22 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
 #editorView .admin-event-logbook-head .eyebrow {
   display: none;
 }
+
+/* V13 requested admin arrangement */
+.editor-grid-v13{display:grid;grid-template-columns:minmax(0,2fr) minmax(340px,1fr);gap:18px;align-items:start}
+.editor-left-column{display:grid;gap:18px;min-width:0}
+.editor-grid-v13 .admin-event-logbook{margin:0!important;width:100%;box-sizing:border-box}
+.participants-collapsible,.admin-event-logbook{padding:0!important;overflow:hidden}
+.participants-summary,.logbook-summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;user-select:none}
+.participants-summary::-webkit-details-marker,.logbook-summary::-webkit-details-marker{display:none}
+.participants-summary h2,.participants-summary p,.logbook-summary h2,.logbook-summary p{margin:0}
+.participants-summary h2,.logbook-summary h2{margin-bottom:3px}
+.participants-collapsible[open] .collapse-chevron,.admin-event-logbook[open] .collapse-chevron{transform:rotate(180deg)}
+.participants-content,.logbook-collapsible-content{border-top:1px solid var(--line);padding:20px}
+.participants-content .participants-header-actions,.logbook-collapsible-content .logbook-top-actions{display:flex;justify-content:flex-end;margin-bottom:16px}
+@media(max-width:920px){.editor-grid-v13{grid-template-columns:1fr}.editor-left-column{order:1}.participants-collapsible{order:2}}
+
+/* V14 - tighter spacing between Event Details and Logbook */
+.editor-left-column {
+  gap: 8px !important;
+}
