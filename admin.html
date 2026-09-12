@@ -159,6 +159,22 @@
             <input id="venueInput" type="text" placeholder="SkyTime or Windobona" />
           </label>
 
+          <div id="venueCostDataBox" class="subpanel event-cost-data-box">
+            <div class="subpanel-head">
+              <strong id="venueCostDataTitle">Drop zone Data</strong>
+            </div>
+
+            <label id="dropzoneTicketPriceField" class="field">
+              <span>Ticket price</span>
+              <input id="ticketPriceInput" type="number" min="0" step="0.01" placeholder="0.00" />
+            </label>
+
+            <label id="tunnelTimeCostField" class="field hidden">
+              <span>Tunnel time cost</span>
+              <input id="tunnelTimeCostInput" type="number" min="0" step="0.01" placeholder="0.00" />
+            </label>
+          </div>
+
           <label class="field">
             <span>Event description</span>
             <textarea id="descriptionInput" rows="6" placeholder="What the event is about, schedule, what is included…"></textarea>

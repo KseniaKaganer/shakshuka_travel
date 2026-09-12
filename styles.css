@@ -2514,3 +2514,34 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 13px !important;
   }
 }
+
+
+/* ---------- V29 participant optional sections + stats ---------- */
+
+.missing-admin-info {
+  font-size: 15px !important;
+  line-height: 1.45;
+  padding: 13px 15px !important;
+}
+
+.missing-admin-info strong {
+  font-size: 16px;
+}
+
+.participant-logbook-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.participant-logbook-stats strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.event-cost-data-box {
+  margin-top: 4px;
+}

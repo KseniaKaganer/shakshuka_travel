@@ -47,6 +47,11 @@ const exportParticipantsButton = document.getElementById("exportParticipantsButt
 const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
 
+const venueCostDataTitle = document.getElementById("venueCostDataTitle");
+const dropzoneTicketPriceField = document.getElementById("dropzoneTicketPriceField");
+const tunnelTimeCostField = document.getElementById("tunnelTimeCostField");
+const ticketPriceInput = document.getElementById("ticketPriceInput");
+const tunnelTimeCostInput = document.getElementById("tunnelTimeCostInput");
 const eventLogbookSection = document.getElementById("eventLogbookSection");
 const eventLogbookDays = document.getElementById("eventLogbookDays");
 const eventLogbookStatus = document.getElementById("eventLogbookStatus");
@@ -284,6 +289,12 @@ function updateParticipantModalForEventType() {
   if (eventLogbookSection) {
     eventLogbookSection.classList.toggle("hidden", type !== "skydive");
   }
+
+  if (venueCostDataTitle) {
+    venueCostDataTitle.textContent = type === "tunnel" ? "Wind tunnel Data" : "Drop zone Data";
+  }
+  dropzoneTicketPriceField?.classList.toggle("hidden", type !== "skydive");
+  tunnelTimeCostField?.classList.toggle("hidden", type !== "tunnel");
 }
 
 
@@ -1036,7 +1047,7 @@ async function openEventEditor(eventId = null) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,event_type,location_id,venue,additional_location_info,description,status")
+    .select("id,name,start_date,end_date,event_type,location_id,venue,additional_location_info,description,status,ticket_price,tunnel_time_cost")
     .eq("id", eventId)
     .single();
 
@@ -1054,6 +1065,8 @@ async function openEventEditor(eventId = null) {
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
+  if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
+  if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
   setEventType(event.event_type || "skydive");
 
   const { data: memberships, error: membershipError } = await client
@@ -1565,7 +1578,13 @@ async function saveEvent(status) {
       event_type: getEventType(),
       location_id: locationSelect.value || null,
       venue: document.getElementById("venueInput").value.trim() || null,
-description: document.getElementById("descriptionInput").value.trim() || null,
+      description: document.getElementById("descriptionInput").value.trim() || null,
+      ticket_price: getEventType() === "skydive"
+        ? (ticketPriceInput?.value ? Number(ticketPriceInput.value) : null)
+        : null,
+      tunnel_time_cost: getEventType() === "tunnel"
+        ? (tunnelTimeCostInput?.value ? Number(tunnelTimeCostInput.value) : null)
+        : null,
       status
     };
 

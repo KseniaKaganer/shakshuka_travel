@@ -180,7 +180,7 @@ async function loadParticipantLogbook() {
   status.textContent = "Loading logbook…";
   status.classList.remove("hidden", "error");
 
-  const { data, error } = await client.rpc("get_participant_skydive_logbook_by_token_v25", {
+  const { data, error } = await client.rpc("get_participant_skydive_logbook_by_token_v29", {
     p_event_id: eventId,
     p_token: participantSessionToken
   });
@@ -194,14 +194,39 @@ async function loadParticipantLogbook() {
     return;
   }
 
-  if (!data?.length) {
+  const rows = Array.isArray(data) ? data : [];
+  const totalJumps = rows.length;
+  const coachedJumps = rows.filter(entry => String(entry.coach_name || "").trim()).length;
+
+  setText("participantTotalJumps", String(totalJumps), "0");
+  setText("participantCoachedJumps", String(coachedJumps), "0");
+
+  // Coach ticket total is derived from:
+  // coached jumps × event ticket price.
+  if ((participantAccess?.event_type || loadedEvent?.event_type) === "skydive") {
+    const ticketPrice = moneyNumber(rows[0]?.ticket_price);
+    if (ticketPrice > 0) {
+      const calculatedCoachTotal = coachedJumps * ticketPrice;
+      const coachPaid = moneyNumber(participantAccess?.coach_tickets_paid);
+
+      setText("selfCoachTotal", formatMoney(calculatedCoachTotal), "0.00");
+      setText("selfCoachPaid", formatMoney(coachPaid), "0.00");
+      setText(
+        "selfCoachLeft",
+        formatMoney(Math.max(0, calculatedCoachTotal - coachPaid)),
+        "0.00"
+      );
+    }
+  }
+
+  if (!rows.length) {
     list.innerHTML = '<p class="muted">No jumps entered yet.</p>';
     return;
   }
 
   const byDay = new Map();
 
-  data.forEach(entry => {
+  rows.forEach(entry => {
     const key = entry.day_date || "";
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key).push(entry);
@@ -212,7 +237,7 @@ async function loadParticipantLogbook() {
     const dayTitle = first?.day_title || "Day";
     const dateLabel = formatLogbookDate(dayDate);
 
-    const rows = entries.map(entry => {
+    const rowsHtml = entries.map(entry => {
       const groupParticipants = Array.isArray(entry.group_participants)
         ? entry.group_participants
         : [];
@@ -247,7 +272,7 @@ async function loadParticipantLogbook() {
               </tr>
             </thead>
             <tbody>
-              ${rows}
+              ${rowsHtml}
             </tbody>
           </table>
         </div>
