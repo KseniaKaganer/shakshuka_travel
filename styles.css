@@ -3402,3 +3402,51 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     line-height: 1.45 !important;
   }
 }
+
+
+/* ---------- V39 small sizing tweaks ---------- */
+
+/* Add-day + button matches the + buttons used inside Day / Load headers. */
+.add-day-match-button {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 9px !important;
+}
+
+/* Group text slightly larger for readability. */
+.logbook-group-summary-coach {
+  font-size: 15px !important;
+}
+
+.logbook-group-summary-participants {
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-top-actions.logbook-day-adder {
+    grid-template-columns: minmax(0, 1fr) 34px !important;
+  }
+
+  .add-day-match-button {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .logbook-group-summary-coach {
+    font-size: 14px !important;
+  }
+
+  .logbook-group-summary-participants {
+    font-size: 13px !important;
+  }
+}
