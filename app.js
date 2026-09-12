@@ -21,6 +21,43 @@ function locationText(location) {
     .join(" • ");
 }
 
+
+function countryFlag(country = "") {
+  const aliases = {
+    "spain": "ES",
+    "thailand": "TH",
+    "slovenia": "SI",
+    "italy": "IT",
+    "france": "FR",
+    "czech republic": "CZ",
+    "czechia": "CZ",
+    "morocco": "MA",
+    "united states": "US",
+    "usa": "US",
+    "united states of america": "US",
+    "israel": "IL",
+    "greece": "GR",
+    "cyprus": "CY",
+    "united arab emirates": "AE",
+    "uae": "AE",
+    "portugal": "PT",
+    "germany": "DE",
+    "austria": "AT",
+    "netherlands": "NL",
+    "belgium": "BE",
+    "poland": "PL",
+    "croatia": "HR"
+  };
+
+  const code = aliases[String(country).trim().toLowerCase()];
+  if (!code) return "🌍";
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
+}
+
+function eventTypeIcon(type) {
+  return type === "tunnel" ? "🌀" : "🪂";
+}
+
 async function loadEvents() {
   if (!config?.supabaseUrl || config.supabaseUrl.includes("PASTE_")) {
     statusEl.textContent = "Add your Supabase URL and anon key in supabase-config.js.";
@@ -37,6 +74,7 @@ async function loadEvents() {
       name,
       start_date,
       end_date,
+      event_type,
       status,
       locations (
         name,
@@ -60,13 +98,23 @@ async function loadEvents() {
     return;
   }
 
-  eventsEl.innerHTML = data.map(event => `
-    <a class="event-card" href="event.html?id=${encodeURIComponent(event.id)}">
-      <div class="event-card__date">${formatDateRange(event.start_date, event.end_date)}</div>
-      <h3>${escapeHtml(event.name)}</h3>
-      <div class="event-card__location">${escapeHtml(locationText(event.locations))}</div>
-    </a>
-  `).join("");
+  eventsEl.innerHTML = data.map(event => {
+    const country = event.locations?.country || "";
+    const type = event.event_type || "skydive";
+    return `
+      <a class="event-card event-card--with-icons" href="event.html?id=${encodeURIComponent(event.id)}">
+        <div class="event-card__topline">
+          <div class="event-card__date">${formatDateRange(event.start_date, event.end_date)}</div>
+          <div class="event-card__icons">
+            <span class="event-country-flag" title="${escapeHtml(country)}">${countryFlag(country)}</span>
+            <span class="event-type-icon" title="${type === "tunnel" ? "Tunnel event" : "Skydive event"}">${eventTypeIcon(type)}</span>
+          </div>
+        </div>
+        <h3>${escapeHtml(event.name)}</h3>
+        <div class="event-card__location">${escapeHtml(locationText(event.locations))}</div>
+      </a>
+    `;
+  }).join("");
 }
 
 function escapeHtml(value = "") {

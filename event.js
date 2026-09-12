@@ -10,7 +10,37 @@ const sessionIndicator = document.getElementById("participantSessionIndicator");
 let client = null;
 let loadedEvent = null;
 let participantAccess = null;
-let participantPhoneForSession = "";
+let participantSessionToken = "";
+
+const LOCAL_SESSION_KEY = eventId ? `shakshuka_participant_session_${eventId}` : "";
+const SESSION_SESSION_KEY = eventId ? `shakshuka_participant_session_temp_${eventId}` : "";
+
+function getStoredParticipantToken() {
+  if (!eventId) return "";
+  return localStorage.getItem(LOCAL_SESSION_KEY)
+    || sessionStorage.getItem(SESSION_SESSION_KEY)
+    || "";
+}
+
+function storeParticipantToken(token, remember) {
+  if (!eventId || !token) return;
+
+  localStorage.removeItem(LOCAL_SESSION_KEY);
+  sessionStorage.removeItem(SESSION_SESSION_KEY);
+
+  if (remember) {
+    localStorage.setItem(LOCAL_SESSION_KEY, token);
+  } else {
+    sessionStorage.setItem(SESSION_SESSION_KEY, token);
+  }
+}
+
+function clearParticipantToken() {
+  if (!eventId) return;
+  localStorage.removeItem(LOCAL_SESSION_KEY);
+  sessionStorage.removeItem(SESSION_SESSION_KEY);
+  participantSessionToken = "";
+}
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -145,15 +175,14 @@ async function loadParticipantLogbook() {
   const list = document.getElementById("participantLogbookList");
   const status = document.getElementById("participantLogbookStatus");
 
-  if (!participantAccess?.participant_id || !participantPhoneForSession) return;
+  if (!participantAccess?.participant_id || !participantSessionToken) return;
 
   status.textContent = "Loading logbook…";
   status.classList.remove("hidden", "error");
 
-  const { data, error } = await client.rpc("get_participant_logbook", {
+  const { data, error } = await client.rpc("get_participant_logbook_by_token", {
     p_event_id: eventId,
-    p_participant_id: participantAccess.participant_id,
-    p_phone: participantPhoneForSession
+    p_token: participantSessionToken
   });
 
   status.classList.add("hidden");
@@ -266,11 +295,12 @@ function showLoggedInView(data) {
 
 async function participantSignIn() {
   const participantId = document.getElementById("participantSelect").value;
-  const phone = document.getElementById("participantPhone").value.trim();
+  const password = document.getElementById("participantPhone").value.trim();
+  const remember = document.getElementById("rememberParticipantLogin").checked;
   const button = document.getElementById("participantSignIn");
 
   if (!participantId) return showLoginStatus("Please select your name.", true);
-  if (!phone) return showLoginStatus("Please enter your password.", true);
+  if (!password) return showLoginStatus("Please enter your password.", true);
 
   button.disabled = true;
   const oldText = button.textContent;
@@ -278,20 +308,24 @@ async function participantSignIn() {
   showLoginStatus("");
 
   try {
-    const { data, error } = await client.rpc("get_participant_event_access", {
+    const { data, error } = await client.rpc("participant_login_create_session", {
       p_event_id: eventId,
       p_participant_id: participantId,
-      p_phone: phone
+      p_phone: password,
+      p_remember: remember
     });
 
     if (error) throw error;
-    if (!data?.ok) {
+    if (!data?.ok || !data?.token || !data?.access) {
       showLoginStatus("The password does not match this participant.", true);
       return;
     }
 
-    participantPhoneForSession = phone;
-    showLoggedInView(data);
+    participantSessionToken = data.token;
+    participantAccess = data.access;
+    storeParticipantToken(data.token, remember);
+    document.getElementById("participantPhone").value = "";
+    showLoggedInView(data.access);
   } catch (error) {
     console.error("Participant login failed:", error);
     showLoginStatus(`Could not sign in: ${error.message}`, true);
@@ -302,7 +336,7 @@ async function participantSignIn() {
 }
 
 async function saveParticipantProfile() {
-  if (!participantAccess?.participant_id || !participantPhoneForSession) return;
+  if (!participantAccess?.participant_id || !participantSessionToken) return;
 
   const type = participantAccess.event_type || loadedEvent?.event_type || "skydive";
   const button = document.getElementById("saveParticipantProfile");
@@ -316,10 +350,9 @@ async function saveParticipantProfile() {
     : combineMinutes(document.getElementById("selfSkydiveTunnelHours").value, document.getElementById("selfSkydiveTunnelMinutes").value);
 
   try {
-    const { data, error } = await client.rpc("update_participant_self_fields", {
+    const { data, error } = await client.rpc("update_participant_self_fields_by_token", {
       p_event_id: eventId,
-      p_participant_id: participantAccess.participant_id,
-      p_phone: participantPhoneForSession,
+      p_token: participantSessionToken,
       p_passport_done: document.getElementById("selfPassportDone").checked,
       p_tunnel_minutes_total: tunnelMinutes,
       p_jersey_done: type === "skydive" ? document.getElementById("selfJerseyDone").checked : null,
@@ -350,13 +383,47 @@ async function saveParticipantProfile() {
   }
 }
 
-function participantSignOut() {
+async function participantSignOut() {
+  const tokenToRevoke = participantSessionToken || getStoredParticipantToken();
+
+  clearParticipantToken();
   participantAccess = null;
-  participantPhoneForSession = "";
   document.getElementById("participantPhone").value = "";
   document.getElementById("participantSelect").value = "";
+  document.getElementById("rememberParticipantLogin").checked = false;
   showLoginStatus("");
   showLoginScreen();
+
+  if (tokenToRevoke && client) {
+    client.rpc("participant_logout_session", { p_token: tokenToRevoke }).catch(() => {});
+  }
+}
+
+
+async function restoreParticipantSession() {
+  const token = getStoredParticipantToken();
+  if (!token) return false;
+
+  try {
+    const { data, error } = await client.rpc("get_participant_event_access_by_token", {
+      p_event_id: eventId,
+      p_token: token
+    });
+
+    if (error || !data?.ok) {
+      clearParticipantToken();
+      return false;
+    }
+
+    participantSessionToken = token;
+    participantAccess = data;
+    showLoggedInView(data);
+    return true;
+  } catch (error) {
+    console.warn("Could not restore participant session:", error);
+    clearParticipantToken();
+    return false;
+  }
 }
 
 async function loadEvent() {
@@ -421,9 +488,12 @@ async function loadEvent() {
 
     setText("eventVenue", venueLines.join("\n"));
 
-    // Show the login page immediately. Participant names load after it is visible.
-    showLoginScreen();
-    await loadParticipantNames();
+    const restored = await restoreParticipantSession();
+
+    if (!restored) {
+      showLoginScreen();
+      await loadParticipantNames();
+    }
 
   } catch (error) {
     console.error("Event page failed to load:", error);
