@@ -1888,3 +1888,19 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     width: 100%;
   }
 }
+
+
+/* ---------- V12 Logbook layout cleanup ---------- */
+
+#editorView .admin-event-logbook {
+  margin-top: 16px;
+  margin-bottom: 18px;
+}
+
+#editorView .admin-event-logbook-head h2 {
+  margin: 0;
+}
+
+#editorView .admin-event-logbook-head .eyebrow {
+  display: none;
+}

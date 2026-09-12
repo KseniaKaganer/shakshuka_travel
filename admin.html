@@ -168,6 +168,23 @@
           </div>
         </details>
 
+<section id="eventLogbookSection" class="admin-event-logbook hidden">
+        <div class="admin-event-logbook-head">
+          <div>
+<h2>Logbook</h2>
+            <p class="muted">Build the event by day, load, group, participants and coach.</p>
+          </div>
+          <div class="logbook-top-actions">
+            <button id="exportLogbookButton" class="secondary-button" type="button">⇩ Export logbook</button>
+            <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+          </div>
+        </div>
+
+        <div id="eventLogbookStatus" class="status hidden"></div>
+        <div id="eventLogbookDays" class="event-logbook-days"></div>
+      </section>
+
+
         <aside class="panel form-panel editor-side">
           <div class="participants-header">
             <div>
@@ -185,27 +202,7 @@
           <div id="participantsList" class="participants-editor-list"></div>
           <button id="addParticipantButton" class="secondary-button full-button" type="button">+ Add participant</button>
         </aside>
-      </form>
-
-
-      <section id="eventLogbookSection" class="admin-event-logbook hidden">
-        <div class="admin-event-logbook-head">
-          <div>
-            <div class="eyebrow">SKYDIVE EVENT</div>
-            <h2>Event Logbook</h2>
-            <p class="muted">Build the event by day, load, group, participants and coach.</p>
-          </div>
-          <div class="logbook-top-actions">
-            <button id="exportLogbookButton" class="secondary-button" type="button">⇩ Export logbook</button>
-            <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
-          </div>
-        </div>
-
-        <div id="eventLogbookStatus" class="status hidden"></div>
-        <div id="eventLogbookDays" class="event-logbook-days"></div>
-      </section>
-
-      <div id="editorStatus" class="status compact-status"></div>
+      </form><div id="editorStatus" class="status compact-status"></div>
     </section>
   </main>
 
@@ -319,7 +316,6 @@
       <input class="participant-payment-total" type="hidden" value="0" />
       <input class="participant-coach-paid" type="hidden" value="0" />
       <input class="participant-coach-total" type="hidden" value="0" />
-      <input class="participant-logbook-json" type="hidden" value="[]" />
       <input class="participant-id" type="hidden" />
       <input class="membership-id" type="hidden" />
     </div>
@@ -426,21 +422,7 @@
           </label>
         </div>
       </div>
-
-
-      <div class="admin-logbook-box">
-        <div class="admin-logbook-head">
-          <div>
-            <h3>Logbook</h3>
-            <p class="muted small-text">Jumps entered here are visible to the participant.</p>
-          </div>
-          <button id="addLogbookEntryButton" class="secondary-button" type="button">+ Add jump</button>
-        </div>
-
-        <div id="adminLogbookList" class="admin-logbook-list"></div>
-      </div>
-
-      <div class="payment-box">
+<div class="payment-box">
         <div class="payment-box-head">
           <div>
             <h3>Payment</h3>
@@ -493,30 +475,7 @@
       </div>
     </div>
   </div>
-
-  <template id="logbookEntryTemplate">
-    <div class="admin-logbook-entry">
-      <label class="field">
-        <span>Date</span>
-        <input class="logbook-date" type="date" />
-      </label>
-      <label class="field">
-        <span>Jump #</span>
-        <input class="logbook-number" type="number" min="1" step="1" />
-      </label>
-      <label class="field">
-        <span>Type / description</span>
-        <input class="logbook-type" type="text" placeholder="e.g. 4-way, AFF, Tracking" />
-      </label>
-      <label class="field logbook-notes-field">
-        <span>Notes</span>
-        <input class="logbook-notes" type="text" placeholder="Optional notes" />
-      </label>
-      <button class="icon-button remove-logbook-entry" type="button" aria-label="Remove jump">×</button>
-    </div>
-  </template>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="admin.js"></script>
 </body>
