@@ -172,13 +172,23 @@
     <p class="muted small-text">Build the event by day, load, group, participants and coach.</p>
   </div>
   <div class="summary-right-actions">
-    <button id="saveLogbookButton" class="primary-button summary-save-button" type="button">Save</button>
-    <button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export</button>
+<button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export</button>
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
   </div>
 </summary>
-<div class="logbook-collapsible-content"><div class="logbook-top-actions"><button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
-          </div><div id="eventLogbookStatus" class="status hidden"></div><div id="eventLogbookDays" class="event-logbook-days"></div></div>
+<div class="logbook-collapsible-content">
+  <div class="logbook-top-actions logbook-day-adder">
+    <label class="field compact-field logbook-add-day-field">
+      <span>Add day</span>
+      <select id="newLogbookDaySelect">
+        <option value="">Choose event date…</option>
+      </select>
+    </label>
+    <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+  </div>
+  <div id="eventLogbookStatus" class="status hidden"></div>
+  <div id="eventLogbookDays" class="event-logbook-days"></div>
+</div>
 </details></div>
 <details class="panel form-panel editor-side participants-collapsible">
 <summary class="participants-summary">
@@ -215,22 +225,17 @@
           <span class="logbook-step-number">1</span>
           <div>
             <strong class="logbook-day-display-title">Day</strong>
-            <span class="muted small-text">Choose a date from this event</span>
+            <span class="logbook-day-display-date muted small-text"></span>
           </div>
         </div>
 
-        <div class="logbook-day-controls">
-          <label class="field compact-field logbook-day-date-field">
-            <span>Date</span>
-            <select class="logbook-day-date">
-              <option value="">Choose date…</option>
-            </select>
-          </label>
+        <div class="logbook-day-actions">
           <button class="secondary-button add-load-button" type="button">+ Add load</button>
           <button class="danger-ghost-button remove-day-button" type="button">Remove day</button>
         </div>
       </div>
 
+      <input class="logbook-day-date" type="hidden" />
       <input class="logbook-day-title" type="hidden" />
       <div class="logbook-loads"></div>
     </section>
@@ -243,7 +248,7 @@
           <span class="logbook-step-number">2</span>
           <div>
             <strong>Load</strong>
-            <span class="muted small-text">Enter the DZ load number</span>
+            <span class="muted small-text">Enter load number</span>
           </div>
         </div>
 

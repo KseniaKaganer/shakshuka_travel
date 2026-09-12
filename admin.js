@@ -51,8 +51,8 @@ const eventLogbookSection = document.getElementById("eventLogbookSection");
 const eventLogbookDays = document.getElementById("eventLogbookDays");
 const eventLogbookStatus = document.getElementById("eventLogbookStatus");
 const addLogbookDayButton = document.getElementById("addLogbookDayButton");
+const newLogbookDaySelect = document.getElementById("newLogbookDaySelect");
 const exportLogbookButton = document.getElementById("exportLogbookButton");
-const saveLogbookButton = document.getElementById("saveLogbookButton");
 const logbookDayTemplate = document.getElementById("logbookDayTemplate");
 const logbookLoadTemplate = document.getElementById("logbookLoadTemplate");
 const logbookGroupTemplate = document.getElementById("logbookGroupTemplate");
@@ -425,33 +425,55 @@ function eventDateOptions() {
   return dates;
 }
 
-function populateDayDateSelect(select, selectedValue = "") {
-  if (!select) return;
+function formatLogbookDayLabel(value) {
+  const option = eventDateOptions().find(item => item.value === value);
+  return option?.label || value || "";
+}
 
-  const dates = eventDateOptions();
-  select.innerHTML = '<option value="">Choose date…</option>';
+function usedLogbookDayDates() {
+  return [...eventLogbookDays.querySelectorAll(".logbook-day-date")]
+    .map(input => input.value)
+    .filter(Boolean);
+}
 
-  dates.forEach(date => {
-    const option = document.createElement("option");
-    option.value = date.value;
-    option.textContent = date.label;
-    select.appendChild(option);
-  });
+function refreshNewLogbookDaySelect() {
+  if (!newLogbookDaySelect) return;
 
-  if (selectedValue) select.value = selectedValue;
+  const used = new Set(usedLogbookDayDates());
+  const current = newLogbookDaySelect.value;
+
+  newLogbookDaySelect.innerHTML = '<option value="">Choose event date…</option>';
+
+  eventDateOptions()
+    .filter(item => !used.has(item.value))
+    .forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.value;
+      option.textContent = item.label;
+      newLogbookDaySelect.appendChild(option);
+    });
+
+  if ([...newLogbookDaySelect.options].some(option => option.value === current)) {
+    newLogbookDaySelect.value = current;
+  }
 }
 
 function updateDayTitles() {
   [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach((card, index) => {
-    const select = card.querySelector(".logbook-day-date");
+    const dateInput = card.querySelector(".logbook-day-date");
     const title = card.querySelector(".logbook-day-title");
-    const display = card.querySelector(".logbook-day-display-title");
-    const weekdayText = select?.selectedOptions?.[0]?.textContent || "";
+    const displayTitle = card.querySelector(".logbook-day-display-title");
+    const displayDate = card.querySelector(".logbook-day-display-date");
 
-    const generated = `Day ${index + 1}${weekdayText ? ` - ${weekdayText}` : ""}`;
-    if (title) title.value = generated;
-    if (display) display.textContent = `Day ${index + 1}`;
+    const dateValue = dateInput?.value || "";
+    const generatedTitle = `Day ${index + 1}`;
+
+    if (title) title.value = generatedTitle;
+    if (displayTitle) displayTitle.textContent = generatedTitle;
+    if (displayDate) displayDate.textContent = formatLogbookDayLabel(dateValue);
   });
+
+  refreshNewLogbookDaySelect();
 }
 
 function renumberGroupTitles(groupContainer) {
@@ -498,16 +520,22 @@ function addLogbookLoad(loadsContainer, data = {}) {
 }
 
 function addLogbookDay(data = {}) {
+  const dayDate = data.day_date || "";
+  if (!dayDate) return;
+
+  if (usedLogbookDayDates().includes(dayDate)) {
+    setEventLogbookStatus("This day is already in the logbook.", true);
+    return;
+  }
+
   const fragment = logbookDayTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".logbook-day-card");
-  const dateSelect = card.querySelector(".logbook-day-date");
+  const dateInput = card.querySelector(".logbook-day-date");
   const titleInput = card.querySelector(".logbook-day-title");
   const loads = card.querySelector(".logbook-loads");
 
-  populateDayDateSelect(dateSelect, data.day_date || "");
+  dateInput.value = dayDate;
   if (titleInput) titleInput.value = data.title || "";
-
-  dateSelect.addEventListener("change", updateDayTitles);
 
   card.querySelector(".add-load-button").addEventListener("click", () => {
     addLogbookLoad(loads);
@@ -598,6 +626,7 @@ async function loadEventLogbook() {
 
   eventLogbookDays.innerHTML = "";
   (data || []).forEach(day => addLogbookDay(day));
+  refreshNewLogbookDaySelect();
 }
 
 async function saveEventLogbook() {
@@ -702,28 +731,21 @@ function exportEventLogbookToSpreadsheet() {
 }
 
 
-saveLogbookButton?.addEventListener("click", async (event) => {
-  event.stopPropagation();
-
-  if (!currentEventId) {
-    setEventLogbookStatus("Save the event first, then save the logbook.", true);
-    return;
-  }
-
-  try {
-    setEventLogbookStatus("Saving logbook…");
-    await saveEventLogbook();
-    setEventLogbookStatus("Logbook saved.");
-    setTimeout(() => setEventLogbookStatus(""), 2200);
-  } catch (error) {
-    setEventLogbookStatus(`Could not save logbook: ${error.message}`, true);
-  }
-});
 
 exportLogbookButton?.addEventListener("click", exportEventLogbookToSpreadsheet);
 
 
-addLogbookDayButton?.addEventListener("click", () => addLogbookDay());
+addLogbookDayButton?.addEventListener("click", () => {
+  const selectedDate = newLogbookDaySelect?.value || "";
+  if (!selectedDate) {
+    setEventLogbookStatus("Choose a day first.", true);
+    return;
+  }
+
+  addLogbookDay({ day_date: selectedDate });
+  if (newLogbookDaySelect) newLogbookDaySelect.value = "";
+  setEventLogbookStatus("");
+});
 
 function resetEventForm() {
   currentEventId = null;
@@ -1404,16 +1426,9 @@ document.getElementById("exportLogbookButton")?.addEventListener("click", (event
   event.stopPropagation();
 });
 
-document.getElementById("saveLogbookButton")?.addEventListener("click", (event) => {
-  event.stopPropagation();
-});
 
 ["startDateInput", "endDateInput"].forEach(id => {
   document.getElementById(id)?.addEventListener("change", () => {
-    document.querySelectorAll(".logbook-day-date").forEach(select => {
-      const current = select.value;
-      populateDayDateSelect(select, current);
-    });
-    updateDayTitles();
+    refreshNewLogbookDaySelect();
   });
 });
