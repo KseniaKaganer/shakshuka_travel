@@ -175,9 +175,7 @@ async function loadParticipantLogbook() {
   const list = document.getElementById("participantLogbookList");
   const status = document.getElementById("participantLogbookStatus");
 
-  if (!participantSessionToken) return;
-
-  if (!list || !status) return;
+  if (!participantSessionToken || !list || !status) return;
 
   status.textContent = "Loading logbook…";
   status.classList.remove("hidden", "error");
@@ -201,17 +199,57 @@ async function loadParticipantLogbook() {
     return;
   }
 
-  list.innerHTML = data.map(entry => `
-    <article class="logbook-entry">
-      <div class="logbook-entry-main">
-        <strong>Load ${entry.load_number}</strong>
-        <span>${entry.jump_type ? escapeHtml(entry.jump_type) : "Jump"}</span>
-      </div>
-      <div class="logbook-entry-date">${formatLogbookDate(entry.day_date)}</div>
-      ${entry.coach_name ? `<p class="coached-jump-label">Coached jump • ${escapeHtml(entry.coach_name)}</p>` : ""}
-      ${entry.day_title ? `<p>${escapeHtml(entry.day_title)}</p>` : ""}
-    </article>
-  `).join("");
+  const byDay = new Map();
+
+  data.forEach(entry => {
+    const key = entry.day_date || "";
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(entry);
+  });
+
+  list.innerHTML = [...byDay.entries()].map(([dayDate, entries]) => {
+    const first = entries[0];
+    const dayTitle = first?.day_title || "Day";
+    const dateLabel = formatLogbookDate(dayDate);
+
+    const rows = entries.map(entry => {
+      const groupLabel = entry.jump_type
+        ? escapeHtml(entry.jump_type)
+        : `Group ${entry.group_number || ""}`.trim();
+
+      return `
+        <tr>
+          <td>${escapeHtml(String(entry.load_number ?? ""))}</td>
+          <td>${entry.coach_name ? escapeHtml(entry.coach_name) : "—"}</td>
+          <td>${groupLabel || "—"}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <section class="participant-logbook-day">
+        <div class="participant-logbook-day-header">
+          <h3>${escapeHtml(dayTitle)}</h3>
+          <span>${escapeHtml(dateLabel)}</span>
+        </div>
+
+        <div class="participant-logbook-table-wrap">
+          <table class="participant-logbook-table">
+            <thead>
+              <tr>
+                <th>Load</th>
+                <th>Coach</th>
+                <th>Group</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }).join("");
 }
 
 function showLoginScreen() {

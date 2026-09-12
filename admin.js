@@ -1630,3 +1630,28 @@ newLogbookDaySelect?.addEventListener("focus", refreshNewLogbookDaySelect);
 newLogbookDaySelect?.addEventListener("pointerdown", refreshNewLogbookDaySelect);
 
 
+
+async function restoreAdminSession() {
+  try {
+    const { data: { session }, error } = await client.auth.getSession();
+    if (error) throw error;
+
+    if (session?.user) {
+      currentUser = session.user;
+      if (loggedInEmail) loggedInEmail.textContent = session.user.email || "";
+      showView("dashboard");
+      await loadAdminEvents();
+      return true;
+    }
+  } catch (error) {
+    console.warn("Could not restore admin session:", error);
+  }
+
+  return false;
+}
+
+
+
+window.addEventListener("DOMContentLoaded", async () => {
+  await restoreAdminSession();
+});
