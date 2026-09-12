@@ -196,27 +196,34 @@ async function loadParticipantLogbook() {
 
   const rows = Array.isArray(data) ? data : [];
   const totalJumps = rows.length;
-  const coachedJumps = rows.filter(entry => String(entry.coach_name || "").trim()).length;
+  const coachedRows = rows.filter(entry => String(entry.coach_name || "").trim());
+  const coachedJumps = coachedRows.length;
 
   setText("participantTotalJumps", String(totalJumps), "0");
   setText("participantCoachedJumps", String(coachedJumps), "0");
 
-  // Coach ticket total is derived from:
-  // coached jumps × event ticket price.
+  // Each coached group's coach ticket is shared equally between
+  // all jumpers in that group. The participant's coach-ticket total
+  // is the sum of their share for every coached jump.
   if ((participantAccess?.event_type || loadedEvent?.event_type) === "skydive") {
-    const ticketPrice = moneyNumber(rows[0]?.ticket_price);
-    if (ticketPrice > 0) {
-      const calculatedCoachTotal = coachedJumps * ticketPrice;
-      const coachPaid = moneyNumber(participantAccess?.coach_tickets_paid);
+    const calculatedCoachTotal = coachedRows.reduce((sum, entry) => {
+      const ticketPrice = moneyNumber(entry.ticket_price);
+      const groupSize = Array.isArray(entry.group_participants)
+        ? entry.group_participants.length
+        : 0;
 
-      setText("selfCoachTotal", formatMoney(calculatedCoachTotal), "0.00");
-      setText("selfCoachPaid", formatMoney(coachPaid), "0.00");
-      setText(
-        "selfCoachLeft",
-        formatMoney(Math.max(0, calculatedCoachTotal - coachPaid)),
-        "0.00"
-      );
-    }
+      return sum + (groupSize > 0 ? ticketPrice / groupSize : 0);
+    }, 0);
+
+    const coachPaid = moneyNumber(participantAccess?.coach_tickets_paid);
+
+    setText("selfCoachTotal", formatMoney(calculatedCoachTotal), "0.00");
+    setText("selfCoachPaid", formatMoney(coachPaid), "0.00");
+    setText(
+      "selfCoachLeft",
+      formatMoney(Math.max(0, calculatedCoachTotal - coachPaid)),
+      "0.00"
+    );
   }
 
   if (!rows.length) {
@@ -519,15 +526,19 @@ async function loadEvent() {
         end_date,
         event_type,
         venue,
+        venue_type,
+        venue_url,
+        ticket_price,
+        tunnel_time_cost,
         description,
         status,
         locations (
           name,
           city,
           country,
-          dropzone,
           address,
-          venue_type
+          location_type,
+          website_url
         )
       `)
       .eq("id", eventId)
@@ -552,11 +563,40 @@ async function loadEvent() {
     setText("eventLocation", locationLine);
     setText("eventDescription", event.description);
 
-    const venueLines = [event.venue, loc.dropzone, loc.address]
-      .filter(Boolean)
-      .filter((value, index, all) => all.indexOf(value) === index);
+    const livingInfo = document.getElementById("livingLocationInfo");
+    if (livingInfo) {
+      const locationType = loc.location_type === "house" ? "House" : "Hotel";
+      const addressLine = [loc.address, loc.city, loc.country]
+        .filter(Boolean)
+        .filter((value, index, all) => all.indexOf(value) === index)
+        .join(" • ");
 
-    setText("eventVenue", venueLines.join("\n"));
+      livingInfo.innerHTML = `
+        ${loc.name ? `<strong>${escapeHtml(loc.name)}</strong>` : ""}
+        ${loc.name ? `<span>${escapeHtml(locationType)}</span>` : ""}
+        ${addressLine ? `<span>${escapeHtml(addressLine)}</span>` : ""}
+        ${loc.website_url
+          ? `<a class="event-info-link" href="${escapeHtml(loc.website_url)}" target="_blank" rel="noopener">Location page ↗</a>`
+          : ""}
+      `;
+    }
+
+    const venueInfo = document.getElementById("eventVenueInfo");
+    if (venueInfo) {
+      const venueType = event.venue_type === "tunnel" ? "Tunnel" : "Drop zone";
+      const priceLine = event.venue_type === "tunnel"
+        ? (event.tunnel_time_cost != null ? `Tunnel time cost: ${formatMoney(event.tunnel_time_cost)}` : "")
+        : (event.ticket_price != null ? `Ticket price: ${formatMoney(event.ticket_price)}` : "");
+
+      venueInfo.innerHTML = `
+        ${event.venue ? `<strong>${escapeHtml(event.venue)}</strong>` : ""}
+        <span>${escapeHtml(venueType)}</span>
+        ${priceLine ? `<span>${escapeHtml(priceLine)}</span>` : ""}
+        ${event.venue_url
+          ? `<a class="event-info-link" href="${escapeHtml(event.venue_url)}" target="_blank" rel="noopener">Venue page ↗</a>`
+          : ""}
+      `;
+    }
 
     const restored = await restoreParticipantSession();
 

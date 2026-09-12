@@ -47,7 +47,8 @@ const exportParticipantsButton = document.getElementById("exportParticipantsButt
 const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
 
-const venueCostDataTitle = document.getElementById("venueCostDataTitle");
+const eventVenueTypeInput = document.getElementById("eventVenueTypeInput");
+const venueUrlInput = document.getElementById("venueUrlInput");
 const dropzoneTicketPriceField = document.getElementById("dropzoneTicketPriceField");
 const tunnelTimeCostField = document.getElementById("tunnelTimeCostField");
 const ticketPriceInput = document.getElementById("ticketPriceInput");
@@ -177,7 +178,7 @@ signOutButton.addEventListener("click", async () => {
 async function loadLocations() {
   const { data, error } = await client
     .from("locations")
-    .select("id,name,country,city,dropzone,address,active,venue_type")
+    .select("id,name,country,city,dropzone,address,active,venue_type,location_type,website_url")
     .order("country", { ascending: true })
     .order("name", { ascending: true });
 
@@ -290,13 +291,22 @@ function updateParticipantModalForEventType() {
     eventLogbookSection.classList.toggle("hidden", type !== "skydive");
   }
 
-  if (venueCostDataTitle) {
-    venueCostDataTitle.textContent = type === "tunnel" ? "Wind tunnel Data" : "Drop zone Data";
+  if (eventVenueTypeInput && !currentEventId) {
+    eventVenueTypeInput.value = type === "tunnel" ? "tunnel" : "dropzone";
   }
-  dropzoneTicketPriceField?.classList.toggle("hidden", type !== "skydive");
-  tunnelTimeCostField?.classList.toggle("hidden", type !== "tunnel");
+  updateEventVenueFields();
 }
 
+
+
+function updateEventVenueFields() {
+  const venueType = eventVenueTypeInput?.value || (getEventType() === "tunnel" ? "tunnel" : "dropzone");
+
+  dropzoneTicketPriceField?.classList.toggle("hidden", venueType !== "dropzone");
+  tunnelTimeCostField?.classList.toggle("hidden", venueType !== "tunnel");
+}
+
+eventVenueTypeInput?.addEventListener("change", updateEventVenueFields);
 
 document.querySelectorAll('input[name="eventType"]').forEach(radio => {
   radio.addEventListener("change", updateParticipantModalForEventType);
@@ -882,6 +892,12 @@ async function saveEventLogbook() {
     );
   }
 
+  const { error: coachCalcError } = await client.rpc("recalculate_event_coach_ticket_totals_v30", {
+    p_event_id: currentEventId
+  });
+
+  if (coachCalcError) throw coachCalcError;
+
   return saveResult;
 }
 
@@ -1047,7 +1063,7 @@ async function openEventEditor(eventId = null) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,event_type,location_id,venue,additional_location_info,description,status,ticket_price,tunnel_time_cost")
+    .select("id,name,start_date,end_date,event_type,location_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost")
     .eq("id", eventId)
     .single();
 
@@ -1065,8 +1081,11 @@ async function openEventEditor(eventId = null) {
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
+  if (eventVenueTypeInput) eventVenueTypeInput.value = event.venue_type || (event.event_type === "tunnel" ? "tunnel" : "dropzone");
+  if (venueUrlInput) venueUrlInput.value = event.venue_url || "";
   if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
   if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
+  updateEventVenueFields();
   setEventType(event.event_type || "skydive");
 
   const { data: memberships, error: membershipError } = await client
@@ -1321,18 +1340,19 @@ function showNewLocationForm(mode = "new") {
   if (editingLocationId) {
     const location = locations.find(item => item.id === editingLocationId);
     if (!location) return;
-    setTextById("locationFormTitle", "Edit location");
+    setTextById("locationFormTitle", "Edit living location");
     document.getElementById("locationNameInput").value = location.name || "";
     document.getElementById("locationCountryInput").value = location.country || "";
     document.getElementById("locationCityInput").value = location.city || "";
-    document.getElementById("locationTypeInput").value = location.venue_type || "dropzone";
+    document.getElementById("locationTypeInput").value = location.location_type || "hotel";
+    document.getElementById("locationWebsiteInput").value = location.website_url || "";
     document.getElementById("locationAddressInput").value = location.address || "";
     deleteButton.classList.remove("hidden");
   } else {
-    setTextById("locationFormTitle", "Add a location");
-    ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput"]
+    setTextById("locationFormTitle", "Add living location");
+    ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput", "locationWebsiteInput"]
       .forEach(id => document.getElementById(id).value = "");
-    document.getElementById("locationTypeInput").value = "dropzone";
+    document.getElementById("locationTypeInput").value = "hotel";
     deleteButton.classList.add("hidden");
   }
 }
@@ -1340,9 +1360,9 @@ function showNewLocationForm(mode = "new") {
 function hideNewLocationForm() {
   document.getElementById("newLocationBox").classList.add("hidden");
   editingLocationId = null;
-  ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput"]
+  ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput", "locationWebsiteInput"]
     .forEach(id => document.getElementById(id).value = "");
-  document.getElementById("locationTypeInput").value = "dropzone";
+  document.getElementById("locationTypeInput").value = "hotel";
   document.getElementById("deleteLocationButton").classList.add("hidden");
 }
 
@@ -1364,7 +1384,7 @@ document.getElementById("cancelLocationButton").addEventListener("click", hideNe
 document.getElementById("saveLocationButton").addEventListener("click", async () => {
   const name = document.getElementById("locationNameInput").value.trim();
   if (!name) {
-    setStatus(editorStatus, "Location name is required.", true);
+    setStatus(editorStatus, "Living location name is required.", true);
     return;
   }
 
@@ -1372,7 +1392,8 @@ document.getElementById("saveLocationButton").addEventListener("click", async ()
     name,
     country: document.getElementById("locationCountryInput").value.trim() || null,
     city: document.getElementById("locationCityInput").value.trim() || null,
-    venue_type: document.getElementById("locationTypeInput").value,
+    location_type: document.getElementById("locationTypeInput").value,
+    website_url: document.getElementById("locationWebsiteInput").value.trim() || null,
     address: document.getElementById("locationAddressInput").value.trim() || null,
     active: true
   };
@@ -1385,7 +1406,7 @@ document.getElementById("saveLocationButton").addEventListener("click", async ()
     }
     locations = locations.map(item => item.id === data.id ? data : item);
     renderLocationOptions(data.id);
-    setStatus(editorStatus, "Location updated.");
+    setStatus(editorStatus, "Living location updated.");
   } else {
     const { data, error } = await client.from("locations").insert(payload).select().single();
     if (error) {
@@ -1394,7 +1415,7 @@ document.getElementById("saveLocationButton").addEventListener("click", async ()
     }
     locations.push(data);
     renderLocationOptions(data.id);
-    setStatus(editorStatus, "Location added.");
+    setStatus(editorStatus, "Living location added.");
   }
   hideNewLocationForm();
 });
@@ -1578,11 +1599,13 @@ async function saveEvent(status) {
       event_type: getEventType(),
       location_id: locationSelect.value || null,
       venue: document.getElementById("venueInput").value.trim() || null,
+      venue_type: eventVenueTypeInput?.value || (getEventType() === "tunnel" ? "tunnel" : "dropzone"),
+      venue_url: venueUrlInput?.value.trim() || null,
       description: document.getElementById("descriptionInput").value.trim() || null,
-      ticket_price: getEventType() === "skydive"
+      ticket_price: (eventVenueTypeInput?.value || "dropzone") === "dropzone"
         ? (ticketPriceInput?.value ? Number(ticketPriceInput.value) : null)
         : null,
-      tunnel_time_cost: getEventType() === "tunnel"
+      tunnel_time_cost: (eventVenueTypeInput?.value || "dropzone") === "tunnel"
         ? (tunnelTimeCostInput?.value ? Number(tunnelTimeCostInput.value) : null)
         : null,
       status
@@ -1674,6 +1697,13 @@ async function saveEvent(status) {
         membershipId = membership.id;
       }
 }
+
+    if (getEventType() === "skydive" && currentEventId) {
+      const { error: coachCalcError } = await client.rpc("recalculate_event_coach_ticket_totals_v30", {
+        p_event_id: currentEventId
+      });
+      if (coachCalcError) throw coachCalcError;
+    }
 
     setStatus(editorStatus, status === "published" ? "Event published successfully." : "Draft saved successfully.");
     await loadAdminEvents();

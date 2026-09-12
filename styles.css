@@ -2545,3 +2545,37 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .event-cost-data-box {
   margin-top: 4px;
 }
+
+
+/* ---------- V30 Living location + Event venue ---------- */
+
+.event-venue-box {
+  margin-top: 4px;
+}
+
+.event-info-stack {
+  display: grid;
+  gap: 6px;
+  line-height: 1.45;
+}
+
+.event-info-stack strong {
+  color: var(--text);
+}
+
+.event-info-stack span {
+  color: var(--muted);
+}
+
+.event-info-link {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 3px;
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.event-info-link:hover {
+  text-decoration: underline;
+}

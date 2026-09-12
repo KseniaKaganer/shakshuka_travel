@@ -118,7 +118,7 @@
 
           <div class="location-picker-row">
             <label class="field grow-field">
-              <span>Location</span>
+              <span>Living location</span>
               <select id="locationSelect">
                 <option value="">No location selected</option>
               </select>
@@ -132,37 +132,55 @@
 
           <div id="newLocationBox" class="subpanel hidden">
             <div class="subpanel-head">
-              <strong id="locationFormTitle">Add a location</strong>
+              <strong id="locationFormTitle">Add living location</strong>
               <button id="cancelLocationButton" class="icon-button" type="button" aria-label="Close">×</button>
             </div>
             <div class="two-columns">
-              <label class="field"><span>Name *</span><input id="locationNameInput" type="text" placeholder="Windobona Madrid" /></label>
+              <label class="field"><span>Name *</span><input id="locationNameInput" type="text" placeholder="Hotel / house name" /></label>
               <label class="field"><span>Type *</span>
                 <select id="locationTypeInput">
-                  <option value="dropzone">Drop zone</option>
-                  <option value="tunnel">Tunnel</option>
-                  <option value="other">Other</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="house">House</option>
                 </select>
               </label>
               <label class="field"><span>Country</span><input id="locationCountryInput" type="text" placeholder="Spain" /></label>
               <label class="field"><span>City</span><input id="locationCityInput" type="text" placeholder="Madrid" /></label>
             </div>
             <label class="field"><span>Address</span><input id="locationAddressInput" type="text" /></label>
+            <label class="field">
+              <span>Location page link</span>
+              <input id="locationWebsiteInput" type="url" placeholder="https://..." />
+            </label>
             <div class="location-form-actions">
-              <button id="saveLocationButton" class="secondary-button" type="button">Save location</button>
+              <button id="saveLocationButton" class="secondary-button" type="button">Save living location</button>
               <button id="deleteLocationButton" class="danger-button hidden" type="button">Delete saved location</button>
             </div>
           </div>
 
-          <label class="field">
-            <span>Venue / drop zone / tunnel</span>
-            <input id="venueInput" type="text" placeholder="SkyTime or Windobona" />
-          </label>
-
-          <div id="venueCostDataBox" class="subpanel event-cost-data-box">
+          <div id="eventVenueBox" class="subpanel event-venue-box">
             <div class="subpanel-head">
-              <strong id="venueCostDataTitle">Drop zone Data</strong>
+              <strong>Event venue</strong>
             </div>
+
+            <div class="two-columns">
+              <label class="field">
+                <span>Venue type</span>
+                <select id="eventVenueTypeInput">
+                  <option value="dropzone">Drop zone</option>
+                  <option value="tunnel">Tunnel</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Venue name</span>
+                <input id="venueInput" type="text" placeholder="SkyTime / Windobona" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Venue page link</span>
+              <input id="venueUrlInput" type="url" placeholder="https://..." />
+            </label>
 
             <label id="dropzoneTicketPriceField" class="field">
               <span>Ticket price</span>
