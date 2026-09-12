@@ -1705,3 +1705,68 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
     flex: 1;
   }
 }
+
+
+/* ---------- V10 index admin + real flag images ---------- */
+
+.admin-home-link {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(17, 21, 26, .92);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+}
+
+.admin-home-link:hover {
+  border-color: rgba(242, 169, 59, .65);
+  color: var(--accent);
+}
+
+.event-country-flag {
+  overflow: hidden;
+}
+
+.event-country-flag-img {
+  display: block;
+  width: 28px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+}
+
+.event-country-fallback {
+  font-size: 18px;
+}
+
+@media (max-width: 700px) {
+  .admin-home-link {
+    top: 10px;
+    right: 10px;
+    padding: 8px 10px;
+  }
+
+  .admin-home-link span:last-child {
+    display: none;
+  }
+}
+
+/* Ensure the event logbook is visually separated inside the event editor. */
+#editorView .admin-event-logbook {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+}

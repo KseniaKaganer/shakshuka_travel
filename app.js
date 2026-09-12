@@ -22,36 +22,51 @@ function locationText(location) {
 }
 
 
-function countryFlag(country = "") {
+function countryCode(country = "") {
   const aliases = {
-    "spain": "ES",
-    "thailand": "TH",
-    "slovenia": "SI",
-    "italy": "IT",
-    "france": "FR",
-    "czech republic": "CZ",
-    "czechia": "CZ",
-    "morocco": "MA",
-    "united states": "US",
-    "usa": "US",
-    "united states of america": "US",
-    "israel": "IL",
-    "greece": "GR",
-    "cyprus": "CY",
-    "united arab emirates": "AE",
-    "uae": "AE",
-    "portugal": "PT",
-    "germany": "DE",
-    "austria": "AT",
-    "netherlands": "NL",
-    "belgium": "BE",
-    "poland": "PL",
-    "croatia": "HR"
+    "spain": "es",
+    "thailand": "th",
+    "slovenia": "si",
+    "italy": "it",
+    "france": "fr",
+    "czech republic": "cz",
+    "czechia": "cz",
+    "morocco": "ma",
+    "united states": "us",
+    "usa": "us",
+    "united states of america": "us",
+    "israel": "il",
+    "greece": "gr",
+    "cyprus": "cy",
+    "united arab emirates": "ae",
+    "uae": "ae",
+    "portugal": "pt",
+    "germany": "de",
+    "austria": "at",
+    "netherlands": "nl",
+    "belgium": "be",
+    "poland": "pl",
+    "croatia": "hr",
+    "ukraine": "ua",
+    "united kingdom": "gb",
+    "uk": "gb"
   };
 
-  const code = aliases[String(country).trim().toLowerCase()];
-  if (!code) return "🌍";
-  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
+  return aliases[String(country).trim().toLowerCase()] || "";
+}
+
+function countryFlagMarkup(country = "") {
+  const code = countryCode(country);
+  if (!code) return '<span class="event-country-fallback">🌍</span>';
+
+  return `<img
+    class="event-country-flag-img"
+    src="https://flagcdn.com/w40/${code}.png"
+    srcset="https://flagcdn.com/w80/${code}.png 2x"
+    width="40"
+    alt="${escapeHtml(country)} flag"
+    loading="lazy"
+  />`;
 }
 
 function eventTypeIcon(type) {
@@ -106,7 +121,7 @@ async function loadEvents() {
         <div class="event-card__topline">
           <div class="event-card__date">${formatDateRange(event.start_date, event.end_date)}</div>
           <div class="event-card__icons">
-            <span class="event-country-flag" title="${escapeHtml(country)}">${countryFlag(country)}</span>
+            <span class="event-country-flag" title="${escapeHtml(country)}">${countryFlagMarkup(country)}</span>
             <span class="event-type-icon" title="${type === "tunnel" ? "Tunnel event" : "Skydive event"}">${eventTypeIcon(type)}</span>
           </div>
         </div>

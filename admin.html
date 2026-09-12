@@ -176,9 +176,96 @@
         </aside>
       </form>
 
+
+      <section id="eventLogbookSection" class="admin-event-logbook hidden">
+        <div class="admin-event-logbook-head">
+          <div>
+            <div class="eyebrow">SKYDIVE EVENT</div>
+            <h2>Event Logbook</h2>
+            <p class="muted">Build the event by day, load, group, participants and coach.</p>
+          </div>
+          <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+        </div>
+
+        <div id="eventLogbookStatus" class="status hidden"></div>
+        <div id="eventLogbookDays" class="event-logbook-days"></div>
+      </section>
+
       <div id="editorStatus" class="status compact-status"></div>
     </section>
   </main>
+
+
+  <template id="logbookDayTemplate">
+    <section class="logbook-day-card">
+      <div class="logbook-day-header">
+        <div class="logbook-day-title-wrap">
+          <label class="field compact-field">
+            <span>Day date</span>
+            <input class="logbook-day-date" type="date" />
+          </label>
+          <label class="field compact-field">
+            <span>Day title</span>
+            <input class="logbook-day-title" type="text" placeholder="Day 1 - Monday" />
+          </label>
+        </div>
+        <div class="logbook-day-actions">
+          <button class="secondary-button add-load-button" type="button">+ Add load</button>
+          <button class="danger-ghost-button remove-day-button" type="button">Remove day</button>
+        </div>
+      </div>
+      <div class="logbook-loads"></div>
+    </section>
+  </template>
+
+  <template id="logbookLoadTemplate">
+    <section class="logbook-load-card">
+      <div class="logbook-load-header">
+        <label class="field compact-field load-number-field">
+          <span>Load number</span>
+          <input class="logbook-load-number" type="number" min="1" step="1" />
+        </label>
+        <div class="logbook-load-actions">
+          <button class="secondary-button add-group-button" type="button">+ Add group</button>
+          <button class="danger-ghost-button remove-load-button" type="button">Remove load</button>
+        </div>
+      </div>
+      <div class="logbook-groups"></div>
+    </section>
+  </template>
+
+  <template id="logbookGroupTemplate">
+    <section class="logbook-group-card">
+      <div class="logbook-group-header">
+        <strong class="logbook-group-title">Group</strong>
+        <button class="danger-ghost-button remove-group-button" type="button">Remove group</button>
+      </div>
+
+      <div class="logbook-group-grid">
+        <label class="field">
+          <span>Coach</span>
+          <select class="logbook-group-coach">
+            <option value="">No coach</option>
+            <option value="Ilya">Ilya</option>
+            <option value="Ksenia">Ksenia</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Jump type / notes</span>
+          <input class="logbook-group-type" type="text" placeholder="e.g. Tracking, 4-way, H&P" />
+        </label>
+      </div>
+
+      <div>
+        <div class="logbook-group-participants-head">
+          <span>Participants</span>
+          <span class="muted small-text">Select everyone in this group</span>
+        </div>
+        <div class="logbook-group-participants"></div>
+      </div>
+    </section>
+  </template>
 
   <template id="participantRowTemplate">
     <div class="participant-row participant-collapsed">
