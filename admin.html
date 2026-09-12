@@ -75,8 +75,17 @@
       </div>
 
       <form id="eventForm" class="editor-grid" onsubmit="return false;">
-        <section class="panel form-panel editor-main">
-          <h2>Event details</h2>
+        <details class="panel form-panel editor-main event-details-collapsible">
+          <summary class="event-details-summary">
+            <div>
+              <h2>Event details</h2>
+              <p class="muted small-text">Title, dates, type and location</p>
+            </div>
+            <span class="collapse-chevron" aria-hidden="true">⌄</span>
+          </summary>
+
+          <div class="event-details-content">
+
 
           <label class="field">
             <span>Event title *</span>
@@ -155,7 +164,9 @@
             <span>Event description</span>
             <textarea id="descriptionInput" rows="6" placeholder="What the event is about, schedule, what is included…"></textarea>
           </label>
-        </section>
+
+          </div>
+        </details>
 
         <aside class="panel form-panel editor-side">
           <div class="participants-header">
@@ -184,7 +195,10 @@
             <h2>Event Logbook</h2>
             <p class="muted">Build the event by day, load, group, participants and coach.</p>
           </div>
-          <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+          <div class="logbook-top-actions">
+            <button id="exportLogbookButton" class="secondary-button" type="button">⇩ Export logbook</button>
+            <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+          </div>
         </div>
 
         <div id="eventLogbookStatus" class="status hidden"></div>
@@ -257,13 +271,19 @@
         </label>
       </div>
 
-      <div>
-        <div class="logbook-group-participants-head">
-          <span>Participants</span>
-          <span class="muted small-text">Select everyone in this group</span>
-        </div>
-        <div class="logbook-group-participants"></div>
+      <div class="logbook-participant-picker">
+        <label class="field grow-field">
+          <span>Add participant</span>
+          <select class="logbook-participant-select">
+            <option value="">Select participant…</option>
+          </select>
+        </label>
+        <button class="secondary-button add-logbook-participant-button field-button" type="button">
+          + Add
+        </button>
       </div>
+
+      <div class="logbook-selected-participants"></div>
     </section>
   </template>
 

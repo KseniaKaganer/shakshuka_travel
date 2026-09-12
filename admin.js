@@ -54,6 +54,7 @@ const eventLogbookSection = document.getElementById("eventLogbookSection");
 const eventLogbookDays = document.getElementById("eventLogbookDays");
 const eventLogbookStatus = document.getElementById("eventLogbookStatus");
 const addLogbookDayButton = document.getElementById("addLogbookDayButton");
+const exportLogbookButton = document.getElementById("exportLogbookButton");
 const logbookDayTemplate = document.getElementById("logbookDayTemplate");
 const logbookLoadTemplate = document.getElementById("logbookLoadTemplate");
 const logbookGroupTemplate = document.getElementById("logbookGroupTemplate");
@@ -336,23 +337,82 @@ function getParticipantOptions() {
     .filter(p => p.participant_id && p.name);
 }
 
-function renderGroupParticipantChoices(container, selectedIds = []) {
+function getParticipantNameById(participantId) {
+  return getParticipantOptions().find(p => p.participant_id === participantId)?.name || "Participant";
+}
+
+function fillParticipantDropdown(select, excludedIds = []) {
   const participants = getParticipantOptions();
-  container.innerHTML = "";
 
-  if (!participants.length) {
-    container.innerHTML = '<p class="muted small-text">Save participants first, then add them to groups.</p>';
-    return;
-  }
+  select.innerHTML = '<option value="">Select participant…</option>';
 
-  participants.forEach(person => {
-    const label = document.createElement("label");
-    label.className = "logbook-participant-choice";
-    label.innerHTML = `
-      <input type="checkbox" value="${person.participant_id}" ${selectedIds.includes(person.participant_id) ? "checked" : ""}>
-      <span>${escapeHtml(person.name)}</span>
-    `;
-    container.appendChild(label);
+  participants
+    .filter(person => !excludedIds.includes(person.participant_id))
+    .forEach(person => {
+      const option = document.createElement("option");
+      option.value = person.participant_id;
+      option.textContent = person.name;
+      select.appendChild(option);
+    });
+}
+
+function selectedParticipantIds(card) {
+  return [...card.querySelectorAll(".logbook-selected-participant")]
+    .map(chip => chip.dataset.participantId)
+    .filter(Boolean);
+}
+
+function renderSelectedParticipant(card, participantId, participantName = "") {
+  if (!participantId) return;
+  if (selectedParticipantIds(card).includes(participantId)) return;
+
+  const selectedContainer = card.querySelector(".logbook-selected-participants");
+  const chip = document.createElement("div");
+  chip.className = "logbook-selected-participant";
+  chip.dataset.participantId = participantId;
+
+  chip.innerHTML = `
+    <span>${escapeHtml(participantName || getParticipantNameById(participantId))}</span>
+    <button class="remove-logbook-participant" type="button" aria-label="Remove participant">×</button>
+  `;
+
+  chip.querySelector(".remove-logbook-participant").addEventListener("click", () => {
+    chip.remove();
+    fillParticipantDropdown(
+      card.querySelector(".logbook-participant-select"),
+      selectedParticipantIds(card)
+    );
+  });
+
+  selectedContainer.appendChild(chip);
+}
+
+function setupGroupParticipantPicker(card, selectedParticipants = []) {
+  const select = card.querySelector(".logbook-participant-select");
+  const addButton = card.querySelector(".add-logbook-participant-button");
+
+  selectedParticipants.forEach(person => {
+    renderSelectedParticipant(
+      card,
+      person.participant_id,
+      person.display_name || person.name || ""
+    );
+  });
+
+  fillParticipantDropdown(select, selectedParticipantIds(card));
+
+  addButton.addEventListener("click", () => {
+    const participantId = select.value;
+    if (!participantId) return;
+
+    renderSelectedParticipant(
+      card,
+      participantId,
+      select.options[select.selectedIndex]?.textContent || ""
+    );
+
+    select.value = "";
+    fillParticipantDropdown(select, selectedParticipantIds(card));
   });
 }
 
@@ -368,15 +428,11 @@ function addLogbookGroup(groupContainer, data = {}) {
   const card = fragment.querySelector(".logbook-group-card");
   const coach = card.querySelector(".logbook-group-coach");
   const type = card.querySelector(".logbook-group-type");
-  const participantBox = card.querySelector(".logbook-group-participants");
 
   coach.value = data.coach_name || "";
   type.value = data.jump_type || "";
 
-  renderGroupParticipantChoices(
-    participantBox,
-    (data.participants || []).map(p => p.participant_id)
-  );
+  setupGroupParticipantPicker(card, data.participants || []);
 
   card.querySelector(".remove-group-button").addEventListener("click", () => {
     card.remove();
@@ -438,8 +494,7 @@ function collectEventLogbookFromEditor() {
       };
 
       [...loadCard.querySelectorAll(".logbook-group-card")].forEach(groupCard => {
-        const participantIds = [...groupCard.querySelectorAll(".logbook-group-participants input[type=checkbox]:checked")]
-          .map(input => input.value);
+        const participantIds = selectedParticipantIds(groupCard);
 
         load.groups.push({
           coach_name: groupCard.querySelector(".logbook-group-coach").value || null,
@@ -512,6 +567,95 @@ async function saveEventLogbook() {
 
   if (error) throw error;
 }
+
+
+function formatDateForExport(dateString) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function exportEventLogbookToSpreadsheet() {
+  const days = collectEventLogbookFromEditor();
+
+  if (!days.length) {
+    setEventLogbookStatus("There is no logbook data to export.", true);
+    return;
+  }
+
+  const rows = [];
+  const headers = [
+    "Day",
+    "Date",
+    "Load",
+    "Group",
+    "Coach",
+    "Coached jump",
+    "Jump type / notes",
+    "Participant"
+  ];
+
+  days.forEach((day, dayIndex) => {
+    day.loads.forEach(load => {
+      load.groups.forEach((group, groupIndex) => {
+        const coach = group.coach_name || "";
+        const participantIds = group.participant_ids || [];
+
+        if (!participantIds.length) {
+          rows.push([
+            day.title || `Day ${dayIndex + 1}`,
+            formatDateForExport(day.day_date),
+            load.load_number ?? "",
+            groupIndex + 1,
+            coach,
+            coach ? "Yes" : "No",
+            group.jump_type || "",
+            ""
+          ]);
+          return;
+        }
+
+        participantIds.forEach(participantId => {
+          rows.push([
+            day.title || `Day ${dayIndex + 1}`,
+            formatDateForExport(day.day_date),
+            load.load_number ?? "",
+            groupIndex + 1,
+            coach,
+            coach ? "Yes" : "No",
+            group.jump_type || "",
+            getParticipantNameById(participantId)
+          ]);
+        });
+      });
+    });
+  });
+
+  const csvEscape = value => `"${String(value ?? "").replaceAll('"', '""')}"`;
+
+  const csv = "\ufeff" + [headers, ...rows]
+    .map(row => row.map(csvEscape).join(","))
+    .join("\r\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const eventName = document.getElementById("eventNameInput").value.trim() || "SHAKSHUKA_event";
+  const safeName = eventName.replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "");
+
+  link.href = url;
+  link.download = `${safeName}_logbook.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  setEventLogbookStatus("Logbook spreadsheet exported.");
+  setTimeout(() => setEventLogbookStatus(""), 2200);
+}
+
+exportLogbookButton?.addEventListener("click", exportEventLogbookToSpreadsheet);
+
 
 addLogbookDayButton?.addEventListener("click", () => addLogbookDay());
 
