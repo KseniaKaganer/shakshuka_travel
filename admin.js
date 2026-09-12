@@ -519,9 +519,10 @@ function addLogbookGroup(groupContainer, data = {}) {
 
   renderGroupParticipantBoxes(card, data.participants || []);
 
-  const removeCard = () => {
+  const removeCard = async () => {
     card.remove();
     renumberGroupTitles(groupContainer);
+    await persistEventLogbook("Group removed.");
   };
 
   const updateCompactSummary = () => {
@@ -551,7 +552,7 @@ function addLogbookGroup(groupContainer, data = {}) {
     card.classList.remove("is-confirmed");
   };
 
-  confirmButton.addEventListener("click", () => {
+  confirmButton.addEventListener("click", async () => {
     const selected = selectedParticipantIds(card);
 
     if (!selected.length) {
@@ -560,8 +561,12 @@ function addLogbookGroup(groupContainer, data = {}) {
     }
 
     showSummary();
-    setEventLogbookStatus("Group added.");
-    setTimeout(() => setEventLogbookStatus(""), 1200);
+
+    const saved = await persistEventLogbook("Group saved.");
+    if (!saved) {
+      // Reopen the editor if saving failed, so the admin can retry.
+      showEditor();
+    }
   });
 
   card.querySelector(".edit-group-button").addEventListener("click", showEditor);
@@ -601,11 +606,21 @@ function addLogbookLoad(loadsContainer, data = {}) {
   numberInput.setAttribute("value", String(nextNumber));
 
   card.querySelector(".add-group-button").addEventListener("click", () => {
+    // A new group is only persisted after the yellow "+ Add group" confirmation.
     addLogbookGroup(groups);
   });
 
-  card.querySelector(".remove-load-button").addEventListener("click", () => {
+  card.querySelector(".remove-load-button").addEventListener("click", async () => {
     card.remove();
+    await persistEventLogbook("Load removed.");
+  });
+
+  numberInput.addEventListener("change", async () => {
+    await persistEventLogbook("Load number saved.");
+  });
+
+  numberInput.addEventListener("blur", async () => {
+    await persistEventLogbook("Load number saved.");
   });
 
   (data.groups || []).forEach(group => addLogbookGroup(groups, group));
@@ -629,13 +644,15 @@ function addLogbookDay(data = {}) {
   dateInput.value = dayDate;
   if (titleInput) titleInput.value = data.title || "";
 
-  card.querySelector(".add-load-button").addEventListener("click", () => {
+  card.querySelector(".add-load-button").addEventListener("click", async () => {
     addLogbookLoad(loads);
+    await persistEventLogbook("Load added.");
   });
 
-  card.querySelector(".remove-day-button").addEventListener("click", () => {
+  card.querySelector(".remove-day-button").addEventListener("click", async () => {
     card.remove();
     updateDayTitles();
+    await persistEventLogbook("Day removed.");
   });
 
   (data.loads || []).forEach(load => addLogbookLoad(loads, load));
@@ -737,6 +754,32 @@ async function saveEventLogbook() {
 }
 
 
+let eventLogbookSaveInProgress = false;
+
+async function persistEventLogbook(message = "Logbook saved.") {
+  if (!currentEventId || getEventType() !== "skydive") return false;
+  if (eventLogbookSaveInProgress) return false;
+
+  try {
+    eventLogbookSaveInProgress = true;
+    setEventLogbookStatus("Saving logbook…");
+    await saveEventLogbook();
+    setEventLogbookStatus(message);
+    setTimeout(() => {
+      if (eventLogbookStatus?.textContent === message) {
+        setEventLogbookStatus("");
+      }
+    }, 1300);
+    return true;
+  } catch (error) {
+    setEventLogbookStatus(`Could not save logbook: ${error.message}`, true);
+    return false;
+  } finally {
+    eventLogbookSaveInProgress = false;
+  }
+}
+
+
 function formatDateForExport(dateString) {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
@@ -827,7 +870,7 @@ function exportEventLogbookToSpreadsheet() {
 exportLogbookButton?.addEventListener("click", exportEventLogbookToSpreadsheet);
 
 
-addLogbookDayButton?.addEventListener("click", () => {
+addLogbookDayButton?.addEventListener("click", async () => {
   const selectedDate = newLogbookDaySelect?.value || "";
   if (!selectedDate) {
     setEventLogbookStatus("Choose a day first.", true);
@@ -835,8 +878,8 @@ addLogbookDayButton?.addEventListener("click", () => {
   }
 
   addLogbookDay({ day_date: selectedDate });
-  if (newLogbookDaySelect) newLogbookDaySelect.value = "";
-  setEventLogbookStatus("");
+  refreshNewLogbookDaySelect();
+  await persistEventLogbook("Day added.");
 });
 
 function resetEventForm() {
