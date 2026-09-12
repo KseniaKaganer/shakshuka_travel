@@ -2242,3 +2242,27 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     width: 100%;
   }
 }
+
+
+/* ---------- V21 Event date dropdown fix ---------- */
+
+.logbook-day-adder #addLogbookDayButton {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex: 0 0 auto !important;
+}
+
+.logbook-day-adder {
+  align-items: end !important;
+}
+
+@media (max-width: 760px) {
+  .logbook-day-adder #addLogbookDayButton {
+    width: fit-content !important;
+    align-self: flex-start;
+  }
+}

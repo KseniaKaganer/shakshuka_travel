@@ -392,26 +392,34 @@ function renderGroupParticipantBoxes(card, selectedParticipants = []) {
 }
 
 function eventDateOptions() {
-  const start = document.getElementById("startDateInput")?.value;
-  const end = document.getElementById("endDateInput")?.value;
+  const startInput = document.getElementById("startDateInput");
+  const endInput = document.getElementById("endDateInput");
+
+  const start = startInput?.value || "";
+  const end = endInput?.value || "";
+
   if (!start || !end) return [];
 
-  const dates = [];
-  const current = new Date(`${start}T12:00:00`);
-  const last = new Date(`${end}T12:00:00`);
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = end.split("-").map(Number);
 
-  if (Number.isNaN(current.getTime()) || Number.isNaN(last.getTime()) || current > last) {
-    return [];
-  }
+  if (![sy, sm, sd, ey, em, ed].every(Number.isFinite)) return [];
+
+  const current = new Date(Date.UTC(sy, sm - 1, sd));
+  const last = new Date(Date.UTC(ey, em - 1, ed));
+
+  if (current > last) return [];
+
+  const dates = [];
 
   while (current <= last) {
-    const value = [
-      current.getFullYear(),
-      String(current.getMonth() + 1).padStart(2, "0"),
-      String(current.getDate()).padStart(2, "0")
-    ].join("-");
+    const year = current.getUTCFullYear();
+    const month = String(current.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(current.getUTCDate()).padStart(2, "0");
+    const value = `${year}-${month}-${day}`;
 
     const label = current.toLocaleDateString("en-GB", {
+      timeZone: "UTC",
       weekday: "short",
       day: "2-digit",
       month: "2-digit",
@@ -419,7 +427,7 @@ function eventDateOptions() {
     });
 
     dates.push({ value, label });
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return dates;
@@ -754,6 +762,7 @@ function resetEventForm() {
   setEventType("skydive");
   participantsList.innerHTML = "";
   if (eventLogbookDays) eventLogbookDays.innerHTML = "";
+  refreshNewLogbookDaySelect();
   updateParticipantCount();
   renderLocationOptions("");
   setStatus(editorStatus, "");
@@ -789,6 +798,7 @@ async function openEventEditor(eventId = null) {
   document.getElementById("eventNameInput").value = event.name || "";
   document.getElementById("startDateInput").value = event.start_date || "";
   document.getElementById("endDateInput").value = event.end_date || "";
+  refreshNewLogbookDaySelect();
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
@@ -1428,7 +1438,14 @@ document.getElementById("exportLogbookButton")?.addEventListener("click", (event
 
 
 ["startDateInput", "endDateInput"].forEach(id => {
-  document.getElementById(id)?.addEventListener("change", () => {
-    refreshNewLogbookDaySelect();
+  const input = document.getElementById(id);
+
+  ["change", "input", "blur"].forEach(eventName => {
+    input?.addEventListener(eventName, () => {
+      refreshNewLogbookDaySelect();
+    });
   });
 });
+
+newLogbookDaySelect?.addEventListener("focus", refreshNewLogbookDaySelect);
+newLogbookDaySelect?.addEventListener("pointerdown", refreshNewLogbookDaySelect);
