@@ -385,6 +385,15 @@ function renderGroupParticipantBoxes(card, selectedParticipants = []) {
     button.addEventListener("click", () => {
       const selected = button.classList.toggle("is-selected");
       button.setAttribute("aria-pressed", selected ? "true" : "false");
+
+      const groupCard = button.closest(".logbook-group-card");
+      groupCard?.classList.remove("is-confirmed");
+
+      const confirmButton = groupCard?.querySelector(".confirm-group-button");
+      const confirmedLabel = groupCard?.querySelector(".group-confirmed-label");
+
+      if (confirmButton) confirmButton.textContent = "+ Add group";
+      confirmedLabel?.classList.add("hidden");
     });
 
     container.appendChild(button);
@@ -448,21 +457,30 @@ function refreshNewLogbookDaySelect() {
   if (!newLogbookDaySelect) return;
 
   const used = new Set(usedLogbookDayDates());
-  const current = newLogbookDaySelect.value;
+  const previousValue = newLogbookDaySelect.value;
 
   newLogbookDaySelect.innerHTML = '<option value="">Choose event date…</option>';
 
-  eventDateOptions()
-    .filter(item => !used.has(item.value))
-    .forEach(item => {
-      const option = document.createElement("option");
-      option.value = item.value;
-      option.textContent = item.label;
-      newLogbookDaySelect.appendChild(option);
-    });
+  const availableDates = eventDateOptions()
+    .filter(item => !used.has(item.value));
 
-  if ([...newLogbookDaySelect.options].some(option => option.value === current)) {
-    newLogbookDaySelect.value = current;
+  availableDates.forEach(item => {
+    const option = document.createElement("option");
+    option.value = item.value;
+    option.textContent = item.label;
+    newLogbookDaySelect.appendChild(option);
+  });
+
+  if (
+    previousValue &&
+    [...newLogbookDaySelect.options].some(option => option.value === previousValue)
+  ) {
+    newLogbookDaySelect.value = previousValue;
+  } else if (availableDates.length) {
+    // Default to the first still-available event day.
+    newLogbookDaySelect.value = availableDates[0].value;
+  } else {
+    newLogbookDaySelect.value = "";
   }
 }
 
@@ -496,11 +514,37 @@ function addLogbookGroup(groupContainer, data = {}) {
   const card = fragment.querySelector(".logbook-group-card");
   const coach = card.querySelector(".logbook-group-coach");
   const type = card.querySelector(".logbook-group-type");
+  const confirmButton = card.querySelector(".confirm-group-button");
+  const confirmedLabel = card.querySelector(".group-confirmed-label");
 
   coach.value = data.coach_name || "";
   type.value = data.jump_type || "";
 
   renderGroupParticipantBoxes(card, data.participants || []);
+
+  const markGroupConfirmed = () => {
+    const selected = selectedParticipantIds(card);
+
+    if (!selected.length) {
+      setEventLogbookStatus("Choose at least one participant for the group.", true);
+      return;
+    }
+
+    card.classList.add("is-confirmed");
+    confirmButton.textContent = "Update group";
+    confirmedLabel?.classList.remove("hidden");
+    setEventLogbookStatus("Group added.");
+    setTimeout(() => setEventLogbookStatus(""), 1400);
+  };
+
+  confirmButton?.addEventListener("click", markGroupConfirmed);
+
+  // Existing saved groups are already considered confirmed.
+  if (data.group_id || (data.participants || []).length) {
+    card.classList.add("is-confirmed");
+    if (confirmButton) confirmButton.textContent = "Update group";
+    confirmedLabel?.classList.remove("hidden");
+  }
 
   card.querySelector(".remove-group-button").addEventListener("click", () => {
     card.remove();
@@ -511,16 +555,29 @@ function addLogbookGroup(groupContainer, data = {}) {
   renumberGroupTitles(groupContainer);
 }
 
+function nextLoadNumber(loadsContainer) {
+  const numbers = [...loadsContainer.querySelectorAll(".logbook-load-number")]
+    .map(input => Number(input.value))
+    .filter(value => Number.isFinite(value) && value > 0);
+
+  return numbers.length ? Math.max(...numbers) + 1 : 1;
+}
+
 function addLogbookLoad(loadsContainer, data = {}) {
   const fragment = logbookLoadTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".logbook-load-card");
   const numberInput = card.querySelector(".logbook-load-number");
   const groups = card.querySelector(".logbook-groups");
 
-  numberInput.value = data.load_number ?? "";
+  numberInput.value = data.load_number ?? nextLoadNumber(loadsContainer);
 
-  card.querySelector(".add-group-button").addEventListener("click", () => addLogbookGroup(groups));
-  card.querySelector(".remove-load-button").addEventListener("click", () => card.remove());
+  card.querySelector(".add-group-button").addEventListener("click", () => {
+    addLogbookGroup(groups);
+  });
+
+  card.querySelector(".remove-load-button").addEventListener("click", () => {
+    card.remove();
+  });
 
   (data.groups || []).forEach(group => addLogbookGroup(groups, group));
 
@@ -1449,3 +1506,32 @@ document.getElementById("exportLogbookButton")?.addEventListener("click", (event
 
 newLogbookDaySelect?.addEventListener("focus", refreshNewLogbookDaySelect);
 newLogbookDaySelect?.addEventListener("pointerdown", refreshNewLogbookDaySelect);
+
+
+function markGroupCardDirtyFromField(event) {
+  const groupCard = event.target.closest(".logbook-group-card");
+  if (!groupCard) return;
+
+  groupCard.classList.remove("is-confirmed");
+
+  const confirmButton = groupCard.querySelector(".confirm-group-button");
+  const confirmedLabel = groupCard.querySelector(".group-confirmed-label");
+
+  if (confirmButton) confirmButton.textContent = "+ Add group";
+  confirmedLabel?.classList.add("hidden");
+}
+
+document.addEventListener("change", event => {
+  if (
+    event.target.matches(".logbook-group-coach") ||
+    event.target.matches(".logbook-group-type")
+  ) {
+    markGroupCardDirtyFromField(event);
+  }
+});
+
+document.addEventListener("input", event => {
+  if (event.target.matches(".logbook-group-type")) {
+    markGroupCardDirtyFromField(event);
+  }
+});

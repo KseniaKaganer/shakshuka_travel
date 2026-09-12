@@ -2266,3 +2266,49 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     align-self: flex-start;
   }
 }
+
+
+/* ---------- V22 Logbook defaults + group confirmation ---------- */
+
+/* Remove the old yellow step numbers completely. */
+.logbook-step-number {
+  display: none !important;
+}
+
+.logbook-step-heading {
+  gap: 0 !important;
+}
+
+.logbook-group-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.confirm-group-button {
+  min-width: 112px;
+}
+
+.group-confirmed-label {
+  color: #7ee787;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.logbook-group-card.is-confirmed {
+  border-color: rgba(63, 185, 80, .45);
+}
+
+@media (max-width: 760px) {
+  .logbook-group-confirm-row {
+    justify-content: stretch;
+  }
+
+  .confirm-group-button {
+    width: 100%;
+  }
+}

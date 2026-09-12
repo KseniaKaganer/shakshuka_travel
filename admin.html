@@ -222,8 +222,7 @@
     <section class="logbook-day-card">
       <div class="logbook-day-header">
         <div class="logbook-step-heading">
-          <span class="logbook-step-number">1</span>
-          <div>
+<div>
             <strong class="logbook-day-display-title">Day</strong>
             <span class="logbook-day-display-date muted small-text"></span>
           </div>
@@ -245,8 +244,7 @@
     <section class="logbook-load-card">
       <div class="logbook-load-header">
         <div class="logbook-step-heading">
-          <span class="logbook-step-number">2</span>
-          <div>
+<div>
             <strong>Load</strong>
             <span class="muted small-text">Enter load number</span>
           </div>
@@ -257,7 +255,7 @@
             <span>Load number</span>
             <input class="logbook-load-number" type="number" min="1" step="1" />
           </label>
-          <button class="secondary-button add-group-button" type="button">+ Add group</button>
+          <button class="secondary-button add-group-button" type="button">+ New group</button>
           <button class="danger-ghost-button remove-load-button" type="button">Remove load</button>
         </div>
       </div>
@@ -269,8 +267,7 @@
     <section class="logbook-group-card">
       <div class="logbook-group-header">
         <div class="logbook-step-heading">
-          <span class="logbook-step-number">3</span>
-          <div>
+<div>
             <strong class="logbook-group-title">Group</strong>
             <span class="muted small-text">Choose coach and click participants to select them</span>
           </div>
@@ -297,6 +294,11 @@
       <div class="field">
         <span>Participants</span>
         <div class="logbook-participant-boxes"></div>
+      </div>
+
+      <div class="logbook-group-confirm-row">
+        <button class="primary-button confirm-group-button" type="button">+ Add group</button>
+        <span class="group-confirmed-label hidden">✓ Group added</span>
       </div>
     </section>
   </template>
