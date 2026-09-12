@@ -354,7 +354,21 @@ function selectedParticipantIds(card) {
     .filter(Boolean);
 }
 
-function renderGroupParticipantBoxes(card, selectedParticipants = []) {
+function participantIdsUsedByOtherGroups(card, groupContainer) {
+  if (!groupContainer) return new Set();
+
+  const used = new Set();
+
+  [...groupContainer.querySelectorAll(".logbook-group-card")].forEach(otherCard => {
+    if (otherCard === card) return;
+
+    selectedParticipantIds(otherCard).forEach(id => used.add(id));
+  });
+
+  return used;
+}
+
+function renderGroupParticipantBoxes(card, selectedParticipants = [], groupContainer = null) {
   const container = card.querySelector(".logbook-participant-boxes");
   if (!container) return;
 
@@ -362,11 +376,17 @@ function renderGroupParticipantBoxes(card, selectedParticipants = []) {
     (selectedParticipants || []).map(person => person.participant_id || person)
   );
 
-  const participants = getParticipantOptions();
+  const usedByOtherGroups = participantIdsUsedByOtherGroups(card, groupContainer);
+  const participants = getParticipantOptions()
+    .filter(person =>
+      selectedIds.has(person.participant_id) ||
+      !usedByOtherGroups.has(person.participant_id)
+    );
+
   container.innerHTML = "";
 
   if (!participants.length) {
-    container.innerHTML = '<p class="muted small-text">Add and save event participants first.</p>';
+    container.innerHTML = '<p class="muted small-text">All participants are already assigned to another group in this load.</p>';
     return;
   }
 
@@ -500,7 +520,10 @@ function updateDayTitles() {
 function renumberGroupTitles(groupContainer) {
   [...groupContainer.querySelectorAll(".logbook-group-card")].forEach((card, index) => {
     const title = card.querySelector(".logbook-group-title");
+    const summaryNumber = card.querySelector(".logbook-group-summary-number");
+
     if (title) title.textContent = `Group ${index + 1}`;
+    if (summaryNumber) summaryNumber.textContent = String(index + 1);
   });
 }
 
@@ -517,26 +540,59 @@ function addLogbookGroup(groupContainer, data = {}) {
   coach.value = data.coach_name || "";
   type.value = data.jump_type || "";
 
-  renderGroupParticipantBoxes(card, data.participants || []);
+  const initialParticipants = data.participants || [];
+  renderGroupParticipantBoxes(card, initialParticipants, groupContainer);
+
+  const currentSelectedParticipants = () =>
+    selectedParticipantIds(card).map(participant_id => ({
+      participant_id,
+      display_name: getParticipantNameById(participant_id)
+    }));
+
+  const refreshOtherGroupSelections = () => {
+    [...groupContainer.querySelectorAll(".logbook-group-card")].forEach(otherCard => {
+      if (otherCard === card) return;
+
+      const otherSelected = selectedParticipantIds(otherCard).map(participant_id => ({
+        participant_id,
+        display_name: getParticipantNameById(participant_id)
+      }));
+
+      renderGroupParticipantBoxes(otherCard, otherSelected, groupContainer);
+    });
+  };
 
   const removeCard = async () => {
     card.remove();
     renumberGroupTitles(groupContainer);
+
+    // Removing a group makes its jumpers available to the other groups again.
+    [...groupContainer.querySelectorAll(".logbook-group-card")].forEach(otherCard => {
+      const otherSelected = selectedParticipantIds(otherCard).map(participant_id => ({
+        participant_id,
+        display_name: getParticipantNameById(participant_id)
+      }));
+      renderGroupParticipantBoxes(otherCard, otherSelected, groupContainer);
+    });
+
     await persistEventLogbook("Group removed.");
   };
 
   const updateCompactSummary = () => {
-    const groupIndex = [...groupContainer.querySelectorAll(".logbook-group-card")].indexOf(card) + 1;
+    const groupIndex =
+      [...groupContainer.querySelectorAll(".logbook-group-card")].indexOf(card) + 1;
+
     const selectedIds = selectedParticipantIds(card);
     const names = selectedIds.map(getParticipantNameById);
 
-    card.querySelector(".logbook-group-summary-title").textContent = `Group ${groupIndex}`;
+    card.querySelector(".logbook-group-summary-number").textContent =
+      String(groupIndex);
+
     card.querySelector(".logbook-group-summary-coach").textContent =
-      coach.value ? `Coach: ${coach.value}` : "No coach";
+      coach.value || "-";
+
     card.querySelector(".logbook-group-summary-participants").textContent =
       names.join(", ");
-    card.querySelector(".logbook-group-summary-notes").textContent =
-      type.value.trim() ? type.value.trim() : "";
   };
 
   const showSummary = () => {
@@ -547,6 +603,12 @@ function addLogbookGroup(groupContainer, data = {}) {
   };
 
   const showEditor = () => {
+    const ownSelected = currentSelectedParticipants();
+
+    // Rebuild the choices every time Edit is opened so any jumper already
+    // assigned to another group in this load is not shown.
+    renderGroupParticipantBoxes(card, ownSelected, groupContainer);
+
     summary.classList.add("hidden");
     editor.classList.remove("hidden");
     card.classList.remove("is-confirmed");
@@ -560,11 +622,24 @@ function addLogbookGroup(groupContainer, data = {}) {
       return;
     }
 
+    // Guard against duplicates even if two group editors were open at once.
+    const usedElsewhere = participantIdsUsedByOtherGroups(card, groupContainer);
+    const duplicate = selected.find(id => usedElsewhere.has(id));
+
+    if (duplicate) {
+      setEventLogbookStatus(
+        `${getParticipantNameById(duplicate)} is already assigned to another group in this load.`,
+        true
+      );
+      showEditor();
+      return;
+    }
+
     showSummary();
+    refreshOtherGroupSelections();
 
     const saved = await persistEventLogbook("Group saved.");
     if (!saved) {
-      // Reopen the editor if saving failed, so the admin can retry.
       showEditor();
     }
   });
@@ -576,8 +651,8 @@ function addLogbookGroup(groupContainer, data = {}) {
   groupContainer.appendChild(fragment);
   renumberGroupTitles(groupContainer);
 
-  // Groups already loaded from the database appear as summaries immediately.
-  if (data.group_id || (data.participants || []).length) {
+  // Saved groups appear as compact summaries.
+  if (data.group_id || initialParticipants.length) {
     showSummary();
   }
 }
