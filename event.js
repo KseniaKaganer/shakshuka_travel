@@ -175,12 +175,12 @@ async function loadParticipantLogbook() {
   const list = document.getElementById("participantLogbookList");
   const status = document.getElementById("participantLogbookStatus");
 
-  if (!participantAccess?.participant_id || !participantSessionToken) return;
+  if (!participantSessionToken) return;
 
   status.textContent = "Loading logbook…";
   status.classList.remove("hidden", "error");
 
-  const { data, error } = await client.rpc("get_participant_logbook_by_token", {
+  const { data, error } = await client.rpc("get_participant_skydive_logbook_by_token", {
     p_event_id: eventId,
     p_token: participantSessionToken
   });
@@ -202,11 +202,12 @@ async function loadParticipantLogbook() {
   list.innerHTML = data.map(entry => `
     <article class="logbook-entry">
       <div class="logbook-entry-main">
-        <strong>${entry.jump_number != null ? `Jump #${entry.jump_number}` : "Jump"}</strong>
-        <span>${escapeHtml(entry.jump_type || "Skydive")}</span>
+        <strong>Load ${entry.load_number}</strong>
+        <span>${entry.jump_type ? escapeHtml(entry.jump_type) : "Jump"}</span>
       </div>
-      <div class="logbook-entry-date">${formatLogbookDate(entry.jump_date)}</div>
-      ${entry.notes ? `<p>${escapeHtml(entry.notes)}</p>` : ""}
+      <div class="logbook-entry-date">${formatLogbookDate(entry.day_date)}</div>
+      ${entry.coach_name ? `<p class="coached-jump-label">Coached jump • ${escapeHtml(entry.coach_name)}</p>` : ""}
+      ${entry.day_title ? `<p>${escapeHtml(entry.day_title)}</p>` : ""}
     </article>
   `).join("");
 }

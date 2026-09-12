@@ -49,6 +49,15 @@ const addLogbookEntryButton = document.getElementById("addLogbookEntryButton");
 const logbookEntryTemplate = document.getElementById("logbookEntryTemplate");
 const coachTicketsPaymentRow = document.getElementById("coachTicketsPaymentRow");
 
+
+const eventLogbookSection = document.getElementById("eventLogbookSection");
+const eventLogbookDays = document.getElementById("eventLogbookDays");
+const eventLogbookStatus = document.getElementById("eventLogbookStatus");
+const addLogbookDayButton = document.getElementById("addLogbookDayButton");
+const logbookDayTemplate = document.getElementById("logbookDayTemplate");
+const logbookLoadTemplate = document.getElementById("logbookLoadTemplate");
+const logbookGroupTemplate = document.getElementById("logbookGroupTemplate");
+
 let currentEventId = null;
 let removedMembershipIds = [];
 let locations = [];
@@ -265,7 +274,11 @@ function updateParticipantModalForEventType() {
     modalCoachTotal.value = "0";
     updatePaymentCalculations();
   }
+  if (eventLogbookSection) {
+    eventLogbookSection.classList.toggle("hidden", type !== "skydive");
+  }
 }
+
 
 document.querySelectorAll('input[name="eventType"]').forEach(radio => {
   radio.addEventListener("change", updateParticipantModalForEventType);
@@ -306,12 +319,209 @@ function updatePaymentCalculations() {
   input?.addEventListener("input", updatePaymentCalculations);
 });
 
+
+function setEventLogbookStatus(message = "", isError = false) {
+  if (!eventLogbookStatus) return;
+  eventLogbookStatus.textContent = message;
+  eventLogbookStatus.classList.toggle("hidden", !message);
+  eventLogbookStatus.classList.toggle("error", isError);
+}
+
+function getParticipantOptions() {
+  return [...participantsList.querySelectorAll(".participant-row")]
+    .map(row => ({
+      participant_id: row.querySelector(".participant-id").value || "",
+      name: row.querySelector(".participant-name").value.trim()
+    }))
+    .filter(p => p.participant_id && p.name);
+}
+
+function renderGroupParticipantChoices(container, selectedIds = []) {
+  const participants = getParticipantOptions();
+  container.innerHTML = "";
+
+  if (!participants.length) {
+    container.innerHTML = '<p class="muted small-text">Save participants first, then add them to groups.</p>';
+    return;
+  }
+
+  participants.forEach(person => {
+    const label = document.createElement("label");
+    label.className = "logbook-participant-choice";
+    label.innerHTML = `
+      <input type="checkbox" value="${person.participant_id}" ${selectedIds.includes(person.participant_id) ? "checked" : ""}>
+      <span>${escapeHtml(person.name)}</span>
+    `;
+    container.appendChild(label);
+  });
+}
+
+function renumberGroupTitles(groupContainer) {
+  [...groupContainer.querySelectorAll(".logbook-group-card")].forEach((card, index) => {
+    const title = card.querySelector(".logbook-group-title");
+    if (title) title.textContent = `Group ${index + 1}`;
+  });
+}
+
+function addLogbookGroup(groupContainer, data = {}) {
+  const fragment = logbookGroupTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".logbook-group-card");
+  const coach = card.querySelector(".logbook-group-coach");
+  const type = card.querySelector(".logbook-group-type");
+  const participantBox = card.querySelector(".logbook-group-participants");
+
+  coach.value = data.coach_name || "";
+  type.value = data.jump_type || "";
+
+  renderGroupParticipantChoices(
+    participantBox,
+    (data.participants || []).map(p => p.participant_id)
+  );
+
+  card.querySelector(".remove-group-button").addEventListener("click", () => {
+    card.remove();
+    renumberGroupTitles(groupContainer);
+  });
+
+  groupContainer.appendChild(fragment);
+  renumberGroupTitles(groupContainer);
+}
+
+function addLogbookLoad(loadsContainer, data = {}) {
+  const fragment = logbookLoadTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".logbook-load-card");
+  const numberInput = card.querySelector(".logbook-load-number");
+  const groups = card.querySelector(".logbook-groups");
+
+  numberInput.value = data.load_number ?? "";
+
+  card.querySelector(".add-group-button").addEventListener("click", () => addLogbookGroup(groups));
+  card.querySelector(".remove-load-button").addEventListener("click", () => card.remove());
+
+  (data.groups || []).forEach(group => addLogbookGroup(groups, group));
+
+  loadsContainer.appendChild(fragment);
+}
+
+function addLogbookDay(data = {}) {
+  const fragment = logbookDayTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".logbook-day-card");
+  const dateInput = card.querySelector(".logbook-day-date");
+  const titleInput = card.querySelector(".logbook-day-title");
+  const loads = card.querySelector(".logbook-loads");
+
+  dateInput.value = data.day_date || "";
+  titleInput.value = data.title || "";
+
+  card.querySelector(".add-load-button").addEventListener("click", () => addLogbookLoad(loads));
+  card.querySelector(".remove-day-button").addEventListener("click", () => card.remove());
+
+  (data.loads || []).forEach(load => addLogbookLoad(loads, load));
+
+  eventLogbookDays.appendChild(fragment);
+}
+
+function collectEventLogbookFromEditor() {
+  const days = [];
+
+  [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach(dayCard => {
+    const day = {
+      day_date: dayCard.querySelector(".logbook-day-date").value || null,
+      title: dayCard.querySelector(".logbook-day-title").value.trim() || null,
+      loads: []
+    };
+
+    [...dayCard.querySelectorAll(".logbook-load-card")].forEach(loadCard => {
+      const load = {
+        load_number: Number(loadCard.querySelector(".logbook-load-number").value) || null,
+        groups: []
+      };
+
+      [...loadCard.querySelectorAll(".logbook-group-card")].forEach(groupCard => {
+        const participantIds = [...groupCard.querySelectorAll(".logbook-group-participants input[type=checkbox]:checked")]
+          .map(input => input.value);
+
+        load.groups.push({
+          coach_name: groupCard.querySelector(".logbook-group-coach").value || null,
+          jump_type: groupCard.querySelector(".logbook-group-type").value.trim() || null,
+          participant_ids: participantIds
+        });
+      });
+
+      day.loads.push(load);
+    });
+
+    days.push(day);
+  });
+
+  return days;
+}
+
+function validateEventLogbook(days) {
+  for (const day of days) {
+    if (!day.day_date) return "Each logbook day needs a date.";
+
+    let lastLoad = null;
+    for (const load of day.loads) {
+      if (!load.load_number || load.load_number < 1) {
+        return "Each load needs a positive load number.";
+      }
+      if (lastLoad !== null && load.load_number <= lastLoad) {
+        return `Load numbers must increase within each day. ${load.load_number} is not greater than ${lastLoad}.`;
+      }
+      lastLoad = load.load_number;
+    }
+  }
+  return "";
+}
+
+async function loadEventLogbook() {
+  if (!currentEventId || getEventType() !== "skydive") {
+    eventLogbookDays.innerHTML = "";
+    return;
+  }
+
+  setEventLogbookStatus("Loading logbook…");
+
+  const { data, error } = await client.rpc("admin_get_event_logbook", {
+    p_event_id: currentEventId
+  });
+
+  setEventLogbookStatus("");
+
+  if (error) {
+    setEventLogbookStatus(`Could not load event logbook: ${error.message}`, true);
+    return;
+  }
+
+  eventLogbookDays.innerHTML = "";
+  (data || []).forEach(day => addLogbookDay(day));
+}
+
+async function saveEventLogbook() {
+  if (!currentEventId || getEventType() !== "skydive") return;
+
+  const days = collectEventLogbookFromEditor();
+  const validation = validateEventLogbook(days);
+  if (validation) throw new Error(validation);
+
+  const { error } = await client.rpc("admin_replace_event_logbook", {
+    p_event_id: currentEventId,
+    p_logbook: days
+  });
+
+  if (error) throw error;
+}
+
+addLogbookDayButton?.addEventListener("click", () => addLogbookDay());
+
 function resetEventForm() {
   currentEventId = null;
   removedMembershipIds = [];
   document.getElementById("eventForm").reset();
   setEventType("skydive");
   participantsList.innerHTML = "";
+  if (eventLogbookDays) eventLogbookDays.innerHTML = "";
   updateParticipantCount();
   renderLocationOptions("");
   setStatus(editorStatus, "");
@@ -919,6 +1129,8 @@ async function saveEvent(status) {
   const endDate = document.getElementById("endDateInput").value;
 
   if (!name || !startDate || !endDate) {
+    await saveEventLogbook();
+
     setStatus(editorStatus, "Event title, start date and end date are required.", true);
     return;
   }
