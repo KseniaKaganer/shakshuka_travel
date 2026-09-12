@@ -932,7 +932,34 @@ function nextLoadNumber(loadsContainer) {
   return numbers.length ? Math.max(...numbers) + 1 : 1;
 }
 
-function addLogbookLoad(loadsContainer, data = {}) {
+
+function shouldIgnoreLogbookHeaderToggle(event) {
+  return Boolean(event.target.closest(
+    "button, input, select, textarea, a, label"
+  ));
+}
+
+function setDayCollapsed(card, collapsed) {
+  card.classList.toggle("is-collapsed", collapsed);
+  const button = card.querySelector(".collapse-day-button");
+  if (button) {
+    button.textContent = collapsed ? "⌄" : "⌃";
+    button.setAttribute("aria-label", collapsed ? "Expand day" : "Collapse day");
+    button.title = collapsed ? "Expand day" : "Collapse day";
+  }
+}
+
+function setLoadCollapsed(card, collapsed) {
+  card.classList.toggle("is-collapsed", collapsed);
+  const button = card.querySelector(".collapse-load-button");
+  if (button) {
+    button.textContent = collapsed ? "⌄" : "⌃";
+    button.setAttribute("aria-label", collapsed ? "Expand load" : "Collapse load");
+    button.title = collapsed ? "Expand load" : "Collapse load";
+  }
+}
+
+function addLogbookLoad(loadsContainer, data = {}, collapseOnCreate = false) {
   const nextNumber = data.load_number ?? nextLoadNumber(loadsContainer);
 
   const fragment = logbookLoadTemplate.content.cloneNode(true);
@@ -952,15 +979,28 @@ function addLogbookLoad(loadsContainer, data = {}) {
     addLogbookGroup(groups);
   });
 
-  card.querySelector(".collapse-load-button")?.addEventListener("click", () => {
-    const collapsed = card.classList.toggle("is-collapsed");
-    const button = card.querySelector(".collapse-load-button");
-    if (button) {
-      button.textContent = collapsed ? "⌄" : "⌃";
-      button.setAttribute("aria-label", collapsed ? "Expand load" : "Collapse load");
-      button.title = collapsed ? "Expand load" : "Collapse load";
-    }
+  const loadHeader = card.querySelector(".logbook-load-header");
+  const loadCollapseButton = card.querySelector(".collapse-load-button");
+
+  const toggleLoad = () => {
+    setLoadCollapsed(card, !card.classList.contains("is-collapsed"));
+  };
+
+  loadCollapseButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    toggleLoad();
   });
+
+  loadHeader?.addEventListener("click", event => {
+    if (shouldIgnoreLogbookHeaderToggle(event)) return;
+    toggleLoad();
+  });
+
+  // Existing loads open collapsed when entering an event.
+  // A newly-added load stays open so it can be edited immediately.
+  if (collapseOnCreate) {
+    setLoadCollapsed(card, true);
+  }
 
   card.querySelector(".remove-load-button").addEventListener("click", async () => {
     card.remove();
@@ -1001,14 +1041,21 @@ function addLogbookDay(data = {}) {
     await persistEventLogbook("Load added.");
   });
 
-  card.querySelector(".collapse-day-button")?.addEventListener("click", () => {
-    const collapsed = card.classList.toggle("is-collapsed");
-    const button = card.querySelector(".collapse-day-button");
-    if (button) {
-      button.textContent = collapsed ? "⌄" : "⌃";
-      button.setAttribute("aria-label", collapsed ? "Expand day" : "Collapse day");
-      button.title = collapsed ? "Expand day" : "Collapse day";
-    }
+  const dayHeader = card.querySelector(".logbook-day-header");
+  const dayCollapseButton = card.querySelector(".collapse-day-button");
+
+  const toggleDay = () => {
+    setDayCollapsed(card, !card.classList.contains("is-collapsed"));
+  };
+
+  dayCollapseButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    toggleDay();
+  });
+
+  dayHeader?.addEventListener("click", event => {
+    if (shouldIgnoreLogbookHeaderToggle(event)) return;
+    toggleDay();
   });
 
   card.querySelector(".remove-day-button").addEventListener("click", async () => {
@@ -1017,7 +1064,7 @@ function addLogbookDay(data = {}) {
     await persistEventLogbook("Day removed.");
   });
 
-  (data.loads || []).forEach(load => addLogbookLoad(loads, load));
+  (data.loads || []).forEach(load => addLogbookLoad(loads, load, true));
 
   eventLogbookDays.appendChild(fragment);
   updateDayTitles();

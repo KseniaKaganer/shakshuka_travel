@@ -2871,3 +2871,155 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     min-height: 48px !important;
   }
 }
+
+
+/* ---------- V35 clickable Day / Load headers + refined Groups ---------- */
+
+.logbook-day-header,
+.logbook-load-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.logbook-day-header:hover,
+.logbook-load-header:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* Interactive controls inside a clickable header keep their normal cursor. */
+.logbook-day-header button,
+.logbook-load-header button,
+.logbook-load-header input {
+  cursor: pointer;
+}
+
+.logbook-load-header input {
+  cursor: text;
+}
+
+/* Make the collapsed state feel like the main Logbook/Event Details boxes. */
+.logbook-day-card.is-collapsed .logbook-day-header,
+.logbook-load-card.is-collapsed .logbook-load-header {
+  border-bottom-color: transparent;
+}
+
+/* Refined compact group card */
+.logbook-group-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 13px !important;
+  border-radius: 11px;
+}
+
+.logbook-group-summary.hidden {
+  display: none !important;
+}
+
+.logbook-group-summary-main {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  align-items: center;
+  gap: 10px !important;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.logbook-group-summary-number {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(255,255,255,.06);
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.logbook-group-summary-info {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.logbook-group-coach-line,
+.logbook-group-participants-line {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.logbook-group-summary-label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.logbook-group-summary-coach {
+  color: var(--text);
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.logbook-group-summary-participants {
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  line-height: 1.35;
+}
+
+.compact-group-icon-actions {
+  flex: 0 0 auto;
+  align-self: center;
+  display: flex !important;
+  gap: 5px !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-group-summary {
+    gap: 8px;
+    padding: 10px !important;
+  }
+
+  .logbook-group-summary-main {
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .logbook-group-summary-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px !important;
+  }
+
+  .logbook-group-coach-line,
+  .logbook-group-participants-line {
+    gap: 5px;
+  }
+
+  .logbook-group-summary-label {
+    font-size: 9px;
+  }
+
+  .logbook-group-summary-coach {
+    font-size: 13px !important;
+  }
+
+  .logbook-group-summary-participants {
+    font-size: 12px !important;
+  }
+
+  .group-summary-icon {
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+}
