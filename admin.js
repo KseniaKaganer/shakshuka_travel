@@ -666,7 +666,6 @@ function resetEventForm() {
   updateParticipantCount();
   renderLocationOptions("");
   setStatus(editorStatus, "");
-  document.getElementById("editorEyebrow").textContent = "NEW EVENT";
   document.getElementById("editorTitle").textContent = "Create Travel Event";
   hideNewLocationForm();
 }
@@ -680,7 +679,6 @@ async function openEventEditor(eventId = null) {
   }
 
   currentEventId = eventId;
-  document.getElementById("editorEyebrow").textContent = "EDIT EVENT";
   document.getElementById("editorTitle").textContent = "Edit Travel Event";
   setStatus(editorStatus, "Loading event…");
 
