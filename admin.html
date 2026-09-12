@@ -172,7 +172,8 @@
     <p class="muted small-text">Build the event by day, load, group, participants and coach.</p>
   </div>
   <div class="summary-right-actions">
-    <button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export logbook</button>
+    <button id="saveLogbookButton" class="primary-button summary-save-button" type="button">Save</button>
+    <button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export</button>
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
   </div>
 </summary>
@@ -210,21 +211,27 @@
   <template id="logbookDayTemplate">
     <section class="logbook-day-card">
       <div class="logbook-day-header">
-        <div class="logbook-day-title-wrap">
-          <label class="field compact-field">
-            <span>Day date</span>
-            <input class="logbook-day-date" type="date" />
-          </label>
-          <label class="field compact-field">
-            <span>Day title</span>
-            <input class="logbook-day-title" type="text" placeholder="Day 1 - Monday" />
-          </label>
+        <div class="logbook-step-heading">
+          <span class="logbook-step-number">1</span>
+          <div>
+            <strong class="logbook-day-display-title">Day</strong>
+            <span class="muted small-text">Choose a date from this event</span>
+          </div>
         </div>
-        <div class="logbook-day-actions">
+
+        <div class="logbook-day-controls">
+          <label class="field compact-field logbook-day-date-field">
+            <span>Date</span>
+            <select class="logbook-day-date">
+              <option value="">Choose date…</option>
+            </select>
+          </label>
           <button class="secondary-button add-load-button" type="button">+ Add load</button>
           <button class="danger-ghost-button remove-day-button" type="button">Remove day</button>
         </div>
       </div>
+
+      <input class="logbook-day-title" type="hidden" />
       <div class="logbook-loads"></div>
     </section>
   </template>
@@ -232,11 +239,19 @@
   <template id="logbookLoadTemplate">
     <section class="logbook-load-card">
       <div class="logbook-load-header">
-        <label class="field compact-field load-number-field">
-          <span>Load number</span>
-          <input class="logbook-load-number" type="number" min="1" step="1" />
-        </label>
-        <div class="logbook-load-actions">
+        <div class="logbook-step-heading">
+          <span class="logbook-step-number">2</span>
+          <div>
+            <strong>Load</strong>
+            <span class="muted small-text">Enter the DZ load number</span>
+          </div>
+        </div>
+
+        <div class="logbook-load-controls">
+          <label class="field compact-field load-number-field">
+            <span>Load number</span>
+            <input class="logbook-load-number" type="number" min="1" step="1" />
+          </label>
           <button class="secondary-button add-group-button" type="button">+ Add group</button>
           <button class="danger-ghost-button remove-load-button" type="button">Remove load</button>
         </div>
@@ -248,7 +263,13 @@
   <template id="logbookGroupTemplate">
     <section class="logbook-group-card">
       <div class="logbook-group-header">
-        <strong class="logbook-group-title">Group</strong>
+        <div class="logbook-step-heading">
+          <span class="logbook-step-number">3</span>
+          <div>
+            <strong class="logbook-group-title">Group</strong>
+            <span class="muted small-text">Choose coach and click participants to select them</span>
+          </div>
+        </div>
         <button class="danger-ghost-button remove-group-button" type="button">Remove group</button>
       </div>
 
@@ -268,19 +289,10 @@
         </label>
       </div>
 
-      <div class="logbook-participant-picker">
-        <label class="field grow-field">
-          <span>Add participant</span>
-          <select class="logbook-participant-select">
-            <option value="">Select participant…</option>
-          </select>
-        </label>
-        <button class="secondary-button add-logbook-participant-button field-button" type="button">
-          + Add
-        </button>
+      <div class="field">
+        <span>Participants</span>
+        <div class="logbook-participant-boxes"></div>
       </div>
-
-      <div class="logbook-selected-participants"></div>
     </section>
   </template>
 

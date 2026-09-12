@@ -2082,3 +2082,117 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     align-items: center !important;
   }
 }
+
+
+/* ---------- V19 step-by-step Logbook ---------- */
+
+.summary-save-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+
+.logbook-step-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logbook-step-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.logbook-step-number {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(242, 169, 59, .12);
+  border: 1px solid rgba(242, 169, 59, .35);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.logbook-day-header,
+.logbook-load-header {
+  align-items: center !important;
+}
+
+.logbook-day-controls,
+.logbook-load-controls {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.logbook-day-date-field {
+  min-width: 230px;
+}
+
+.logbook-participant-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.logbook-participant-box {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #20252c;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease,
+              transform .15s ease;
+}
+
+.logbook-participant-box:hover {
+  border-color: rgba(255,255,255,.35);
+  transform: translateY(-1px);
+}
+
+.logbook-participant-box.is-selected {
+  background: rgba(46, 160, 67, .22);
+  border-color: #3fb950;
+  color: #7ee787;
+  box-shadow: inset 0 0 0 1px rgba(63,185,80,.18);
+}
+
+.logbook-participant-box.is-selected::before {
+  content: "✓ ";
+}
+
+.logbook-group-card .field > span {
+  display: block;
+}
+
+@media (max-width: 760px) {
+  .logbook-day-controls,
+  .logbook-load-controls {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .logbook-day-date-field,
+  .load-number-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .summary-save-button,
+  .summary-export-button {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+}

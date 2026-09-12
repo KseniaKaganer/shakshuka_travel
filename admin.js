@@ -52,6 +52,7 @@ const eventLogbookDays = document.getElementById("eventLogbookDays");
 const eventLogbookStatus = document.getElementById("eventLogbookStatus");
 const addLogbookDayButton = document.getElementById("addLogbookDayButton");
 const exportLogbookButton = document.getElementById("exportLogbookButton");
+const saveLogbookButton = document.getElementById("saveLogbookButton");
 const logbookDayTemplate = document.getElementById("logbookDayTemplate");
 const logbookLoadTemplate = document.getElementById("logbookLoadTemplate");
 const logbookGroupTemplate = document.getElementById("logbookGroupTemplate");
@@ -81,6 +82,12 @@ function formatDateRange(start, end) {
   return `${formatDate(start)} – ${formatDate(end)}`;
 }
 
+
+function setTextById(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
+}
+
 function setStatus(element, message = "", isError = false) {
   element.textContent = message;
   element.classList.toggle("error", isError);
@@ -101,7 +108,7 @@ function showView(view) {
 
 async function updateLoggedInIndicator() {
   const { data: { user } } = await client.auth.getUser();
-  loggedInEmail.textContent = user?.email || "";
+  if (loggedInEmail) loggedInEmail.textContent = user?.email || "";
 }
 
 async function isCurrentUserAdmin() {
@@ -156,7 +163,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 
 signOutButton.addEventListener("click", async () => {
   await client.auth.signOut();
-  loggedInEmail.textContent = "";
+  if (loggedInEmail) loggedInEmail.textContent = "";
   showView("login");
 });
 
@@ -259,7 +266,7 @@ function updateParticipantModalForEventType() {
   if (tunnelParticipantFields) tunnelParticipantFields.classList.toggle("hidden", type !== "tunnel");
   if (skydiveParticipantFields) skydiveParticipantFields.classList.toggle("hidden", type !== "skydive");
   if (participantEventTypeBadge) {
-    participantEventTypeBadge.textContent = type === "tunnel" ? "TUNNEL" : "SKYDIVE";
+    if (participantEventTypeBadge) participantEventTypeBadge.textContent = type === "tunnel" ? "TUNNEL" : "SKYDIVE";
     participantEventTypeBadge.className = `status-pill event-type-${type}`;
   }
 
@@ -306,10 +313,10 @@ function formatMoney(value) {
 
 function updatePaymentCalculations() {
   if (modalPaymentLeft) {
-    modalPaymentLeft.textContent = formatMoney(calculateLeft(modalPaymentTotal.value, modalPaymentPaid.value));
+    if (modalPaymentLeft) modalPaymentLeft.textContent = formatMoney(calculateLeft(modalPaymentTotal.value, modalPaymentPaid.value));
   }
   if (modalCoachLeft) {
-    modalCoachLeft.textContent = formatMoney(calculateLeft(modalCoachTotal.value, modalCoachPaid.value));
+    if (modalCoachLeft) modalCoachLeft.textContent = formatMoney(calculateLeft(modalCoachTotal.value, modalCoachPaid.value));
   }
 }
 
@@ -320,6 +327,7 @@ function updatePaymentCalculations() {
 
 function setEventLogbookStatus(message = "", isError = false) {
   if (!eventLogbookStatus) return;
+  if (!eventLogbookStatus) return;
   eventLogbookStatus.textContent = message;
   eventLogbookStatus.classList.toggle("hidden", !message);
   eventLogbookStatus.classList.toggle("error", isError);
@@ -328,8 +336,8 @@ function setEventLogbookStatus(message = "", isError = false) {
 function getParticipantOptions() {
   return [...participantsList.querySelectorAll(".participant-row")]
     .map(row => ({
-      participant_id: row.querySelector(".participant-id").value || "",
-      name: row.querySelector(".participant-name").value.trim()
+      participant_id: row.querySelector(".participant-id")?.value || "",
+      name: row.querySelector(".participant-name")?.value.trim() || ""
     }))
     .filter(p => p.participant_id && p.name);
 }
@@ -338,78 +346,111 @@ function getParticipantNameById(participantId) {
   return getParticipantOptions().find(p => p.participant_id === participantId)?.name || "Participant";
 }
 
-function fillParticipantDropdown(select, excludedIds = []) {
-  const participants = getParticipantOptions();
-
-  select.innerHTML = '<option value="">Select participant…</option>';
-
-  participants
-    .filter(person => !excludedIds.includes(person.participant_id))
-    .forEach(person => {
-      const option = document.createElement("option");
-      option.value = person.participant_id;
-      option.textContent = person.name;
-      select.appendChild(option);
-    });
-}
-
 function selectedParticipantIds(card) {
-  return [...card.querySelectorAll(".logbook-selected-participant")]
-    .map(chip => chip.dataset.participantId)
+  return [...card.querySelectorAll(".logbook-participant-box.is-selected")]
+    .map(box => box.dataset.participantId)
     .filter(Boolean);
 }
 
-function renderSelectedParticipant(card, participantId, participantName = "") {
-  if (!participantId) return;
-  if (selectedParticipantIds(card).includes(participantId)) return;
+function renderGroupParticipantBoxes(card, selectedParticipants = []) {
+  const container = card.querySelector(".logbook-participant-boxes");
+  if (!container) return;
 
-  const selectedContainer = card.querySelector(".logbook-selected-participants");
-  const chip = document.createElement("div");
-  chip.className = "logbook-selected-participant";
-  chip.dataset.participantId = participantId;
+  const selectedIds = new Set(
+    (selectedParticipants || []).map(person => person.participant_id || person)
+  );
 
-  chip.innerHTML = `
-    <span>${escapeHtml(participantName || getParticipantNameById(participantId))}</span>
-    <button class="remove-logbook-participant" type="button" aria-label="Remove participant">×</button>
-  `;
+  const participants = getParticipantOptions();
+  container.innerHTML = "";
 
-  chip.querySelector(".remove-logbook-participant").addEventListener("click", () => {
-    chip.remove();
-    fillParticipantDropdown(
-      card.querySelector(".logbook-participant-select"),
-      selectedParticipantIds(card)
-    );
+  if (!participants.length) {
+    container.innerHTML = '<p class="muted small-text">Add and save event participants first.</p>';
+    return;
+  }
+
+  participants.forEach(person => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "logbook-participant-box";
+    button.dataset.participantId = person.participant_id;
+    button.textContent = person.name;
+
+    if (selectedIds.has(person.participant_id)) {
+      button.classList.add("is-selected");
+      button.setAttribute("aria-pressed", "true");
+    } else {
+      button.setAttribute("aria-pressed", "false");
+    }
+
+    button.addEventListener("click", () => {
+      const selected = button.classList.toggle("is-selected");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+
+    container.appendChild(button);
   });
-
-  selectedContainer.appendChild(chip);
 }
 
-function setupGroupParticipantPicker(card, selectedParticipants = []) {
-  const select = card.querySelector(".logbook-participant-select");
-  const addButton = card.querySelector(".add-logbook-participant-button");
+function eventDateOptions() {
+  const start = document.getElementById("startDateInput")?.value;
+  const end = document.getElementById("endDateInput")?.value;
+  if (!start || !end) return [];
 
-  selectedParticipants.forEach(person => {
-    renderSelectedParticipant(
-      card,
-      person.participant_id,
-      person.display_name || person.name || ""
-    );
+  const dates = [];
+  const current = new Date(`${start}T12:00:00`);
+  const last = new Date(`${end}T12:00:00`);
+
+  if (Number.isNaN(current.getTime()) || Number.isNaN(last.getTime()) || current > last) {
+    return [];
+  }
+
+  while (current <= last) {
+    const value = [
+      current.getFullYear(),
+      String(current.getMonth() + 1).padStart(2, "0"),
+      String(current.getDate()).padStart(2, "0")
+    ].join("-");
+
+    const label = current.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+    dates.push({ value, label });
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function populateDayDateSelect(select, selectedValue = "") {
+  if (!select) return;
+
+  const dates = eventDateOptions();
+  select.innerHTML = '<option value="">Choose date…</option>';
+
+  dates.forEach(date => {
+    const option = document.createElement("option");
+    option.value = date.value;
+    option.textContent = date.label;
+    select.appendChild(option);
   });
 
-  fillParticipantDropdown(select, selectedParticipantIds(card));
+  if (selectedValue) select.value = selectedValue;
+}
 
-  addButton.addEventListener("click", () => {
-    const participantId = select.value;
-    if (!participantId) return;
+function updateDayTitles() {
+  [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach((card, index) => {
+    const select = card.querySelector(".logbook-day-date");
+    const title = card.querySelector(".logbook-day-title");
+    const display = card.querySelector(".logbook-day-display-title");
+    const weekdayText = select?.selectedOptions?.[0]?.textContent || "";
 
-    renderSelectedParticipant(
-      card,
-      participantId,
-      select.options[select.selectedIndex]?.textContent || ""
-    );
-
-    select.value = "";
-    fillParticipantDropdown(select, selectedParticipantIds(card));
+    const generated = `Day ${index + 1}${weekdayText ? ` - ${weekdayText}` : ""}`;
+    if (title) title.value = generated;
+    if (display) display.textContent = `Day ${index + 1}`;
   });
 }
 
@@ -429,7 +470,7 @@ function addLogbookGroup(groupContainer, data = {}) {
   coach.value = data.coach_name || "";
   type.value = data.jump_type || "";
 
-  setupGroupParticipantPicker(card, data.participants || []);
+  renderGroupParticipantBoxes(card, data.participants || []);
 
   card.querySelector(".remove-group-button").addEventListener("click", () => {
     card.remove();
@@ -459,19 +500,28 @@ function addLogbookLoad(loadsContainer, data = {}) {
 function addLogbookDay(data = {}) {
   const fragment = logbookDayTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".logbook-day-card");
-  const dateInput = card.querySelector(".logbook-day-date");
+  const dateSelect = card.querySelector(".logbook-day-date");
   const titleInput = card.querySelector(".logbook-day-title");
   const loads = card.querySelector(".logbook-loads");
 
-  dateInput.value = data.day_date || "";
-  titleInput.value = data.title || "";
+  populateDayDateSelect(dateSelect, data.day_date || "");
+  if (titleInput) titleInput.value = data.title || "";
 
-  card.querySelector(".add-load-button").addEventListener("click", () => addLogbookLoad(loads));
-  card.querySelector(".remove-day-button").addEventListener("click", () => card.remove());
+  dateSelect.addEventListener("change", updateDayTitles);
+
+  card.querySelector(".add-load-button").addEventListener("click", () => {
+    addLogbookLoad(loads);
+  });
+
+  card.querySelector(".remove-day-button").addEventListener("click", () => {
+    card.remove();
+    updateDayTitles();
+  });
 
   (data.loads || []).forEach(load => addLogbookLoad(loads, load));
 
   eventLogbookDays.appendChild(fragment);
+  updateDayTitles();
 }
 
 function collectEventLogbookFromEditor() {
@@ -480,7 +530,7 @@ function collectEventLogbookFromEditor() {
   [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach(dayCard => {
     const day = {
       day_date: dayCard.querySelector(".logbook-day-date").value || null,
-      title: dayCard.querySelector(".logbook-day-title").value.trim() || null,
+      title: dayCard.querySelector(".logbook-day-title")?.value.trim() || null,
       loads: []
     };
 
@@ -651,6 +701,25 @@ function exportEventLogbookToSpreadsheet() {
   setTimeout(() => setEventLogbookStatus(""), 2200);
 }
 
+
+saveLogbookButton?.addEventListener("click", async (event) => {
+  event.stopPropagation();
+
+  if (!currentEventId) {
+    setEventLogbookStatus("Save the event first, then save the logbook.", true);
+    return;
+  }
+
+  try {
+    setEventLogbookStatus("Saving logbook…");
+    await saveEventLogbook();
+    setEventLogbookStatus("Logbook saved.");
+    setTimeout(() => setEventLogbookStatus(""), 2200);
+  } catch (error) {
+    setEventLogbookStatus(`Could not save logbook: ${error.message}`, true);
+  }
+});
+
 exportLogbookButton?.addEventListener("click", exportEventLogbookToSpreadsheet);
 
 
@@ -666,7 +735,8 @@ function resetEventForm() {
   updateParticipantCount();
   renderLocationOptions("");
   setStatus(editorStatus, "");
-  document.getElementById("editorTitle").textContent = "Create Travel Event";
+
+  setTextById("editorTitle", "Create Travel Event");
   hideNewLocationForm();
 }
 
@@ -679,7 +749,8 @@ async function openEventEditor(eventId = null) {
   }
 
   currentEventId = eventId;
-  document.getElementById("editorTitle").textContent = "Edit Travel Event";
+
+  setTextById("editorTitle", "Edit Travel Event");
   setStatus(editorStatus, "Loading event…");
 
   const { data: event, error: eventError } = await client
@@ -761,6 +832,7 @@ document.getElementById("descriptionInput").value = event.description || "";
     });
   });
 
+  await loadEventLogbook();
   setStatus(editorStatus, "");
 }
 
@@ -804,8 +876,10 @@ function boolString(value) {
 function updateParticipantSummary(row) {
   const name = row.querySelector(".participant-name").value.trim() || "New participant";
   const phone = row.querySelector(".participant-phone").value.trim();
-  row.querySelector(".participant-summary-name").textContent = name;
-  row.querySelector(".participant-summary-phone").textContent = phone;
+  const summaryName = row.querySelector(".participant-summary-name");
+  const summaryPhone = row.querySelector(".participant-summary-phone");
+  if (summaryName) summaryName.textContent = name;
+  if (summaryPhone) summaryPhone.textContent = phone;
 }
 
 async function openParticipantModal(row) {
@@ -938,7 +1012,7 @@ const tunnelMinutesTotal = getEventType() === "tunnel"
 
 function updateParticipantCount() {
   const rows = [...participantsList.querySelectorAll(".participant-row")];
-  document.getElementById("participantCount").textContent = rows.length;
+  setTextById("participantCount", rows.length);
 }
 
 function showNewLocationForm(mode = "new") {
@@ -950,7 +1024,7 @@ function showNewLocationForm(mode = "new") {
   if (editingLocationId) {
     const location = locations.find(item => item.id === editingLocationId);
     if (!location) return;
-    document.getElementById("locationFormTitle").textContent = "Edit location";
+    setTextById("locationFormTitle", "Edit location");
     document.getElementById("locationNameInput").value = location.name || "";
     document.getElementById("locationCountryInput").value = location.country || "";
     document.getElementById("locationCityInput").value = location.city || "";
@@ -958,7 +1032,7 @@ function showNewLocationForm(mode = "new") {
     document.getElementById("locationAddressInput").value = location.address || "";
     deleteButton.classList.remove("hidden");
   } else {
-    document.getElementById("locationFormTitle").textContent = "Add a location";
+    setTextById("locationFormTitle", "Add a location");
     ["locationNameInput", "locationCountryInput", "locationCityInput", "locationAddressInput"]
       .forEach(id => document.getElementById(id).value = "");
     document.getElementById("locationTypeInput").value = "dropzone";
@@ -1181,8 +1255,6 @@ async function saveEvent(status) {
   const endDate = document.getElementById("endDateInput").value;
 
   if (!name || !startDate || !endDate) {
-    await saveEventLogbook();
-
     setStatus(editorStatus, "Event title, start date and end date are required.", true);
     return;
   }
@@ -1330,4 +1402,18 @@ document.getElementById("exportParticipantsButton")?.addEventListener("click", (
 });
 document.getElementById("exportLogbookButton")?.addEventListener("click", (event) => {
   event.stopPropagation();
+});
+
+document.getElementById("saveLogbookButton")?.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+["startDateInput", "endDateInput"].forEach(id => {
+  document.getElementById(id)?.addEventListener("change", () => {
+    document.querySelectorAll(".logbook-day-date").forEach(select => {
+      const current = select.value;
+      populateDayDateSelect(select, current);
+    });
+    updateDayTitles();
+  });
 });
