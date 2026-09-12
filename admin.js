@@ -716,26 +716,49 @@ function validateEventLogbook(days) {
 
 async function loadEventLogbook() {
   if (!currentEventId || getEventType() !== "skydive") {
-    eventLogbookDays.innerHTML = "";
+    if (eventLogbookDays) eventLogbookDays.innerHTML = "";
     return;
   }
 
   setEventLogbookStatus("Loading logbook…");
 
-  const { data, error } = await client.rpc("admin_get_event_logbook", {
+  const { data, error } = await client.rpc("admin_get_event_logbook_v25", {
     p_event_id: currentEventId
   });
 
-  setEventLogbookStatus("");
-
   if (error) {
-    setEventLogbookStatus(`Could not load event logbook: ${error.message}`, true);
+    setEventLogbookStatus(`Could not load saved logbook: ${error.message}`, true);
     return;
   }
 
+  let savedDays = data;
+
+  // Some Supabase/PostgREST versions can return JSON as a string.
+  if (typeof savedDays === "string") {
+    try {
+      savedDays = JSON.parse(savedDays);
+    } catch {
+      savedDays = [];
+    }
+  }
+
+  if (!Array.isArray(savedDays)) savedDays = [];
+
   eventLogbookDays.innerHTML = "";
-  (data || []).forEach(day => addLogbookDay(day));
+  savedDays.forEach(day => addLogbookDay(day));
   refreshNewLogbookDaySelect();
+
+  setEventLogbookStatus(
+    savedDays.length ? `Loaded ${savedDays.length} saved day(s).` : ""
+  );
+
+  if (savedDays.length) {
+    setTimeout(() => {
+      if (eventLogbookStatus?.textContent?.startsWith("Loaded ")) {
+        setEventLogbookStatus("");
+      }
+    }, 1200);
+  }
 }
 
 async function saveEventLogbook() {
@@ -745,12 +768,35 @@ async function saveEventLogbook() {
   const validation = validateEventLogbook(days);
   if (validation) throw new Error(validation);
 
-  const { error } = await client.rpc("admin_replace_event_logbook", {
-    p_event_id: currentEventId,
-    p_logbook: days
-  });
+  const { data: saveResult, error: saveError } = await client.rpc(
+    "admin_replace_event_logbook_v25",
+    {
+      p_event_id: currentEventId,
+      p_logbook: days
+    }
+  );
 
-  if (error) throw error;
+  if (saveError) throw saveError;
+
+  const { data: persisted, error: readError } = await client.rpc(
+    "admin_get_event_logbook_v25",
+    {
+      p_event_id: currentEventId
+    }
+  );
+
+  if (readError) throw readError;
+
+  const expectedDayCount = days.length;
+  const persistedDayCount = Array.isArray(persisted) ? persisted.length : 0;
+
+  if (persistedDayCount !== expectedDayCount) {
+    throw new Error(
+      `The logbook was not saved correctly. Expected ${expectedDayCount} day(s), database returned ${persistedDayCount}.`
+    );
+  }
+
+  return saveResult;
 }
 
 

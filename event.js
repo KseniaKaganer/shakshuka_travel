@@ -177,10 +177,12 @@ async function loadParticipantLogbook() {
 
   if (!participantSessionToken) return;
 
+  if (!list || !status) return;
+
   status.textContent = "Loading logbook…";
   status.classList.remove("hidden", "error");
 
-  const { data, error } = await client.rpc("get_participant_skydive_logbook_by_token", {
+  const { data, error } = await client.rpc("get_participant_skydive_logbook_by_token_v25", {
     p_event_id: eventId,
     p_token: participantSessionToken
   });
