@@ -58,6 +58,8 @@ const logbookLoadTemplate = document.getElementById("logbookLoadTemplate");
 const logbookGroupTemplate = document.getElementById("logbookGroupTemplate");
 
 let currentEventId = null;
+let currentEventStartDate = "";
+let currentEventEndDate = "";
 let removedMembershipIds = [];
 let locations = [];
 let editingParticipantRow = null;
@@ -385,15 +387,6 @@ function renderGroupParticipantBoxes(card, selectedParticipants = []) {
     button.addEventListener("click", () => {
       const selected = button.classList.toggle("is-selected");
       button.setAttribute("aria-pressed", selected ? "true" : "false");
-
-      const groupCard = button.closest(".logbook-group-card");
-      groupCard?.classList.remove("is-confirmed");
-
-      const confirmButton = groupCard?.querySelector(".confirm-group-button");
-      const confirmedLabel = groupCard?.querySelector(".group-confirmed-label");
-
-      if (confirmButton) confirmButton.textContent = "+ Add group";
-      confirmedLabel?.classList.add("hidden");
     });
 
     container.appendChild(button);
@@ -404,8 +397,8 @@ function eventDateOptions() {
   const startInput = document.getElementById("startDateInput");
   const endInput = document.getElementById("endDateInput");
 
-  const start = startInput?.value || "";
-  const end = endInput?.value || "";
+  const start = startInput?.value || currentEventStartDate || "";
+  const end = endInput?.value || currentEventEndDate || "";
 
   if (!start || !end) return [];
 
@@ -459,10 +452,19 @@ function refreshNewLogbookDaySelect() {
   const used = new Set(usedLogbookDayDates());
   const previousValue = newLogbookDaySelect.value;
 
-  newLogbookDaySelect.innerHTML = '<option value="">Choose event date…</option>';
-
   const availableDates = eventDateOptions()
     .filter(item => !used.has(item.value));
+
+  newLogbookDaySelect.innerHTML = "";
+
+  if (!availableDates.length) {
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = "No available event dates";
+    newLogbookDaySelect.appendChild(emptyOption);
+    newLogbookDaySelect.value = "";
+    return;
+  }
 
   availableDates.forEach(item => {
     const option = document.createElement("option");
@@ -471,17 +473,10 @@ function refreshNewLogbookDaySelect() {
     newLogbookDaySelect.appendChild(option);
   });
 
-  if (
-    previousValue &&
-    [...newLogbookDaySelect.options].some(option => option.value === previousValue)
-  ) {
-    newLogbookDaySelect.value = previousValue;
-  } else if (availableDates.length) {
-    // Default to the first still-available event day.
-    newLogbookDaySelect.value = availableDates[0].value;
-  } else {
-    newLogbookDaySelect.value = "";
-  }
+  const previousStillAvailable = availableDates.some(item => item.value === previousValue);
+  newLogbookDaySelect.value = previousStillAvailable
+    ? previousValue
+    : availableDates[0].value;
 }
 
 function updateDayTitles() {
@@ -512,17 +507,51 @@ function renumberGroupTitles(groupContainer) {
 function addLogbookGroup(groupContainer, data = {}) {
   const fragment = logbookGroupTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".logbook-group-card");
+
+  const editor = card.querySelector(".logbook-group-editor");
+  const summary = card.querySelector(".logbook-group-summary");
   const coach = card.querySelector(".logbook-group-coach");
   const type = card.querySelector(".logbook-group-type");
   const confirmButton = card.querySelector(".confirm-group-button");
-  const confirmedLabel = card.querySelector(".group-confirmed-label");
 
   coach.value = data.coach_name || "";
   type.value = data.jump_type || "";
 
   renderGroupParticipantBoxes(card, data.participants || []);
 
-  const markGroupConfirmed = () => {
+  const removeCard = () => {
+    card.remove();
+    renumberGroupTitles(groupContainer);
+  };
+
+  const updateCompactSummary = () => {
+    const groupIndex = [...groupContainer.querySelectorAll(".logbook-group-card")].indexOf(card) + 1;
+    const selectedIds = selectedParticipantIds(card);
+    const names = selectedIds.map(getParticipantNameById);
+
+    card.querySelector(".logbook-group-summary-title").textContent = `Group ${groupIndex}`;
+    card.querySelector(".logbook-group-summary-coach").textContent =
+      coach.value ? `Coach: ${coach.value}` : "No coach";
+    card.querySelector(".logbook-group-summary-participants").textContent =
+      names.join(", ");
+    card.querySelector(".logbook-group-summary-notes").textContent =
+      type.value.trim() ? type.value.trim() : "";
+  };
+
+  const showSummary = () => {
+    updateCompactSummary();
+    editor.classList.add("hidden");
+    summary.classList.remove("hidden");
+    card.classList.add("is-confirmed");
+  };
+
+  const showEditor = () => {
+    summary.classList.add("hidden");
+    editor.classList.remove("hidden");
+    card.classList.remove("is-confirmed");
+  };
+
+  confirmButton.addEventListener("click", () => {
     const selected = selectedParticipantIds(card);
 
     if (!selected.length) {
@@ -530,29 +559,22 @@ function addLogbookGroup(groupContainer, data = {}) {
       return;
     }
 
-    card.classList.add("is-confirmed");
-    confirmButton.textContent = "Update group";
-    confirmedLabel?.classList.remove("hidden");
+    showSummary();
     setEventLogbookStatus("Group added.");
-    setTimeout(() => setEventLogbookStatus(""), 1400);
-  };
-
-  confirmButton?.addEventListener("click", markGroupConfirmed);
-
-  // Existing saved groups are already considered confirmed.
-  if (data.group_id || (data.participants || []).length) {
-    card.classList.add("is-confirmed");
-    if (confirmButton) confirmButton.textContent = "Update group";
-    confirmedLabel?.classList.remove("hidden");
-  }
-
-  card.querySelector(".remove-group-button").addEventListener("click", () => {
-    card.remove();
-    renumberGroupTitles(groupContainer);
+    setTimeout(() => setEventLogbookStatus(""), 1200);
   });
+
+  card.querySelector(".edit-group-button").addEventListener("click", showEditor);
+  card.querySelector(".remove-group-button").addEventListener("click", removeCard);
+  card.querySelector(".remove-group-summary-button").addEventListener("click", removeCard);
 
   groupContainer.appendChild(fragment);
   renumberGroupTitles(groupContainer);
+
+  // Groups already loaded from the database appear as summaries immediately.
+  if (data.group_id || (data.participants || []).length) {
+    showSummary();
+  }
 }
 
 function nextLoadNumber(loadsContainer) {
@@ -564,12 +586,19 @@ function nextLoadNumber(loadsContainer) {
 }
 
 function addLogbookLoad(loadsContainer, data = {}) {
+  const nextNumber = data.load_number ?? nextLoadNumber(loadsContainer);
+
   const fragment = logbookLoadTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".logbook-load-card");
   const numberInput = card.querySelector(".logbook-load-number");
   const groups = card.querySelector(".logbook-groups");
 
-  numberInput.value = data.load_number ?? nextLoadNumber(loadsContainer);
+  loadsContainer.appendChild(fragment);
+
+  // Set both property and attribute after insertion so the visible field
+  // always shows the default number.
+  numberInput.value = String(nextNumber);
+  numberInput.setAttribute("value", String(nextNumber));
 
   card.querySelector(".add-group-button").addEventListener("click", () => {
     addLogbookGroup(groups);
@@ -580,8 +609,6 @@ function addLogbookLoad(loadsContainer, data = {}) {
   });
 
   (data.groups || []).forEach(group => addLogbookGroup(groups, group));
-
-  loadsContainer.appendChild(fragment);
 }
 
 function addLogbookDay(data = {}) {
@@ -814,6 +841,8 @@ addLogbookDayButton?.addEventListener("click", () => {
 
 function resetEventForm() {
   currentEventId = null;
+  currentEventStartDate = "";
+  currentEventEndDate = "";
   removedMembershipIds = [];
   document.getElementById("eventForm").reset();
   setEventType("skydive");
@@ -853,8 +882,10 @@ async function openEventEditor(eventId = null) {
   }
 
   document.getElementById("eventNameInput").value = event.name || "";
-  document.getElementById("startDateInput").value = event.start_date || "";
-  document.getElementById("endDateInput").value = event.end_date || "";
+  currentEventStartDate = event.start_date || "";
+  currentEventEndDate = event.end_date || "";
+  document.getElementById("startDateInput").value = currentEventStartDate;
+  document.getElementById("endDateInput").value = currentEventEndDate;
   refreshNewLogbookDaySelect();
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
@@ -1499,6 +1530,8 @@ document.getElementById("exportLogbookButton")?.addEventListener("click", (event
 
   ["change", "input", "blur"].forEach(eventName => {
     input?.addEventListener(eventName, () => {
+      currentEventStartDate = document.getElementById("startDateInput")?.value || "";
+      currentEventEndDate = document.getElementById("endDateInput")?.value || "";
       refreshNewLogbookDaySelect();
     });
   });
@@ -1508,30 +1541,3 @@ newLogbookDaySelect?.addEventListener("focus", refreshNewLogbookDaySelect);
 newLogbookDaySelect?.addEventListener("pointerdown", refreshNewLogbookDaySelect);
 
 
-function markGroupCardDirtyFromField(event) {
-  const groupCard = event.target.closest(".logbook-group-card");
-  if (!groupCard) return;
-
-  groupCard.classList.remove("is-confirmed");
-
-  const confirmButton = groupCard.querySelector(".confirm-group-button");
-  const confirmedLabel = groupCard.querySelector(".group-confirmed-label");
-
-  if (confirmButton) confirmButton.textContent = "+ Add group";
-  confirmedLabel?.classList.add("hidden");
-}
-
-document.addEventListener("change", event => {
-  if (
-    event.target.matches(".logbook-group-coach") ||
-    event.target.matches(".logbook-group-type")
-  ) {
-    markGroupCardDirtyFromField(event);
-  }
-});
-
-document.addEventListener("input", event => {
-  if (event.target.matches(".logbook-group-type")) {
-    markGroupCardDirtyFromField(event);
-  }
-});

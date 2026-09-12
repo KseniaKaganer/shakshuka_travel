@@ -2312,3 +2312,83 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     width: 100%;
   }
 }
+
+
+/* ---------- V23 defaults + compact confirmed groups ---------- */
+
+.logbook-group-summary {
+  min-height: 66px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logbook-group-summary.hidden,
+.logbook-group-editor.hidden {
+  display: none !important;
+}
+
+.logbook-group-summary-main {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.logbook-group-summary-title {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.logbook-group-summary-coach,
+.logbook-group-summary-participants,
+.logbook-group-summary-notes {
+  font-size: 12px;
+}
+
+.logbook-group-summary-participants {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.logbook-group-summary-actions {
+  display: flex;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.logbook-group-card.is-confirmed {
+  padding: 0 !important;
+  border-color: rgba(63, 185, 80, .38);
+  background: rgba(63, 185, 80, .025);
+}
+
+.logbook-group-card.is-confirmed .logbook-group-summary {
+  border-left: 3px solid #3fb950;
+}
+
+#newLogbookDaySelect:not(:disabled) {
+  font-weight: 700;
+}
+
+.logbook-load-number {
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .logbook-group-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .logbook-group-summary-actions {
+    width: 100%;
+  }
+
+  .logbook-group-summary-actions > * {
+    flex: 1;
+  }
+}

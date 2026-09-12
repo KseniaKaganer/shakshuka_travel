@@ -265,40 +265,54 @@
 
   <template id="logbookGroupTemplate">
     <section class="logbook-group-card">
-      <div class="logbook-group-header">
-        <div class="logbook-step-heading">
-<div>
-            <strong class="logbook-group-title">Group</strong>
-            <span class="muted small-text">Choose coach and click participants to select them</span>
-          </div>
+      <div class="logbook-group-summary hidden">
+        <div class="logbook-group-summary-main">
+          <strong class="logbook-group-summary-title">Group</strong>
+          <span class="logbook-group-summary-coach muted"></span>
+          <span class="logbook-group-summary-participants"></span>
+          <span class="logbook-group-summary-notes muted"></span>
         </div>
-        <button class="danger-ghost-button remove-group-button" type="button">Remove group</button>
+        <div class="logbook-group-summary-actions">
+          <button class="secondary-button edit-group-button" type="button">Edit</button>
+          <button class="danger-ghost-button remove-group-summary-button" type="button">Remove</button>
+        </div>
       </div>
 
-      <div class="logbook-group-grid">
-        <label class="field">
-          <span>Coach</span>
-          <select class="logbook-group-coach">
-            <option value="">No coach</option>
-            <option value="Ilya">Ilya</option>
-            <option value="Ksenia">Ksenia</option>
-          </select>
-        </label>
+      <div class="logbook-group-editor">
+        <div class="logbook-group-header">
+          <div class="logbook-step-heading">
+            <div>
+              <strong class="logbook-group-title">Group</strong>
+              <span class="muted small-text">Choose coach and click participants to select them</span>
+            </div>
+          </div>
+          <button class="danger-ghost-button remove-group-button" type="button">Remove group</button>
+        </div>
 
-        <label class="field">
-          <span>Jump type / notes</span>
-          <input class="logbook-group-type" type="text" placeholder="e.g. Tracking, 4-way, H&P" />
-        </label>
-      </div>
+        <div class="logbook-group-grid">
+          <label class="field">
+            <span>Coach</span>
+            <select class="logbook-group-coach">
+              <option value="">No coach</option>
+              <option value="Ilya">Ilya</option>
+              <option value="Ksenia">Ksenia</option>
+            </select>
+          </label>
 
-      <div class="field">
-        <span>Participants</span>
-        <div class="logbook-participant-boxes"></div>
-      </div>
+          <label class="field">
+            <span>Jump type / notes</span>
+            <input class="logbook-group-type" type="text" placeholder="e.g. Tracking, 4-way, H&P" />
+          </label>
+        </div>
 
-      <div class="logbook-group-confirm-row">
-        <button class="primary-button confirm-group-button" type="button">+ Add group</button>
-        <span class="group-confirmed-label hidden">✓ Group added</span>
+        <div class="field">
+          <span>Participants</span>
+          <div class="logbook-participant-boxes"></div>
+        </div>
+
+        <div class="logbook-group-confirm-row">
+          <button class="primary-button confirm-group-button" type="button">+ Add group</button>
+        </div>
       </div>
     </section>
   </template>
