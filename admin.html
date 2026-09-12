@@ -69,8 +69,7 @@
 
       <div class="admin-heading-row editor-heading">
         <div>
-          <div id="editorEyebrow" class="eyebrow">NEW EVENT</div>
-          <h1 id="editorTitle" class="admin-title dashboard-title">Create travel event</h1>
+<h1 id="editorTitle" class="admin-title dashboard-title">Create Travel Event</h1>
         </div>
       </div>
 
@@ -167,20 +166,38 @@
 
           </div>
         </details><details id="eventLogbookSection" class="admin-event-logbook hidden">
-<summary class="logbook-summary"><div><h2>Logbook</h2><p class="muted small-text">Build the event by day, load, group, participants and coach.</p></div><span class="collapse-chevron">⌄</span></summary>
-<div class="logbook-collapsible-content"><div class="logbook-top-actions">
-            <button id="exportLogbookButton" class="secondary-button" type="button">⇩ Export logbook</button>
-            <button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
+<summary class="logbook-summary">
+  <div>
+    <h2>Logbook</h2>
+    <p class="muted small-text">Build the event by day, load, group, participants and coach.</p>
+  </div>
+  <div class="summary-right-actions">
+    <button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export logbook</button>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </div>
+</summary>
+<div class="logbook-collapsible-content"><div class="logbook-top-actions"><button id="addLogbookDayButton" class="primary-button" type="button">+ Add day</button>
           </div><div id="eventLogbookStatus" class="status hidden"></div><div id="eventLogbookDays" class="event-logbook-days"></div></div>
 </details></div>
 <details class="panel form-panel editor-side participants-collapsible">
-<summary class="participants-summary"><div><h2>Participants</h2><p class="muted small-text">Add everyone joining this event.</p></div><span class="collapse-chevron">⌄</span></summary>
-<div class="participants-content"><div class="participants-header-actions">
-              <button id="exportParticipantsButton" class="secondary-button compact-export-button" type="button" title="Export participant data to spreadsheet">
-                ⇩ Export
-              </button>
-              <span id="participantCount" class="count-pill">0</span>
-            </div>
+<summary class="participants-summary">
+  <div class="summary-title-row">
+    <div>
+      <div class="summary-title-with-count">
+        <h2>Participants</h2>
+        <span id="participantCount" class="count-pill">0</span>
+      </div>
+      <p class="muted small-text">Add everyone joining this event.</p>
+    </div>
+  </div>
+  <div class="summary-right-actions">
+    <button id="exportParticipantsButton" class="secondary-button compact-export-button summary-export-button" type="button" title="Export participant data to spreadsheet">
+      ⇩ Export
+    </button>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </div>
+</summary>
+<div class="participants-content">
 
           <div id="participantsList" class="participants-editor-list"></div>
           <button id="addParticipantButton" class="secondary-button full-button" type="button">+ Add participant</button></div>

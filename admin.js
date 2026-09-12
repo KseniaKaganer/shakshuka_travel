@@ -667,7 +667,7 @@ function resetEventForm() {
   renderLocationOptions("");
   setStatus(editorStatus, "");
   document.getElementById("editorEyebrow").textContent = "NEW EVENT";
-  document.getElementById("editorTitle").textContent = "Create travel event";
+  document.getElementById("editorTitle").textContent = "Create Travel Event";
   hideNewLocationForm();
 }
 
@@ -681,7 +681,7 @@ async function openEventEditor(eventId = null) {
 
   currentEventId = eventId;
   document.getElementById("editorEyebrow").textContent = "EDIT EVENT";
-  document.getElementById("editorTitle").textContent = "Edit travel event";
+  document.getElementById("editorTitle").textContent = "Edit Travel Event";
   setStatus(editorStatus, "Loading event…");
 
   const { data: event, error: eventError } = await client
@@ -1324,3 +1324,12 @@ client.auth.onAuthStateChange((event) => {
 });
 
 routeForSession();
+
+
+// Keep summary action buttons from toggling their collapsible boxes.
+document.getElementById("exportParticipantsButton")?.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+document.getElementById("exportLogbookButton")?.addEventListener("click", (event) => {
+  event.stopPropagation();
+});

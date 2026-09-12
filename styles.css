@@ -1919,7 +1919,166 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
 .participants-content .participants-header-actions,.logbook-collapsible-content .logbook-top-actions{display:flex;justify-content:flex-end;margin-bottom:16px}
 @media(max-width:920px){.editor-grid-v13{grid-template-columns:1fr}.editor-left-column{order:1}.participants-collapsible{order:2}}
 
-/* V14 - tighter spacing between Event Details and Logbook */
+.editor-left-column{gap:8px!important;}
+
+
+/* ---------- V15 unified collapsible box headers ---------- */
+
+/* The three top editor boxes use exactly the same collapsed header geometry. */
+.event-details-collapsible,
+.participants-collapsible,
+.admin-event-logbook {
+  display: block !important;
+  min-height: 0 !important;
+}
+
+.event-details-summary,
+.participants-summary,
+.logbook-summary {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 106px;
+  padding: 18px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px;
+}
+
+.event-details-summary > div,
+.participants-summary > div,
+.logbook-summary > div {
+  min-width: 0;
+}
+
+.event-details-summary h2,
+.participants-summary h2,
+.logbook-summary h2 {
+  margin: 0 0 3px !important;
+  font-size: 21px !important;
+  line-height: 1.2;
+}
+
+.event-details-summary p,
+.participants-summary p,
+.logbook-summary p {
+  margin: 0 !important;
+  line-height: 1.35 !important;
+}
+
+/* Same arrow placement and appearance on all three boxes. */
+.event-details-summary .collapse-chevron,
+.participants-summary .collapse-chevron,
+.logbook-summary .collapse-chevron {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform .18s ease;
+}
+
+/* Closed boxes should contain only the header, with no inherited empty height. */
+.event-details-collapsible:not([open]),
+.participants-collapsible:not([open]),
+.admin-event-logbook:not([open]) {
+  height: auto !important;
+}
+
+.editor-side {
+  min-height: 0 !important;
+}
+
+/* Keep the requested tighter Event Details -> Logbook spacing. */
 .editor-left-column {
   gap: 8px !important;
+}
+
+@media (max-width: 760px) {
+  .event-details-summary,
+  .participants-summary,
+  .logbook-summary {
+    min-height: 94px;
+    padding: 16px !important;
+  }
+}
+
+
+/* ---------- V16 visibility + summary actions ---------- */
+
+/* Native date calendar icons: force white on dark UI. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Header title + participant count sit together. */
+.summary-title-with-count {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.summary-title-with-count h2 {
+  margin: 0 0 3px !important;
+}
+
+/* Export buttons live beside the collapse arrow. */
+.summary-right-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.summary-export-button {
+  white-space: nowrap;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+/* Make all collapsible arrows much easier to see. */
+.event-details-summary .collapse-chevron,
+.participants-summary .collapse-chevron,
+.logbook-summary .collapse-chevron {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 22px !important;
+  font-weight: 900;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+}
+
+/* Don't leave an empty old participant action area. */
+.participants-content > .participants-header-actions:empty {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .summary-right-actions {
+    gap: 6px;
+  }
+
+  .summary-export-button {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .participants-summary,
+  .logbook-summary {
+    align-items: center !important;
+  }
 }
