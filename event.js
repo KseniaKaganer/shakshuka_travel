@@ -213,15 +213,19 @@ async function loadParticipantLogbook() {
     const dateLabel = formatLogbookDate(dayDate);
 
     const rows = entries.map(entry => {
-      const groupLabel = entry.jump_type
-        ? escapeHtml(entry.jump_type)
-        : `Group ${entry.group_number || ""}`.trim();
+      const groupParticipants = Array.isArray(entry.group_participants)
+        ? entry.group_participants
+        : [];
+
+      const groupLabel = groupParticipants.length
+        ? groupParticipants.map(name => escapeHtml(name)).join(", ")
+        : "—";
 
       return `
         <tr>
           <td>${escapeHtml(String(entry.load_number ?? ""))}</td>
           <td>${entry.coach_name ? escapeHtml(entry.coach_name) : "—"}</td>
-          <td>${groupLabel || "—"}</td>
+          <td>${groupLabel}</td>
         </tr>
       `;
     }).join("");
