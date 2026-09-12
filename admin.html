@@ -266,12 +266,11 @@
 <div class="logbook-collapsible-content">
   <div class="logbook-top-actions logbook-day-adder">
     <label class="field compact-field logbook-add-day-field">
-      <span>Add day</span>
-      <select id="newLogbookDaySelect">
+      <select id="newLogbookDaySelect" aria-label="Choose event day">
         <option value="">Choose event date…</option>
       </select>
     </label>
-    <button id="addLogbookDayButton" class="primary-button logbook-action-icon" type="button" title="Add day">+</button>
+    <button id="addLogbookDayButton" class="primary-button add-day-match-button" type="button" title="Add day" aria-label="Add day">+</button>
   </div>
   <div id="eventLogbookStatus" class="status hidden"></div>
   <div id="eventLogbookDays" class="event-logbook-days"></div>
@@ -359,9 +358,9 @@
           <span class="logbook-group-summary-coach">-</span>
           <span class="logbook-group-summary-participants"></span>
         </div>
-        <div class="logbook-group-summary-actions">
-          <button class="secondary-button edit-group-button" type="button">Edit</button>
-          <button class="danger-ghost-button remove-group-summary-button" type="button">Remove</button>
+        <div class="logbook-group-summary-actions compact-group-icon-actions">
+          <button class="secondary-button group-summary-icon edit-group-button" type="button" aria-label="Edit group" title="Edit group">✎</button>
+          <button class="danger-ghost-button group-summary-icon remove-group-summary-button" type="button" aria-label="Remove group" title="Remove group">×</button>
         </div>
       </div>
 

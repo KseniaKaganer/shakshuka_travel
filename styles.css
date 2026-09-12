@@ -2805,3 +2805,69 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 14px;
   }
 }
+
+
+/* ---------- V34 Day dropdown + compact group icons ---------- */
+
+/* Remove vertical space that existed for the old "Add day" field label. */
+.logbook-add-day-field {
+  margin: 0 !important;
+}
+
+.logbook-add-day-field select {
+  height: 48px !important;
+  min-height: 48px !important;
+}
+
+/* Add Day + matches the dropdown height and stays square. */
+.add-day-match-button {
+  box-sizing: border-box;
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  font-size: 21px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+/* Group compact summary actions become small icons. */
+.compact-group-icon-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.group-summary-icon {
+  box-sizing: border-box !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-top-actions.logbook-day-adder {
+    grid-template-columns: minmax(0, 1fr) 48px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .logbook-add-day-field select,
+  .add-day-match-button {
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+}

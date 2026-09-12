@@ -686,6 +686,7 @@ function eventDateOptions() {
   if (current > last) return [];
 
   const dates = [];
+  let dayIndex = 0;
 
   while (current <= last) {
     const year = current.getUTCFullYear();
@@ -693,7 +694,7 @@ function eventDateOptions() {
     const day = String(current.getUTCDate()).padStart(2, "0");
     const value = `${year}-${month}-${day}`;
 
-    const label = current.toLocaleDateString("en-GB", {
+    const dateLabel = current.toLocaleDateString("en-GB", {
       timeZone: "UTC",
       weekday: "short",
       day: "2-digit",
@@ -701,7 +702,14 @@ function eventDateOptions() {
       year: "numeric"
     });
 
-    dates.push({ value, label });
+    dates.push({
+      value,
+      dayIndex,
+      dateLabel,
+      label: `Day ${dayIndex} - ${dateLabel}`
+    });
+
+    dayIndex += 1;
     current.setUTCDate(current.getUTCDate() + 1);
   }
 
@@ -710,7 +718,12 @@ function eventDateOptions() {
 
 function formatLogbookDayLabel(value) {
   const option = eventDateOptions().find(item => item.value === value);
-  return option?.label || value || "";
+  return option?.dateLabel || value || "";
+}
+
+function logbookDayNumberForDate(value) {
+  const option = eventDateOptions().find(item => item.value === value);
+  return Number.isInteger(option?.dayIndex) ? option.dayIndex : 0;
 }
 
 function usedLogbookDayDates() {
@@ -753,14 +766,15 @@ function refreshNewLogbookDaySelect() {
 }
 
 function updateDayTitles() {
-  [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach((card, index) => {
+  [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach(card => {
     const dateInput = card.querySelector(".logbook-day-date");
     const title = card.querySelector(".logbook-day-title");
     const displayTitle = card.querySelector(".logbook-day-display-title");
     const displayDate = card.querySelector(".logbook-day-display-date");
 
     const dateValue = dateInput?.value || "";
-    const generatedTitle = `Day ${index + 1}`;
+    const dayNumber = logbookDayNumberForDate(dateValue);
+    const generatedTitle = `Day ${dayNumber}`;
 
     if (title) title.value = generatedTitle;
     if (displayTitle) displayTitle.textContent = generatedTitle;
