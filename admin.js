@@ -2275,12 +2275,21 @@ function refreshAdminLandingParticipantSelect(participants = currentCompetitionP
 }
 
 function currentCompetitionParticipants() {
-  return [...participantsList.querySelectorAll(".participant-row")]
+  const unique = new Map();
+
+  [...participantsList.querySelectorAll(".participant-row")]
     .map(row => ({
       participant_id: row.querySelector(".participant-id")?.value || "",
       name: row.querySelector(".participant-name")?.value.trim() || "Participant"
     }))
-    .filter(item => item.participant_id);
+    .filter(item => item.participant_id)
+    .forEach(item => {
+      if (!unique.has(item.participant_id)) {
+        unique.set(item.participant_id, item);
+      }
+    });
+
+  return [...unique.values()];
 }
 
 function competitionTotalScore(row) {
