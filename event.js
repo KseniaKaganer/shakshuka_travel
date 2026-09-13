@@ -36,6 +36,8 @@ function storeParticipantToken(token, remember) {
 }
 
 function clearParticipantToken() {
+  beerFinesLoadedOnce = false;
+  beerFinesLoading = false;
   if (!eventId) return;
   localStorage.removeItem(LOCAL_SESSION_KEY);
   sessionStorage.removeItem(SESSION_SESSION_KEY);
@@ -652,9 +654,14 @@ const beerFineEventLists = {
   red_card: document.getElementById("beerFineEventRedCardList")
 };
 
-async function loadBeerFines() {
-  Object.values(beerFineEventLists).forEach(list=>{if(list) list.innerHTML="";});
+let beerFinesLoadedOnce = false;
+let beerFinesLoading = false;
+
+async function loadBeerFines(force = false) {
+  if ((!force && beerFinesLoadedOnce) || beerFinesLoading) return;
+  beerFinesLoading = true;
   if(!participantSessionToken) {
+    beerFinesLoading = false;
     document.getElementById("beerFineUnpaidAlert")?.classList.add("hidden");
     return;
   }
@@ -662,6 +669,10 @@ async function loadBeerFines() {
     const {data,error}=await client.rpc("get_beer_fines_by_token_v70",{p_event_id:eventId,p_token:participantSessionToken});
     if(error) throw error;
     const rows=Array.isArray(data)?data:[];
+
+    Object.values(beerFineEventLists).forEach(list=>{
+      if(list) list.innerHTML="";
+    });
     const unpaidAlert = document.getElementById("beerFineUnpaidAlert");
     const myParticipantId = participantAccess?.participant_id || null;
     const hasMyUnpaidFine = rows.some(item =>
@@ -717,7 +728,7 @@ async function loadBeerFines() {
             if (payError) throw payError;
             if (!result?.ok) throw new Error(result?.error || "Could not update Beer Fine.");
 
-            await loadBeerFines();
+            await loadBeerFines(true);
           } catch (payError) {
             console.warn("Could not mark Beer Fine paid:", payError);
             paidButton.disabled = false;
@@ -738,7 +749,13 @@ async function loadBeerFines() {
         list.appendChild(empty);
       }
     });
-  } catch(error){ console.warn("Could not load Beer Fine:",error); }
+
+    beerFinesLoadedOnce = true;
+  } catch(error){
+    console.warn("Could not load Beer Fine:",error);
+  } finally {
+    beerFinesLoading = false;
+  }
 }
 
 
