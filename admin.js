@@ -817,7 +817,17 @@ function refreshNewLogbookDaySelect() {
 }
 
 function updateDayTitles() {
-  [...eventLogbookDays.querySelectorAll(".logbook-day-card")].forEach(card => {
+  const dayCards = [...eventLogbookDays.querySelectorAll(".logbook-day-card")];
+
+  dayCards.sort((a, b) => {
+    const dateA = a.querySelector(".logbook-day-date")?.value || "";
+    const dateB = b.querySelector(".logbook-day-date")?.value || "";
+    return dateA.localeCompare(dateB);
+  });
+
+  dayCards.forEach(card => eventLogbookDays.appendChild(card));
+
+  dayCards.forEach(card => {
     const dateInput = card.querySelector(".logbook-day-date");
     const title = card.querySelector(".logbook-day-title");
     const displayTitle = card.querySelector(".logbook-day-display-title");
@@ -826,6 +836,11 @@ function updateDayTitles() {
     const dateValue = dateInput?.value || "";
     const dayNumber = logbookDayNumberForDate(dateValue);
     const generatedTitle = `Day ${dayNumber}`;
+
+    // Explicit visual ordering prevents any later DOM append/render from
+    // showing the cards out of chronological order.
+    card.style.order = String(dayNumber);
+    card.dataset.dayOrder = String(dayNumber);
 
     if (title) title.value = generatedTitle;
     if (displayTitle) {
@@ -1210,7 +1225,13 @@ async function loadEventLogbook() {
   if (!Array.isArray(savedDays)) savedDays = [];
 
   eventLogbookDays.innerHTML = "";
+
+  savedDays.sort((a, b) =>
+    String(a?.day_date || "").localeCompare(String(b?.day_date || ""))
+  );
+
   savedDays.forEach(day => addLogbookDay(day));
+  updateDayTitles();
   refreshNewLogbookDaySelect();
 
   setEventLogbookStatus(

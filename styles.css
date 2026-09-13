@@ -6415,3 +6415,104 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     line-height: 1.15 !important;
   }
 }
+
+
+/* ---------- V97 Ordered + full-width flat Logbook ---------- */
+
+/* Day cards always fill the Logbook width and no longer look like nested boxes. */
+.event-logbook-days {
+  width: calc(100% + 40px) !important;
+  max-width: none !important;
+  margin: 0 -20px -20px !important;
+  padding: 0 !important;
+}
+
+.logbook-day-card {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Use simple separators instead of borders around cards. */
+.logbook-day-card + .logbook-day-card {
+  border-top: 1px solid var(--line) !important;
+}
+
+.logbook-day-header {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  border-radius: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+
+.logbook-day-body,
+.logbook-loads,
+.logbook-load-card,
+.logbook-load-body,
+.logbook-groups,
+.logbook-group-card {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove all nested outer borders/shells inside Logbook. */
+.logbook-load-card,
+.logbook-group-card {
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep content aligned with the main Logbook edges. */
+.logbook-load-header {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.logbook-groups {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+@media (max-width: 600px) {
+  .event-logbook-days {
+    width: calc(100% + 28px) !important;
+    margin-left: -14px !important;
+    margin-right: -14px !important;
+    margin-bottom: -14px !important;
+  }
+
+  .logbook-day-header,
+  .logbook-load-header {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .logbook-groups {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
+
+
+/* ---------- V98 Strict chronological Logbook day order ---------- */
+#eventLogbookDays,
+.event-logbook-days {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Day cards receive an explicit inline order from admin.js. */
+#eventLogbookDays > .logbook-day-card {
+  flex: 0 0 auto;
+}
