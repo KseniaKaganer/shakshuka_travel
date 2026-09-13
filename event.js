@@ -675,10 +675,16 @@ async function loadBeerFines(force = false) {
     });
     const unpaidAlert = document.getElementById("beerFineUnpaidAlert");
     const myParticipantId = participantAccess?.participant_id || null;
-    const hasMyUnpaidFine = rows.some(item =>
-      item.participant_id === myParticipantId &&
-      (Number(item.paid_count) || 0) < (Number(item.total_count) || 0)
-    );
+    const hasMyUnpaidFine = rows.some(item => {
+      const paid = Number(item.paid_count) || 0;
+      const total = Number(
+        item.total_count != null ? item.total_count : item.unpaid_count
+      ) || 0;
+
+      return String(item.participant_id || "") === String(myParticipantId || "") &&
+        total > 0 &&
+        paid < total;
+    });
 
     if (unpaidAlert) {
       unpaidAlert.classList.toggle("hidden", !hasMyUnpaidFine);
@@ -694,19 +700,22 @@ async function loadBeerFines(force = false) {
       const name=document.createElement("strong");
       name.textContent=item.display_name||"Participant";
 
+      const paidCount = Number(item.paid_count) || 0;
+      const totalCount = Number(
+        item.total_count != null ? item.total_count : item.unpaid_count
+      ) || 0;
+
       const ratio=document.createElement("span");
       ratio.className="beer-fine-ratio";
-      ratio.textContent=`${Number(item.paid_count)||0}/${Number(item.total_count)||0}`;
+      ratio.textContent=`${paidCount}/${totalCount}`;
       ratio.title="Paid / total fines";
 
       row.append(name,ratio);
 
       const myParticipantId = participantAccess?.participant_id || null;
-      const isMine = item.participant_id === myParticipantId;
-      const paidCount = Number(item.paid_count) || 0;
-      const totalCount = Number(item.total_count) || 0;
+      const isMine = String(item.participant_id || "") === String(myParticipantId || "");
 
-      if (isMine && paidCount < totalCount) {
+      if (isMine && totalCount > 0 && paidCount < totalCount) {
         row.classList.add("is-my-beer-fine");
 
         const paidButton=document.createElement("button");
