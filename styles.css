@@ -4699,3 +4699,61 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 20px;
   }
 }
+
+
+/* ---------- V59 compact event hero/header ---------- */
+
+/* Reduce the empty space between the top bar and event title. */
+.event-detail__top {
+  padding-top: 20px !important;
+  margin-top: 0 !important;
+}
+
+.event-hero-copy {
+  gap: 5px !important;
+}
+
+/* Event title slightly smaller than V58. */
+.event-hero-copy #eventName {
+  font-size: clamp(30px, 5vw, 42px) !important;
+  line-height: 1.08 !important;
+}
+
+/* Logged-in participant is now shown beside the green dot. */
+.participant-session-welcome {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.participant-session-name {
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  color: var(--accent) !important;
+}
+
+@media (max-width: 600px) {
+  .event-detail__top {
+    padding-top: 14px !important;
+  }
+
+  .event-hero-copy #eventName {
+    font-size: clamp(28px, 7.4vw, 36px) !important;
+  }
+
+  .participant-session-welcome {
+    display: inline-flex !important;
+    font-size: 11px;
+  }
+
+  .participant-session-name {
+    display: inline !important;
+    max-width: 85px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
