@@ -6516,3 +6516,41 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 #eventLogbookDays > .logbook-day-card {
   flex: 0 0 auto;
 }
+
+
+/* ---------- V99 Logbook first-row order ---------- */
+/* Left-to-right: Export, +, Day dropdown. */
+.logbook-day-adder {
+  display: grid !important;
+  grid-template-columns: 34px 34px minmax(0, 1fr) !important;
+  gap: 7px !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.logbook-day-adder #exportLogbookButton {
+  grid-column: 1 !important;
+}
+
+.logbook-day-adder #addLogbookDayButton {
+  grid-column: 2 !important;
+}
+
+.logbook-day-adder .logbook-add-day-field {
+  grid-column: 3 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.logbook-day-adder .logbook-add-day-field select {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 480px) {
+  .logbook-day-adder {
+    grid-template-columns: 32px 32px minmax(0, 1fr) !important;
+    gap: 6px !important;
+  }
+}
