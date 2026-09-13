@@ -3543,3 +3543,95 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding-right: 0 !important;
   }
 }
+
+
+/* ---------- V42 flat full-width logbook nesting ---------- */
+
+/*
+  Load should visually span the full inner width of the Day card.
+  Remove the extra nested rounded shell/border that made it look like
+  a smaller card inside the Day.
+*/
+.logbook-day-body {
+  overflow: visible !important;
+}
+
+.logbook-loads {
+  width: calc(100% + 24px) !important;
+  max-width: none !important;
+  margin-left: -12px !important;
+  margin-right: -12px !important;
+}
+
+.logbook-load-card {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* A clean full-width separator defines each Load instead of an outer box. */
+.logbook-load-card + .logbook-load-card {
+  border-top: 1px solid var(--line) !important;
+}
+
+.logbook-load-header {
+  width: 100% !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+
+/*
+  Groups sit inside the Load with a modest inset, but without another
+  nested outer container border around the whole group region.
+*/
+.logbook-load-body {
+  width: 100% !important;
+  padding: 12px 0 0 !important;
+}
+
+.logbook-groups {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 12px 12px !important;
+  border: 0 !important;
+}
+
+.logbook-group-card {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 0 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep the actual editable/confirmed group surface, but remove the extra shell. */
+.logbook-group-card .logbook-group-editor,
+.logbook-group-card .logbook-group-summary {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-loads {
+    width: calc(100% + 24px) !important;
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+  }
+
+  .logbook-load-card {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .logbook-groups {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}

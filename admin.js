@@ -2142,27 +2142,6 @@ newLogbookDaySelect?.addEventListener("pointerdown", refreshNewLogbookDaySelect)
 
 
 
-async function restoreAdminSession() {
-  try {
-    const { data: { session }, error } = await client.auth.getSession();
-    if (error) throw error;
-
-    if (session?.user) {
-      currentUser = session.user;
-      if (loggedInEmail) loggedInEmail.textContent = session.user.email || "";
-      showView("dashboard");
-      await loadAdminEvents();
-      return true;
-    }
-  } catch (error) {
-    console.warn("Could not restore admin session:", error);
-  }
-
-  return false;
-}
-
-
-
-window.addEventListener("DOMContentLoaded", async () => {
-  await restoreAdminSession();
-});
+// routeForSession() is the single source of truth for restoring Admin state.
+// Do not run the old dashboard-only restore on DOMContentLoaded, because it
+// would override an event restored from ?event=<id> after a page refresh.
