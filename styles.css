@@ -3808,3 +3808,90 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding: 10px;
   }
 }
+
+
+/* ---------- V48 collapsible participant event information ---------- */
+
+.event-info-boxes {
+  display: grid;
+  gap: 16px;
+}
+
+.event-summary-box summary,
+.participant-payment-status summary {
+  min-height: 68px;
+}
+
+.event-summary-title-row {
+  min-width: 0;
+}
+
+.event-summary-title-row h3,
+.participant-payment-status summary h3 {
+  margin: 0;
+}
+
+.event-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.event-type-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.event-type-badge:empty {
+  display: none;
+}
+
+.event-summary-box .event-info-stack {
+  padding-top: 2px;
+}
+
+.event-summary-box .event-info-stack span {
+  color: var(--text);
+}
+
+.participant-payment-status {
+  padding: 0 !important;
+}
+
+.participant-payment-status .participant-collapse-content {
+  padding: 0 22px 22px;
+}
+
+.participant-payment-status .readonly-payment-grid {
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .event-info-boxes {
+    gap: 12px;
+  }
+
+  .event-summary-box summary,
+  .participant-payment-status summary {
+    min-height: 62px;
+  }
+
+  .event-type-badge {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .participant-payment-status .participant-collapse-content {
+    padding: 0 14px 14px;
+  }
+}

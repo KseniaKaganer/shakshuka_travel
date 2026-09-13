@@ -73,50 +73,84 @@
         </div>
       </div>
 
-      <div class="detail-grid">
-        <section class="panel">
-          <h3>Event information</h3>
-          <p id="eventDescription"></p>
-        </section>
+      <div class="event-info-boxes">
+        <details class="panel participant-collapsible event-summary-box">
+          <summary>
+            <div class="event-summary-title-row">
+              <h3 id="eventVenueTitle">Event venue</h3>
+            </div>
+            <div class="event-summary-right">
+              <span id="eventVenueTypeBadge" class="event-type-badge"></span>
+              <span class="collapse-chevron">⌄</span>
+            </div>
+          </summary>
 
-        <section class="panel">
-          <h3>Living location</h3>
-          <div id="livingLocationInfo" class="event-info-stack"></div>
-        </section>
+          <div class="participant-collapse-content">
+            <div id="eventVenueInfo" class="event-info-stack"></div>
+          </div>
+        </details>
 
-        <section class="panel">
-          <h3>Event venue</h3>
-          <div id="eventVenueInfo" class="event-info-stack"></div>
-        </section>
+        <details class="panel participant-collapsible event-summary-box">
+          <summary>
+            <div class="event-summary-title-row">
+              <h3 id="livingLocationTitle">Living location</h3>
+            </div>
+            <div class="event-summary-right">
+              <span id="livingLocationTypeBadge" class="event-type-badge"></span>
+              <span class="collapse-chevron">⌄</span>
+            </div>
+          </summary>
+
+          <div class="participant-collapse-content">
+            <div id="livingLocationInfo" class="event-info-stack"></div>
+          </div>
+        </details>
+
+        <details class="panel participant-collapsible participant-payment-status">
+          <summary>
+            <div>
+              <h3>Payment</h3>
+            </div>
+            <span class="collapse-chevron">⌄</span>
+          </summary>
+
+          <div class="participant-collapse-content">
+            <div class="readonly-payment-grid">
+              <div class="readonly-payment-card">
+                <strong>Payment</strong>
+                <div class="readonly-payment-values">
+                  <div><span>Total</span><b id="selfPaymentTotal">0.00</b></div>
+                  <div><span>Paid</span><b id="selfPaymentPaid">0.00</b></div>
+                  <div><span>Left to pay</span><b id="selfPaymentLeft">0.00</b></div>
+                </div>
+              </div>
+
+              <div id="selfCoachPaymentCard" class="readonly-payment-card">
+                <strong>Coach tickets</strong>
+                <div class="readonly-payment-values">
+                  <div><span>Total</span><b id="selfCoachTotal">0.00</b></div>
+                  <div><span>Paid</span><b id="selfCoachPaid">0.00</b></div>
+                  <div><span>Left to pay</span><b id="selfCoachLeft">0.00</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel participant-collapsible event-summary-box">
+          <summary>
+            <div>
+              <h3>Event information</h3>
+            </div>
+            <span class="collapse-chevron">⌄</span>
+          </summary>
+
+          <div class="participant-collapse-content">
+            <p id="eventDescription"></p>
+          </div>
+        </details>
       </div>
 
-
-      <section class="panel participant-payment-status">
-        <div class="participant-section-title">
-          <h4>Payment status</h4>
-          <p class="muted small-text">Payment information is managed by the admins.</p>
-        </div>
-
-        <div class="readonly-payment-grid">
-          <div class="readonly-payment-card">
-            <strong>Payment</strong>
-            <div class="readonly-payment-values">
-              <div><span>Total</span><b id="selfPaymentTotal">0.00</b></div>
-              <div><span>Paid</span><b id="selfPaymentPaid">0.00</b></div>
-              <div><span>Left to pay</span><b id="selfPaymentLeft">0.00</b></div>
-            </div>
-          </div>
-
-          <div id="selfCoachPaymentCard" class="readonly-payment-card">
-            <strong>Coach tickets</strong>
-            <div class="readonly-payment-values">
-              <div><span>Total</span><b id="selfCoachTotal">0.00</b></div>
-              <div><span>Paid</span><b id="selfCoachPaid">0.00</b></div>
-              <div><span>Left to pay</span><b id="selfCoachLeft">0.00</b></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <details class="panel participant-collapsible participant-quests-panel">
         <summary>

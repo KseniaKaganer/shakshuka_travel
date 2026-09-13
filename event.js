@@ -672,6 +672,9 @@ async function loadEvent() {
     setText("eventDescription", event.description);
 
     const livingInfo = document.getElementById("livingLocationInfo");
+    const livingTitle = document.getElementById("livingLocationTitle");
+    const livingTypeBadge = document.getElementById("livingLocationTypeBadge");
+
     if (livingInfo) {
       const locationType = loc.location_type === "house" ? "House" : "Hotel";
       const addressLine = [loc.address, loc.city, loc.country]
@@ -679,9 +682,10 @@ async function loadEvent() {
         .filter((value, index, all) => all.indexOf(value) === index)
         .join(" • ");
 
+      if (livingTitle) livingTitle.textContent = loc.name || "Living location";
+      if (livingTypeBadge) livingTypeBadge.textContent = loc.name ? locationType : "";
+
       livingInfo.innerHTML = `
-        ${loc.name ? `<strong>${escapeHtml(loc.name)}</strong>` : ""}
-        ${loc.name ? `<span>${escapeHtml(locationType)}</span>` : ""}
         ${addressLine ? `<span>${escapeHtml(addressLine)}</span>` : ""}
         ${loc.website_url
           ? `<a class="event-info-link" href="${escapeHtml(loc.website_url)}" target="_blank" rel="noopener">Location page ↗</a>`
@@ -690,15 +694,19 @@ async function loadEvent() {
     }
 
     const venueInfo = document.getElementById("eventVenueInfo");
+    const venueTitle = document.getElementById("eventVenueTitle");
+    const venueTypeBadge = document.getElementById("eventVenueTypeBadge");
+
     if (venueInfo) {
       const venueType = event.venue_type === "tunnel" ? "Tunnel" : "Drop zone";
       const priceLine = event.venue_type === "tunnel"
         ? (event.tunnel_time_cost != null ? `Tunnel time cost: ${formatMoney(event.tunnel_time_cost)}` : "")
         : (event.ticket_price != null ? `Ticket price: ${formatMoney(event.ticket_price)}` : "");
 
+      if (venueTitle) venueTitle.textContent = event.venue || "Event venue";
+      if (venueTypeBadge) venueTypeBadge.textContent = event.venue ? venueType : "";
+
       venueInfo.innerHTML = `
-        ${event.venue ? `<strong>${escapeHtml(event.venue)}</strong>` : ""}
-        <span>${escapeHtml(venueType)}</span>
         ${priceLine ? `<span>${escapeHtml(priceLine)}</span>` : ""}
         ${event.venue_url
           ? `<a class="event-info-link" href="${escapeHtml(event.venue_url)}" target="_blank" rel="noopener">Venue page ↗</a>`
