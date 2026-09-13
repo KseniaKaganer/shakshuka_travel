@@ -5600,3 +5600,50 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding: 11px 10px;
   }
 }
+
+
+/* ---------- V74 Admin top-level box consistency ---------- */
+
+/* Beer Fine now follows the exact same header spacing as Quests/Competitions. */
+#eventBeerFineSection > .quests-summary {
+  padding: 20px !important;
+  min-height: 70px;
+  box-sizing: border-box;
+}
+
+#eventBeerFineSection > .quests-summary h2 {
+  margin: 0;
+}
+
+/* Keep the one right-side chevron only. */
+#eventBeerFineSection > .quests-summary .collapse-chevron {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* Match the content spacing used by the other admin sections. */
+#eventBeerFineSection > .beer-fine-admin-content {
+  padding: 0 20px 20px !important;
+  border-top: 1px solid var(--line);
+}
+
+/* Keep the main admin collapsible cards visually aligned. */
+.event-details-collapsible,
+.event-logbook-collapsible,
+#eventQuestsSection,
+#eventBeerFineSection,
+#eventCompetitionsSection,
+.participants-collapsible {
+  border-radius: 18px;
+}
+
+@media (max-width: 600px) {
+  #eventBeerFineSection > .quests-summary {
+    padding: 16px !important;
+    min-height: 70px;
+  }
+
+  #eventBeerFineSection > .beer-fine-admin-content {
+    padding: 0 16px 16px !important;
+  }
+}
