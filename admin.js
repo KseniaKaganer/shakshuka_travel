@@ -1412,6 +1412,8 @@ function resetEventForm() {
   setEventType("skydive");
   participantsList.innerHTML = "";
   if (eventLogbookDays) eventLogbookDays.innerHTML = "";
+  if (adminQuestCategories) adminQuestCategories.innerHTML = "";
+  setAdminQuestsStatus("");
   refreshNewLogbookDaySelect();
   updateParticipantCount();
   renderLocationOptions("");
@@ -1538,7 +1540,10 @@ document.getElementById("descriptionInput").value = event.description || "";
     });
   });
 
-  await loadEventLogbook();
+  await Promise.all([
+    loadEventLogbook(),
+    loadAdminQuests()
+  ]);
   setStatus(editorStatus, "");
 }
 
@@ -1958,6 +1963,171 @@ function exportParticipantsToSpreadsheet() {
 
 exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsheet);
 
+
+// ---------------- SHAKSHUKA Quests ----------------
+
+const adminQuestCategories = document.getElementById("adminQuestCategories");
+const adminQuestsStatus = document.getElementById("adminQuestsStatus");
+const addQuestCategoryButton = document.getElementById("addQuestCategoryButton");
+const questCategoryTemplate = document.getElementById("questCategoryTemplate");
+const questItemTemplate = document.getElementById("questItemTemplate");
+
+function setAdminQuestsStatus(message = "", isError = false) {
+  if (!adminQuestsStatus) return;
+  adminQuestsStatus.textContent = message;
+  adminQuestsStatus.classList.toggle("hidden", !message);
+  adminQuestsStatus.classList.toggle("error", isError);
+}
+
+function questUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function collectAdminQuests() {
+  if (!adminQuestCategories) return [];
+
+  return [...adminQuestCategories.querySelectorAll(".quest-category-card")].map((card, categoryIndex) => ({
+    id: card.dataset.categoryId || questUuid(),
+    title: card.querySelector(".quest-category-title")?.value.trim() || "",
+    sort_order: categoryIndex,
+    items: [...card.querySelectorAll(".quest-item-editor")].map((item, itemIndex) => ({
+      id: item.dataset.itemId || questUuid(),
+      title: item.querySelector(".quest-item-title")?.value.trim() || "",
+      sort_order: itemIndex
+    }))
+  }));
+}
+
+async function saveAdminQuests(message = "Quests saved.") {
+  if (!currentEventId) {
+    setAdminQuestsStatus("Save the event first to store quests.");
+    return false;
+  }
+
+  const quests = collectAdminQuests();
+
+  const emptyCategory = quests.find(category => !category.title);
+  if (emptyCategory) {
+    setAdminQuestsStatus("Each quest category needs a name.", true);
+    return false;
+  }
+
+  const emptyItem = quests.flatMap(category => category.items).find(item => !item.title);
+  if (emptyItem) {
+    setAdminQuestsStatus("Each quest needs text.", true);
+    return false;
+  }
+
+  try {
+    setAdminQuestsStatus("Saving quests…");
+    const { data, error } = await client.rpc("admin_replace_event_quests_v47", {
+      p_event_id: currentEventId,
+      p_quests: quests
+    });
+    if (error) throw error;
+
+    setAdminQuestsStatus(message);
+    setTimeout(() => {
+      if (adminQuestsStatus?.textContent === message) setAdminQuestsStatus("");
+    }, 1200);
+    return Boolean(data?.ok ?? true);
+  } catch (error) {
+    setAdminQuestsStatus(`Could not save quests: ${error.message}`, true);
+    return false;
+  }
+}
+
+function addQuestItem(categoryCard, data = {}) {
+  if (!questItemTemplate) return;
+
+  const fragment = questItemTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".quest-item-editor");
+  const input = row.querySelector(".quest-item-title");
+
+  row.dataset.itemId = data.id || questUuid();
+  input.value = data.title || "";
+
+  input.addEventListener("change", () => saveAdminQuests());
+  input.addEventListener("blur", () => {
+    if (input.value.trim()) saveAdminQuests();
+  });
+
+  row.querySelector(".remove-quest-item")?.addEventListener("click", async () => {
+    row.remove();
+    await saveAdminQuests("Quest removed.");
+  });
+
+  categoryCard.querySelector(".quest-items")?.appendChild(fragment);
+}
+
+function addQuestCategory(data = {}) {
+  if (!questCategoryTemplate || !adminQuestCategories) return;
+
+  const fragment = questCategoryTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".quest-category-card");
+  const titleInput = card.querySelector(".quest-category-title");
+
+  card.dataset.categoryId = data.id || questUuid();
+  titleInput.value = data.title || "";
+
+  titleInput.addEventListener("change", () => saveAdminQuests());
+  titleInput.addEventListener("blur", () => {
+    if (titleInput.value.trim()) saveAdminQuests();
+  });
+
+  card.querySelector(".add-quest-item")?.addEventListener("click", () => {
+    addQuestItem(card);
+    card.querySelector(".quest-item-editor:last-child .quest-item-title")?.focus();
+  });
+
+  card.querySelector(".remove-quest-category")?.addEventListener("click", async () => {
+    card.remove();
+    await saveAdminQuests("Category removed.");
+  });
+
+  (data.items || []).forEach(item => addQuestItem(card, item));
+  adminQuestCategories.appendChild(fragment);
+
+  if (!data.title) titleInput.focus();
+}
+
+async function loadAdminQuests() {
+  if (!adminQuestCategories) return;
+  adminQuestCategories.innerHTML = "";
+
+  if (!currentEventId) {
+    setAdminQuestsStatus("");
+    return;
+  }
+
+  try {
+    setAdminQuestsStatus("Loading quests…");
+    const { data, error } = await client.rpc("admin_get_event_quests_v47", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+
+    let quests = data;
+    if (typeof quests === "string") {
+      try { quests = JSON.parse(quests); } catch { quests = []; }
+    }
+    if (!Array.isArray(quests)) quests = [];
+
+    quests.forEach(category => addQuestCategory(category));
+    setAdminQuestsStatus("");
+  } catch (error) {
+    setAdminQuestsStatus(`Could not load quests: ${error.message}`, true);
+  }
+}
+
+addQuestCategoryButton?.addEventListener("click", () => addQuestCategory());
+
+
 async function saveEvent(status) {
   const name = document.getElementById("eventNameInput").value.trim();
   const startDate = document.getElementById("startDateInput").value;
@@ -2105,6 +2275,11 @@ async function saveEvent(status) {
       .eq("event_id", currentEventId);
 
     if (paymentTotalError) throw paymentTotalError;
+
+    if (adminQuestCategories?.children.length) {
+      const questsSaved = await saveAdminQuests();
+      if (!questsSaved) throw new Error("Could not save SHAKSHUKA Quests.");
+    }
 
     if (getEventType() === "skydive" && currentEventId) {
       const { error: coachCalcError } = await client.rpc("recalculate_event_coach_ticket_totals_v30", {

@@ -3666,3 +3666,145 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     max-width: 68px !important;
   }
 }
+
+
+/* ---------- V47 SHAKSHUKA Quests ---------- */
+
+.admin-event-quests {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.quests-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quests-summary::-webkit-details-marker {
+  display: none;
+}
+
+.quests-summary h2 {
+  margin: 0;
+}
+
+.quests-content {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-quest-categories {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.quest-category-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(0,0,0,.12);
+}
+
+.quest-category-header,
+.quest-item-editor {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-category-title {
+  font-weight: 850;
+}
+
+.quest-items {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.quest-icon-button {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+}
+
+.add-quest-item {
+  padding: 8px 11px;
+}
+
+.participant-quests-list {
+  display: grid;
+  gap: 14px;
+}
+
+.participant-quest-category {
+  display: grid;
+  gap: 8px;
+}
+
+.participant-quest-category h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.participant-quest-items {
+  display: grid;
+  gap: 7px;
+}
+
+.participant-quest-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+}
+
+.participant-quest-row input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.participant-quest-row span {
+  line-height: 1.35;
+}
+
+.participant-quest-row.is-complete {
+  border-color: rgba(63,185,80,.6);
+  background: rgba(63,185,80,.08);
+}
+
+.participant-quest-row.is-complete span {
+  text-decoration: line-through;
+  opacity: .75;
+}
+
+@media (max-width: 600px) {
+  .quests-summary {
+    padding: 16px;
+  }
+
+  .quests-content {
+    padding: 0 14px 14px;
+  }
+
+  .quest-category-card {
+    padding: 10px;
+  }
+}

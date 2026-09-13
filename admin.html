@@ -144,7 +144,7 @@
             </div>
             <label class="field"><span>Address</span><input id="locationAddressInput" type="text" /></label>
             <label class="field">
-              <span>Location page link</span>
+              <span>Location page website</span>
               <input id="locationWebsiteInput" type="url" placeholder="https://..." />
             </label>
             <div class="location-form-actions">
@@ -280,7 +280,24 @@
   <div id="eventLogbookStatus" class="status hidden"></div>
   <div id="eventLogbookDays" class="event-logbook-days"></div>
 </div>
-</details></div>
+</details>
+
+<details id="eventQuestsSection" class="admin-event-quests">
+  <summary class="quests-summary">
+    <div>
+      <h2>SHAKSHUKA Quests</h2>
+    </div>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </summary>
+
+  <div class="quests-content">
+    <div id="adminQuestsStatus" class="status compact-status hidden"></div>
+    <div id="adminQuestCategories" class="admin-quest-categories"></div>
+    <button id="addQuestCategoryButton" class="secondary-button" type="button">+ Add category</button>
+  </div>
+</details>
+</div>
+
 <details class="panel form-panel editor-side participants-collapsible">
 <summary class="participants-summary">
   <div class="summary-title-row">
@@ -410,6 +427,24 @@
         </div>
       </div>
     </section>
+  </template>
+
+  <template id="questCategoryTemplate">
+    <section class="quest-category-card">
+      <div class="quest-category-header">
+        <input class="quest-category-title" type="text" placeholder="Category name" />
+        <button class="danger-ghost-button quest-icon-button remove-quest-category" type="button" aria-label="Remove category" title="Remove category">×</button>
+      </div>
+      <div class="quest-items"></div>
+      <button class="ghost-button add-quest-item" type="button">+ Add quest</button>
+    </section>
+  </template>
+
+  <template id="questItemTemplate">
+    <div class="quest-item-editor">
+      <input class="quest-item-title" type="text" placeholder="Quest / task" />
+      <button class="danger-ghost-button quest-icon-button remove-quest-item" type="button" aria-label="Remove quest" title="Remove quest">×</button>
+    </div>
   </template>
 
   <template id="participantRowTemplate">

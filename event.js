@@ -355,6 +355,113 @@ function renderParticipantFields(data) {
   document.getElementById("selfCanopyCourseDone").checked = Boolean(data.canopy_course_done);
 }
 
+
+async function loadParticipantQuests() {
+  const list = document.getElementById("participantQuestsList");
+  const status = document.getElementById("participantQuestsStatus");
+
+  if (!list || !status || !participantSessionToken) return;
+
+  status.textContent = "Loading quests…";
+  status.classList.remove("hidden", "error");
+
+  try {
+    const { data, error } = await client.rpc("get_participant_quests_by_token_v47", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    status.classList.add("hidden");
+    list.innerHTML = "";
+
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">No quests yet.</p>';
+      return;
+    }
+
+    const categories = new Map();
+
+    rows.forEach(row => {
+      const key = row.category_id;
+      if (!categories.has(key)) {
+        categories.set(key, {
+          title: row.category_title || "Quests",
+          items: []
+        });
+      }
+      categories.get(key).items.push(row);
+    });
+
+    categories.forEach(category => {
+      const section = document.createElement("section");
+      section.className = "participant-quest-category";
+
+      const title = document.createElement("h4");
+      title.textContent = category.title;
+      section.appendChild(title);
+
+      const items = document.createElement("div");
+      items.className = "participant-quest-items";
+
+      category.items.forEach(item => {
+        const label = document.createElement("label");
+        label.className = "participant-quest-row";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = Boolean(item.checked);
+
+        const text = document.createElement("span");
+        text.textContent = item.item_title || "Quest";
+
+        checkbox.addEventListener("change", async () => {
+          const requestedValue = checkbox.checked;
+          checkbox.disabled = true;
+
+          try {
+            const { data: result, error: updateError } = await client.rpc(
+              "set_participant_quest_check_by_token_v47",
+              {
+                p_event_id: eventId,
+                p_token: participantSessionToken,
+                p_item_id: item.item_id,
+                p_checked: requestedValue
+              }
+            );
+
+            if (updateError) throw updateError;
+            if (!result?.ok) throw new Error("Could not verify participant session.");
+
+            label.classList.toggle("is-complete", requestedValue);
+          } catch (updateError) {
+            checkbox.checked = !requestedValue;
+            status.textContent = `Could not update quest: ${updateError.message}`;
+            status.classList.remove("hidden");
+            status.classList.add("error");
+          } finally {
+            checkbox.disabled = false;
+          }
+        });
+
+        label.classList.toggle("is-complete", checkbox.checked);
+        label.append(checkbox, text);
+        items.appendChild(label);
+      });
+
+      section.appendChild(items);
+      list.appendChild(section);
+    });
+  } catch (error) {
+    status.textContent = `Could not load quests: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+  }
+}
+
+
 function showLoggedInView(data) {
   participantAccess = data;
   loginScreen.classList.add("hidden");
@@ -367,6 +474,7 @@ function showLoggedInView(data) {
   renderPaymentStatus(data);
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
+  loadParticipantQuests();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
