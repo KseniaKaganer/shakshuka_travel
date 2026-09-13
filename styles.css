@@ -4485,3 +4485,147 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 12px;
   }
 }
+
+
+/* ---------- V57 Landing Competition participant leaderboard ---------- */
+
+.landing-leaderboard-wrap {
+  width: 100%;
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.landing-leaderboard {
+  width: 100%;
+  min-width: 660px;
+  border-collapse: collapse;
+  background: rgba(0,0,0,.12);
+}
+
+.landing-leaderboard th,
+.landing-leaderboard td {
+  padding: 10px 11px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.landing-leaderboard th {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.landing-leaderboard td {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.landing-leaderboard th:nth-child(2),
+.landing-leaderboard td:nth-child(2) {
+  text-align: left;
+}
+
+.landing-leaderboard tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.landing-leaderboard tr.is-me {
+  background: rgba(242,169,59,.08);
+}
+
+.landing-leaderboard tr.is-me .landing-participant-name {
+  color: var(--accent);
+}
+
+.landing-total-score {
+  color: var(--accent);
+  font-weight: 900 !important;
+}
+
+.landing-my-score {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.landing-my-score-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.landing-score-entry {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr)) 42px;
+  align-items: end;
+  gap: 8px;
+}
+
+.landing-score-entry label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.landing-score-entry label > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.landing-score-entry input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 7px 8px;
+  text-align: center;
+}
+
+.landing-add-score-button {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 600px) {
+  .landing-my-score-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .landing-score-entry {
+    grid-template-columns: repeat(3, minmax(0,1fr)) 38px;
+    gap: 5px;
+  }
+
+  .landing-score-entry label > span {
+    font-size: 9px;
+  }
+
+  .landing-score-entry input {
+    height: 38px;
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .landing-add-score-button {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+  }
+}

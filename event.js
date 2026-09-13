@@ -489,6 +489,150 @@ async function loadParticipantQuests() {
 }
 
 
+
+function formatCompetitionScore(value) {
+  const number = Number(value) || 0;
+  return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(/\.0$/, "");
+}
+
+function showLandingScoreStatus(message = "", isError = false) {
+  const status = document.getElementById("landingScoreStatus");
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle("hidden", !message);
+  status.classList.toggle("error", isError);
+}
+
+async function loadLandingCompetitionLeaderboard() {
+  const body = document.getElementById("landingLeaderboardBody");
+  if (!body || !participantSessionToken) return;
+
+  try {
+    const { data, error } = await client.rpc("get_landing_competition_leaderboard_by_token_v57", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    body.innerHTML = "";
+
+    if (!rows.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 7;
+      cell.className = "muted";
+      cell.textContent = "No participants yet.";
+      row.appendChild(cell);
+      body.appendChild(row);
+      return;
+    }
+
+    rows.forEach((entry, index) => {
+      const row = document.createElement("tr");
+
+      if (entry.participant_id === participantAccess?.participant_id) {
+        row.classList.add("is-me");
+      }
+
+      const values = [
+        index + 1,
+        entry.display_name || "Participant",
+        Number(entry.jump_count) || 0,
+        formatCompetitionScore(entry.pattern_score),
+        formatCompetitionScore(entry.accuracy_score),
+        formatCompetitionScore(entry.flare_score),
+        formatCompetitionScore(entry.total_score)
+      ];
+
+      values.forEach((value, cellIndex) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+
+        if (cellIndex === 1) cell.classList.add("landing-participant-name");
+        if (cellIndex === 6) cell.classList.add("landing-total-score");
+
+        row.appendChild(cell);
+      });
+
+      body.appendChild(row);
+    });
+  } catch (error) {
+    console.warn("Could not load landing leaderboard:", error);
+    showLandingScoreStatus(`Could not load scores: ${error.message}`, true);
+  }
+}
+
+async function addMyLandingScore() {
+  if (!participantSessionToken) return;
+
+  const patternInput = document.getElementById("myLandingPatternScore");
+  const accuracyInput = document.getElementById("myLandingAccuracyScore");
+  const flareInput = document.getElementById("myLandingFlareScore");
+  const button = document.getElementById("addMyLandingScoreButton");
+
+  const pattern = Number(patternInput?.value ?? 0);
+  const accuracy = Number(accuracyInput?.value ?? 0);
+  const flare = Number(flareInput?.value ?? 0);
+
+  const scores = [
+    ["Pattern", pattern],
+    ["Accuracy", accuracy],
+    ["Flare", flare]
+  ];
+
+  const invalid = scores.find(([, value]) =>
+    !Number.isFinite(value) || value < 0 || value > 10
+  );
+
+  if (invalid) {
+    showLandingScoreStatus(`${invalid[0]} must be between 0 and 10.`, true);
+    return;
+  }
+
+  if (pattern === 0 && accuracy === 0 && flare === 0) {
+    showLandingScoreStatus("Enter at least one score above 0.", true);
+    return;
+  }
+
+  button.disabled = true;
+  showLandingScoreStatus("Adding score…");
+
+  try {
+    const { data, error } = await client.rpc("add_participant_landing_score_by_token_v57", {
+      p_event_id: eventId,
+      p_token: participantSessionToken,
+      p_pattern: pattern,
+      p_accuracy: accuracy,
+      p_flare: flare
+    });
+
+    if (error) throw error;
+    if (!data?.ok) throw new Error("Could not verify participant session.");
+
+    if (patternInput) patternInput.value = "0";
+    if (accuracyInput) accuracyInput.value = "0";
+    if (flareInput) flareInput.value = "0";
+
+    showLandingScoreStatus("Score added.");
+    await loadLandingCompetitionLeaderboard();
+
+    setTimeout(() => {
+      const status = document.getElementById("landingScoreStatus");
+      if (status?.textContent === "Score added.") showLandingScoreStatus("");
+    }, 1800);
+  } catch (error) {
+    showLandingScoreStatus(`Could not add score: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+document.getElementById("addMyLandingScoreButton")?.addEventListener("click", addMyLandingScore);
+
+
 function showLoggedInView(data) {
   participantAccess = data;
   loginScreen.classList.add("hidden");
@@ -503,6 +647,7 @@ function showLoggedInView(data) {
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
   loadParticipantQuests();
+  loadLandingCompetitionLeaderboard();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 

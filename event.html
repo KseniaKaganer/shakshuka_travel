@@ -164,13 +164,59 @@
         </summary>
 
         <div class="participant-collapse-content competition-list">
-          <details class="competition-item">
+          <details class="competition-item landing-competition-item">
             <summary>
               <strong>Landing Competition</strong>
               <span class="collapse-chevron">⌄</span>
             </summary>
+
             <div class="competition-item-body">
               <p id="landingCompetitionInfo"></p>
+
+              <div class="landing-leaderboard-wrap">
+                <table class="landing-leaderboard">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Participant</th>
+                      <th>Jumps</th>
+                      <th>Pattern</th>
+                      <th>Accuracy</th>
+                      <th>Flare</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="landingLeaderboardBody"></tbody>
+                </table>
+              </div>
+
+              <div class="landing-my-score">
+                <div class="landing-my-score-head">
+                  <strong>Add to my score</strong>
+                  <span class="muted small-text">Each category can be 0–10.</span>
+                </div>
+
+                <div class="landing-score-entry">
+                  <label>
+                    <span>Pattern</span>
+                    <input id="myLandingPatternScore" type="number" min="0" max="10" step="0.1" value="0" />
+                  </label>
+
+                  <label>
+                    <span>Accuracy</span>
+                    <input id="myLandingAccuracyScore" type="number" min="0" max="10" step="0.1" value="0" />
+                  </label>
+
+                  <label>
+                    <span>Flare</span>
+                    <input id="myLandingFlareScore" type="number" min="0" max="10" step="0.1" value="0" />
+                  </label>
+
+                  <button id="addMyLandingScoreButton" class="primary-button landing-add-score-button" type="button" title="Add to my score" aria-label="Add to my score">+</button>
+                </div>
+
+                <div id="landingScoreStatus" class="status compact-status hidden"></div>
+              </div>
             </div>
           </details>
 
