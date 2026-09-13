@@ -2125,6 +2125,27 @@ function competitionTotalScore(row) {
 }
 
 function refreshCompetitionPlacementNumbers(container) {
+  if (!container) return;
+
+  // Landing Competition is ranked automatically:
+  // average score = (Pattern + Accuracy + Flare) / number of jumps.
+  if (container === landingCompetitionRanking) {
+    const rows = [...container.querySelectorAll(".competition-ranking-row")];
+
+    rows.sort((a, b) => {
+      const scoreA = competitionTotalScore(a);
+      const scoreB = competitionTotalScore(b);
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      const nameA = a.querySelector(".competition-participant-name")?.textContent || "";
+      const nameB = b.querySelector(".competition-participant-name")?.textContent || "";
+      return nameA.localeCompare(nameB);
+    });
+
+    rows.forEach(row => container.appendChild(row));
+  }
+
   [...container.querySelectorAll(".competition-ranking-row")].forEach((row, index) => {
     const place = row.querySelector(".competition-place");
     if (place) place.textContent = String(index + 1);
@@ -2215,7 +2236,7 @@ function enableCompetitionDrag(container, type) {
 function buildCompetitionRow(participant, type, saved = {}) {
   const row = document.createElement("div");
   row.className = `competition-ranking-row ${type === "landing" ? "landing-ranking-row" : ""}`;
-  row.draggable = true;
+  row.draggable = type !== "landing";
   row.dataset.participantId = participant.participant_id;
   row.dataset.jumpCount = String(saved.jump_count ?? 0);
 
@@ -2256,7 +2277,6 @@ function buildCompetitionRow(participant, type, saved = {}) {
     total.title = "Average score = (P + A + F) ÷ jumps";
 
     row.append(
-      drag,
       place,
       name,
       jumps,
@@ -2311,6 +2331,29 @@ async function loadCompetitionRanking(type, container) {
 
   const savedMap = new Map((data || []).map(item => [item.participant_id, item]));
   const ordered = [...participants].sort((a, b) => {
+    if (type === "landing") {
+      const aSaved = savedMap.get(a.participant_id) || {};
+      const bSaved = savedMap.get(b.participant_id) || {};
+
+      const aJumps = Number(aSaved.jump_count) || 0;
+      const bJumps = Number(bSaved.jump_count) || 0;
+
+      const aScore = aJumps > 0
+        ? ((Number(aSaved.pattern_score) || 0)
+          + (Number(aSaved.accuracy_score) || 0)
+          + (Number(aSaved.flare_score) || 0)) / aJumps
+        : 0;
+
+      const bScore = bJumps > 0
+        ? ((Number(bSaved.pattern_score) || 0)
+          + (Number(bSaved.accuracy_score) || 0)
+          + (Number(bSaved.flare_score) || 0)) / bJumps
+        : 0;
+
+      if (aScore !== bScore) return bScore - aScore;
+      return a.name.localeCompare(b.name);
+    }
+
     const pa = savedMap.get(a.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
     const pb = savedMap.get(b.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
     if (pa !== pb) return pa - pb;
@@ -2335,7 +2378,7 @@ async function loadCompetitionPlacements() {
   ]);
 }
 
-enableCompetitionDrag(landingCompetitionRanking, "landing");
+// Landing Competition is ordered automatically by score.
 enableCompetitionDrag(socialCompetitionRanking, "social");
 
 document.getElementById("refreshLandingCompetitionParticipants")?.addEventListener("click", () => {

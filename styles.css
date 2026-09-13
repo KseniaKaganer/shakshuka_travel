@@ -4996,3 +4996,77 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 8px !important;
   }
 }
+
+
+/* ---------- V62 Admin Landing Competition automatic ranking ---------- */
+
+/* Landing Competition is no longer draggable. */
+#landingCompetitionRanking .competition-ranking-row {
+  cursor: default !important;
+}
+
+#landingCompetitionRanking .competition-drag-handle {
+  display: none !important;
+}
+
+/* # | Participant | J | P | A | F | Score */
+.landing-score-head,
+.landing-ranking-row {
+  grid-template-columns:
+    30px
+    minmax(90px, 1fr)
+    34px
+    48px
+    48px
+    48px
+    58px !important;
+  gap: 5px !important;
+}
+
+.competition-score-input {
+  box-sizing: border-box !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  text-align: center !important;
+  font-size: 12px !important;
+}
+
+/* Enough room for a four-digit/decimal average without taking extra space. */
+#landingCompetitionRanking .competition-total {
+  width: 58px;
+  min-width: 58px;
+  text-align: center;
+  font-size: 12px !important;
+}
+
+@media (max-width: 700px) {
+  .landing-score-head,
+  .landing-ranking-row {
+    grid-template-columns:
+      26px
+      minmax(70px, 1fr)
+      28px
+      42px
+      42px
+      42px
+      50px !important;
+    gap: 4px !important;
+  }
+
+  .competition-score-input {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 30px !important;
+    font-size: 11px !important;
+  }
+
+  #landingCompetitionRanking .competition-total {
+    width: 50px;
+    min-width: 50px;
+    font-size: 11px !important;
+  }
+}
