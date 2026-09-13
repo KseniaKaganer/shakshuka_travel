@@ -3450,3 +3450,96 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 13px !important;
   }
 }
+
+
+/* ---------- V40 Add Day button width ---------- */
+
+.add-day-match-button {
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-top-actions.logbook-day-adder {
+    grid-template-columns: minmax(0, 1fr) 68px !important;
+  }
+
+  .add-day-match-button {
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+  }
+}
+
+
+/* ---------- V41 full-width Load + Group cards ---------- */
+
+/*
+  Day remains the outer card.
+  Loads and Groups now use the full available horizontal width inside it,
+  instead of becoming progressively narrower with every nesting level.
+*/
+.logbook-day-body,
+.logbook-loads,
+.logbook-load-body,
+.logbook-groups {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.logbook-load-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.logbook-group-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Remove nested horizontal indentation responsible for the staircase effect. */
+.logbook-day-body,
+.logbook-load-body {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.logbook-loads,
+.logbook-groups {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Keep a clean full-width divider from left to right. */
+.logbook-day-body > .logbook-loads,
+.logbook-load-body > .logbook-groups {
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-load-card,
+  .logbook-group-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .logbook-day-body,
+  .logbook-loads,
+  .logbook-load-body,
+  .logbook-groups {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}

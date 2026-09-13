@@ -133,6 +133,27 @@ function showView(view) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+
+function adminEventIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("event") || "";
+}
+
+function setAdminEventUrl(eventId = "") {
+  const url = new URL(window.location.href);
+
+  if (eventId) {
+    url.searchParams.set("event", eventId);
+  } else {
+    url.searchParams.delete("event");
+  }
+
+  window.history.replaceState(
+    { eventId: eventId || null },
+    "",
+    `${url.pathname}${url.search}${url.hash}`
+  );
+}
+
 async function updateLoggedInIndicator() {
   const { data: { user } } = await client.auth.getUser();
   if (!loggedInEmail) return;
@@ -152,6 +173,7 @@ async function isCurrentUserAdmin() {
 
 async function routeForSession() {
   const { data: { session } } = await client.auth.getSession();
+
   if (!session) {
     showView("login");
     return;
@@ -165,8 +187,17 @@ async function routeForSession() {
   }
 
   await updateLoggedInIndicator();
-  showView("dashboard");
+
+  // Load shared data first, then restore the exact event if its ID is in the URL.
   await Promise.all([loadLocations(), loadVenues(), loadAdminEvents()]);
+
+  const eventIdFromUrl = adminEventIdFromUrl();
+
+  if (eventIdFromUrl) {
+    await openEventEditor(eventIdFromUrl, { updateUrl: false });
+  } else {
+    showView("dashboard");
+  }
 }
 
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
@@ -190,8 +221,14 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 
   setStatus(loginStatus, "");
   await updateLoggedInIndicator();
-  showView("dashboard");
   await Promise.all([loadLocations(), loadVenues(), loadAdminEvents()]);
+
+  const eventIdFromUrl = adminEventIdFromUrl();
+  if (eventIdFromUrl) {
+    await openEventEditor(eventIdFromUrl, { updateUrl: false });
+  } else {
+    showView("dashboard");
+  }
 });
 
 signOutButton.addEventListener("click", async () => {
@@ -735,7 +772,8 @@ function usedLogbookDayDates() {
 function refreshNewLogbookDaySelect() {
   if (!newLogbookDaySelect) return;
 
-  const used = new Set(usedLogbookDayDates());
+  const usedDates = usedLogbookDayDates().sort();
+  const used = new Set(usedDates);
   const previousValue = newLogbookDaySelect.value;
 
   const availableDates = eventDateOptions()
@@ -759,10 +797,27 @@ function refreshNewLogbookDaySelect() {
     newLogbookDaySelect.appendChild(option);
   });
 
+  // Default suggestion:
+  // choose the first available event date AFTER the latest date already added.
+  // If no days exist yet, use the first event date (Day 0).
+  let suggestedValue = availableDates[0].value;
+
+  if (usedDates.length) {
+    const latestUsedDate = usedDates[usedDates.length - 1];
+    const followingDate = availableDates.find(item => item.value > latestUsedDate);
+    if (followingDate) suggestedValue = followingDate.value;
+  }
+
+  // Keep an intentional current selection while the user is interacting,
+  // otherwise move automatically to the logical next day.
   const previousStillAvailable = availableDates.some(item => item.value === previousValue);
-  newLogbookDaySelect.value = previousStillAvailable
+  const previousIsAfterLatest = usedDates.length
+    ? previousValue > usedDates[usedDates.length - 1]
+    : Boolean(previousValue);
+
+  newLogbookDaySelect.value = previousStillAvailable && previousIsAfterLatest
     ? previousValue
-    : availableDates[0].value;
+    : suggestedValue;
 }
 
 function updateDayTitles() {
@@ -1364,15 +1419,17 @@ function resetEventForm() {
   hideNewLocationForm();
 }
 
-async function openEventEditor(eventId = null) {
+async function openEventEditor(eventId = null, { updateUrl = true } = {}) {
   resetEventForm();
   showView("editor");
 
   if (!eventId) {
+    if (updateUrl) setAdminEventUrl("");
     return;
   }
 
   currentEventId = eventId;
+  if (updateUrl) setAdminEventUrl(eventId);
 
   setTextById("editorTitle", "Edit Travel Event");
   setStatus(editorStatus, "Loading event…");
@@ -1481,6 +1538,7 @@ document.getElementById("descriptionInput").value = event.description || "";
 
 document.getElementById("newEventButton").addEventListener("click", () => openEventEditor());
 document.getElementById("backToDashboard").addEventListener("click", async () => {
+  setAdminEventUrl("");
   showView("dashboard");
   await loadAdminEvents();
 });
@@ -2037,6 +2095,7 @@ async function saveEvent(status) {
     await loadAdminEvents();
 
     setTimeout(() => {
+      setAdminEventUrl("");
       showView("dashboard");
     }, 500);
   } catch (error) {
