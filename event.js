@@ -522,7 +522,7 @@ async function loadLandingCompetitionLeaderboard() {
     if (!rows.length) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 7;
+      cell.colSpan = 9;
       cell.className = "muted";
       cell.textContent = "No participants yet.";
       row.appendChild(cell);
@@ -687,6 +687,8 @@ async function loadSocialCompetitionLeaderboard() {
       const values = [
         index + 1,
         entry.display_name || "Participant",
+        Number(entry.existing_shakshuka_count) || 0,
+        Number(entry.seqlife_count) || 0,
         Number(entry.hashtag_count) || 0,
         Number(entry.story_count) || 0,
         Number(entry.post_count) || 0,
@@ -698,7 +700,7 @@ async function loadSocialCompetitionLeaderboard() {
         const cell = document.createElement("td");
         cell.textContent = String(value);
         if (cellIndex === 1) cell.classList.add("social-participant-name");
-        if (cellIndex === 6) cell.classList.add("social-total-score");
+        if (cellIndex === 8) cell.classList.add("social-total-score");
         row.appendChild(cell);
       });
 

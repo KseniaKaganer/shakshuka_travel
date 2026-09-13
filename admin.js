@@ -2312,6 +2312,14 @@ function buildCompetitionRow(participant, type, saved = {}) {
   } else {
     row.draggable = false;
 
+    const existing = document.createElement("span");
+    existing.className = "social-count";
+    existing.textContent = String(saved.existing_shakshuka_count ?? 0);
+
+    const seqlife = document.createElement("span");
+    seqlife.className = "social-count";
+    seqlife.textContent = String(saved.seqlife_count ?? 0);
+
     const hashtag = document.createElement("span");
     hashtag.className = "social-count";
     hashtag.textContent = String(saved.hashtag_count ?? 0);
@@ -2334,7 +2342,7 @@ function buildCompetitionRow(participant, type, saved = {}) {
 
     row.dataset.socialScore = String(saved.total_score ?? 0);
 
-    row.append(place, name, hashtag, story, post, reel, score);
+    row.append(place, name, existing, seqlife, hashtag, story, post, reel, score);
   }
 
   return row;

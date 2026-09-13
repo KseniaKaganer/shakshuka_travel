@@ -5349,3 +5349,84 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 8px;
   }
 }
+
+
+/* ---------- V67 #seqlife social scoring ---------- */
+.social-score-head,
+.social-ranking-list .competition-ranking-row {
+  grid-template-columns: 30px minmax(90px,1fr) 40px 40px 40px 40px 40px 56px !important;
+}
+
+.social-media-rules,
+.social-score-actions {
+  grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+}
+
+.social-leaderboard th:nth-child(2),
+.social-leaderboard td:nth-child(2) { width: 27% !important; }
+
+.social-leaderboard th:nth-child(1),
+.social-leaderboard td:nth-child(1) { width: 6% !important; }
+
+.social-leaderboard th:nth-child(3),
+.social-leaderboard td:nth-child(3),
+.social-leaderboard th:nth-child(4),
+.social-leaderboard td:nth-child(4),
+.social-leaderboard th:nth-child(5),
+.social-leaderboard td:nth-child(5),
+.social-leaderboard th:nth-child(6),
+.social-leaderboard td:nth-child(6),
+.social-leaderboard th:nth-child(7),
+.social-leaderboard td:nth-child(7) { width: 9% !important; }
+
+.social-leaderboard th:nth-child(8),
+.social-leaderboard td:nth-child(8) { width: 22% !important; }
+
+@media (max-width:600px) {
+  .social-score-head,
+  .social-ranking-list .competition-ranking-row {
+    grid-template-columns: 24px minmax(65px,1fr) 31px 31px 31px 31px 31px 44px !important;
+    gap: 2px !important;
+  }
+
+  .social-media-rules,
+  .social-score-actions {
+    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+    gap: 3px !important;
+  }
+}
+
+
+/* ---------- V68 existing Shakshuka post/reel +1 ---------- */
+.social-score-head,
+.social-ranking-list .competition-ranking-row {
+  grid-template-columns: 28px minmax(82px,1fr) 34px 34px 34px 34px 34px 34px 52px !important;
+  gap: 3px !important;
+}
+
+.social-media-rules,
+.social-score-actions {
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+}
+
+.social-leaderboard th:nth-child(1),
+.social-leaderboard td:nth-child(1) { width: 6% !important; }
+.social-leaderboard th:nth-child(2),
+.social-leaderboard td:nth-child(2) { width: 25% !important; }
+.social-leaderboard th:nth-child(n+3):nth-child(-n+8),
+.social-leaderboard td:nth-child(n+3):nth-child(-n+8) { width: 8% !important; }
+.social-leaderboard th:nth-child(9),
+.social-leaderboard td:nth-child(9) { width: 21% !important; }
+
+@media (max-width:600px) {
+  .social-score-head,
+  .social-ranking-list .competition-ranking-row {
+    grid-template-columns: 23px minmax(58px,1fr) repeat(6,28px) 40px !important;
+    gap: 2px !important;
+  }
+
+  .social-media-rules,
+  .social-score-actions {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+}
