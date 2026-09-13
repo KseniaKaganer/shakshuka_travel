@@ -2169,9 +2169,6 @@ function renderBeerFineAdminRow(item) {
   name.className="beer-fine-name";
   name.textContent=item.display_name||"Participant";
 
-  const ratio=document.createElement("span");
-  ratio.className="beer-fine-ratio";
-
   const counts=document.createElement("div");
   counts.className="beer-fine-count-editor";
 
@@ -2188,13 +2185,9 @@ function renderBeerFineAdminRow(item) {
   };
   const paid=makeInput("Paid","beer-fine-paid",item.paid_count);
   const unpaid=makeInput("Unpaid","beer-fine-unpaid",item.unpaid_count);
-  const refreshRatio=()=>ratio.textContent=`${Math.max(0,Number(paid.input.value)||0)}/${Math.max(0,Number(unpaid.input.value)||0)}`;
-  paid.input.addEventListener("input",refreshRatio);
-  unpaid.input.addEventListener("input",refreshRatio);
   paid.input.addEventListener("change",()=>saveBeerFineRow(row));
   unpaid.input.addEventListener("change",()=>saveBeerFineRow(row));
   counts.append(paid.label,unpaid.label);
-  refreshRatio();
 
   const remove=document.createElement("button");
   remove.type="button"; remove.className="danger-ghost-button beer-fine-remove"; remove.textContent="×";
@@ -2207,7 +2200,7 @@ function renderBeerFineAdminRow(item) {
       row.remove();
     } catch(error){ setBeerFineStatus(`Could not remove: ${error.message}`,true); }
   });
-  row.append(name,ratio,counts,remove);
+  row.append(name,counts,remove);
   list.appendChild(row);
 }
 

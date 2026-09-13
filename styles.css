@@ -5493,3 +5493,88 @@ input[type="time"]::-webkit-calendar-picker-indicator {
  .beer-fine-admin-row{grid-template-columns:minmax(74px,1fr) 44px 124px 28px;gap:4px;padding:7px 8px}
  .beer-fine-count-editor{grid-template-columns:repeat(2,60px);gap:4px}
 }
+
+
+/* ---------- V71 Social score buttons ---------- */
+.social-score-add {
+  min-height: 92px;
+  padding: 12px 7px !important;
+  gap: 8px !important;
+}
+
+.social-score-add > span:first-child {
+  font-size: 15px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.social-plus {
+  width: auto !important;
+  min-width: 48px;
+  height: 34px !important;
+  padding: 0 10px;
+  font-size: 18px !important;
+  line-height: 34px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 600px) {
+  .social-score-add {
+    min-height: 88px;
+    padding: 10px 5px !important;
+  }
+
+  .social-score-add > span:first-child {
+    font-size: 13px !important;
+  }
+
+  .social-plus {
+    min-width: 44px;
+    height: 32px !important;
+    padding: 0 8px;
+    font-size: 17px !important;
+    line-height: 32px !important;
+  }
+}
+
+
+/* ---------- V72 Beer Fine admin cleanup ---------- */
+#eventBeerFineSection > summary {
+  list-style: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#eventBeerFineSection > summary::-webkit-details-marker {
+  display: none !important;
+}
+
+#eventBeerFineSection > summary::marker {
+  content: "" !important;
+  display: none !important;
+}
+
+#eventBeerFineSection > summary::before,
+#eventBeerFineSection > summary::after {
+  content: none !important;
+  display: none !important;
+}
+
+#eventBeerFineSection > summary .collapse-chevron {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.beer-fine-admin-row {
+  grid-template-columns: minmax(90px,1fr) 150px 30px !important;
+}
+
+@media (max-width:600px) {
+  .beer-fine-admin-row {
+    grid-template-columns: minmax(74px,1fr) 124px 28px !important;
+  }
+}
