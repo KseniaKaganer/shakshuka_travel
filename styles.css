@@ -6191,3 +6191,29 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     max-height: 16px !important;
   }
 }
+
+
+/* ---------- V91 Admin mobile box order ---------- */
+@media (max-width: 900px) {
+  #eventForm.editor-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  #eventForm > .editor-left-column {
+    display: contents !important;
+  }
+
+  #eventLogbookSection { order: 1 !important; }
+  #eventLandingCompetitionSection { order: 2 !important; }
+  #eventSocialCompetitionSection { order: 3 !important; }
+  #eventBeerFineSection { order: 4 !important; }
+  #eventParticipantsSection { order: 5 !important; }
+  #eventDetailsSection { order: 6 !important; }
+  #eventQuestsSection { order: 7 !important; }
+
+  #eventParticipantsSection {
+    position: static !important;
+    top: auto !important;
+  }
+}

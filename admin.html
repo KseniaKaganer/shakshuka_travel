@@ -60,7 +60,7 @@
         <button id="backToDashboard" class="ghost-button" type="button">← Back to events</button>
         <div class="editor-actions">
           <button id="saveDraftButton" class="ghost-button" type="button">Save draft</button>
-          <button id="publishButton" class="primary-button" type="button">Publish event</button>
+          <button id="publishButton" class="primary-button" type="button">Save and Publish</button>
         </div>
       </div>
 
@@ -71,11 +71,11 @@
       </div>
 
       <form id="eventForm" class="editor-grid editor-grid-v13" onsubmit="return false;">
-<div class="editor-left-column"><details class="panel form-panel editor-main event-details-collapsible">
+<div class="editor-left-column"><details id="eventDetailsSection" class="panel form-panel editor-main event-details-collapsible">
           <summary class="event-details-summary">
             <div class="admin-box-title">
               <span class="admin-box-icon" aria-hidden="true">ℹ️</span>
-              <h2>Event details</h2>
+              <h2>Even Details</h2>
             </div>
             <span class="collapse-chevron" aria-hidden="true">⌄</span>
           </summary>
@@ -445,7 +445,7 @@
     </details>
 </div>
 
-<details class="panel form-panel editor-side participants-collapsible">
+<details id="eventParticipantsSection" class="panel form-panel editor-side participants-collapsible">
 <summary class="participants-summary">
   <div class="summary-title-row">
     <div class="admin-box-title">
