@@ -303,7 +303,10 @@ function renderSelectedVenue() {
 
   const venue = venues.find(item => item.id === venueSelect.value);
 
-  selectedVenueDetails?.classList.toggle("hidden", !venue);
+  // Keep the selected venue compact when not editing.
+  // The readonly fields stay populated but are hidden; the saved venue dropdown
+  // is the normal non-edit view, matching Living location.
+  selectedVenueDetails?.classList.add("hidden");
 
   if (!venue) {
     if (eventVenueTypeInput) eventVenueTypeInput.value = getEventType() === "tunnel" ? "tunnel" : "dropzone";
@@ -326,6 +329,7 @@ function renderSelectedVenue() {
 
 function showVenueForm(mode = "new") {
   newVenueBox?.classList.remove("hidden");
+  selectedVenueDetails?.classList.add("hidden");
   editingVenueId = mode === "edit" ? venueSelect?.value || null : null;
 
   if (editingVenueId) {
@@ -1475,7 +1479,7 @@ document.getElementById("descriptionInput").value = event.description || "";
     if (venueUrlInput) venueUrlInput.value = event.venue_url || "";
     if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
     if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
-    selectedVenueDetails?.classList.toggle("hidden", !event.venue);
+    selectedVenueDetails?.classList.add("hidden");
     updateEventVenueFields();
   }
   setEventType(event.event_type || "skydive");

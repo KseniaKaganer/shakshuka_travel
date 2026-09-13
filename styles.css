@@ -3895,3 +3895,83 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding: 0 14px 14px;
   }
 }
+
+
+/* ---------- V49 compact Admin venue + consolidated Event info ---------- */
+
+/* Welcome is the main personal line; remove the need for a secondary location line. */
+.event-participant-welcome {
+  font-size: 18px !important;
+  line-height: 1.25;
+  margin-top: 8px;
+}
+
+.event-participant-welcome strong {
+  font-size: 20px !important;
+}
+
+/* Event information now contains venue + living location. */
+.event-information-content {
+  display: grid;
+  gap: 16px;
+}
+
+.event-description-text {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.event-description-text:empty {
+  display: none;
+}
+
+.event-information-item {
+  display: grid;
+  gap: 9px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.event-description-text:empty + .event-information-item {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.event-information-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.event-information-item-head h4 {
+  margin: 0;
+  min-width: 0;
+  font-size: 16px;
+}
+
+.event-information-item .event-info-stack {
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .event-participant-welcome {
+    font-size: 17px !important;
+  }
+
+  .event-participant-welcome strong {
+    font-size: 19px !important;
+  }
+
+  .event-information-content {
+    gap: 14px;
+  }
+
+  .event-information-item {
+    padding-top: 12px;
+  }
+
+  .event-information-item-head h4 {
+    font-size: 15px;
+  }
+}

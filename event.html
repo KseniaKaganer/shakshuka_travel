@@ -64,8 +64,6 @@
             <span>Welcome,</span>
             <strong id="participantWelcomeName">Participant</strong>
           </div>
-          <div id="eventLocation" class="location"></div>
-
           <div id="missingAdminInfo" class="missing-admin-info hidden">
             <strong>Please provide the following information to the admin:</strong>
             <span id="missingAdminInfoText"></span>
@@ -74,35 +72,32 @@
       </div>
 
       <div class="event-info-boxes">
-        <details class="panel participant-collapsible event-summary-box">
+        <details class="panel participant-collapsible event-summary-box event-information-box">
           <summary>
-            <div class="event-summary-title-row">
-              <h3 id="eventVenueTitle">Event venue</h3>
+            <div>
+              <h3>Event information</h3>
             </div>
-            <div class="event-summary-right">
-              <span id="eventVenueTypeBadge" class="event-type-badge"></span>
-              <span class="collapse-chevron">⌄</span>
-            </div>
+            <span class="collapse-chevron">⌄</span>
           </summary>
 
-          <div class="participant-collapse-content">
-            <div id="eventVenueInfo" class="event-info-stack"></div>
-          </div>
-        </details>
+          <div class="participant-collapse-content event-information-content">
+            <p id="eventDescription" class="event-description-text"></p>
 
-        <details class="panel participant-collapsible event-summary-box">
-          <summary>
-            <div class="event-summary-title-row">
-              <h3 id="livingLocationTitle">Living location</h3>
-            </div>
-            <div class="event-summary-right">
-              <span id="livingLocationTypeBadge" class="event-type-badge"></span>
-              <span class="collapse-chevron">⌄</span>
-            </div>
-          </summary>
+            <section class="event-information-item">
+              <div class="event-information-item-head">
+                <h4 id="eventVenueTitle">Event venue</h4>
+                <span id="eventVenueTypeBadge" class="event-type-badge"></span>
+              </div>
+              <div id="eventVenueInfo" class="event-info-stack"></div>
+            </section>
 
-          <div class="participant-collapse-content">
-            <div id="livingLocationInfo" class="event-info-stack"></div>
+            <section class="event-information-item">
+              <div class="event-information-item-head">
+                <h4 id="livingLocationTitle">Living location</h4>
+                <span id="livingLocationTypeBadge" class="event-type-badge"></span>
+              </div>
+              <div id="livingLocationInfo" class="event-info-stack"></div>
+            </section>
           </div>
         </details>
 
@@ -134,19 +129,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </details>
-
-        <details class="panel participant-collapsible event-summary-box">
-          <summary>
-            <div>
-              <h3>Event information</h3>
-            </div>
-            <span class="collapse-chevron">⌄</span>
-          </summary>
-
-          <div class="participant-collapse-content">
-            <p id="eventDescription"></p>
           </div>
         </details>
       </div>
