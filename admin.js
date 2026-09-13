@@ -2118,7 +2118,10 @@ function competitionTotalScore(row) {
   const pattern = Number(row.querySelector(".competition-pattern")?.value) || 0;
   const accuracy = Number(row.querySelector(".competition-accuracy")?.value) || 0;
   const flare = Number(row.querySelector(".competition-flare")?.value) || 0;
-  return pattern + accuracy + flare;
+  const jumps = Number(row.dataset.jumpCount) || 0;
+
+  if (jumps <= 0) return 0;
+  return (pattern + accuracy + flare) / jumps;
 }
 
 function refreshCompetitionPlacementNumbers(container) {
@@ -2214,6 +2217,7 @@ function buildCompetitionRow(participant, type, saved = {}) {
   row.className = `competition-ranking-row ${type === "landing" ? "landing-ranking-row" : ""}`;
   row.draggable = true;
   row.dataset.participantId = participant.participant_id;
+  row.dataset.jumpCount = String(saved.jump_count ?? 0);
 
   const place = document.createElement("span");
   place.className = "competition-place";
@@ -2243,13 +2247,19 @@ function buildCompetitionRow(participant, type, saved = {}) {
       return input;
     };
 
+    const jumps = document.createElement("span");
+    jumps.className = "competition-jumps";
+    jumps.textContent = String(saved.jump_count ?? 0);
+
     const total = document.createElement("strong");
     total.className = "competition-total";
+    total.title = "Average score = (P + A + F) ÷ jumps";
 
     row.append(
       drag,
       place,
       name,
+      jumps,
       makeScoreInput("competition-pattern", saved.pattern_score),
       makeScoreInput("competition-accuracy", saved.accuracy_score),
       makeScoreInput("competition-flare", saved.flare_score),
@@ -2273,12 +2283,26 @@ async function loadCompetitionRanking(type, container) {
     return;
   }
 
-  const { data, error } = await client
-    .from("competition_results")
-    .select("participant_id,placement,pattern_score,accuracy_score,flare_score")
-    .eq("event_id", currentEventId)
-    .eq("competition_type", type)
-    .order("placement", { ascending: true });
+  let data = [];
+  let error = null;
+
+  if (type === "landing") {
+    const result = await client.rpc("admin_get_landing_competition_v60", {
+      p_event_id: currentEventId
+    });
+    data = result.data || [];
+    error = result.error;
+  } else {
+    const result = await client
+      .from("competition_results")
+      .select("participant_id,placement,pattern_score,accuracy_score,flare_score")
+      .eq("event_id", currentEventId)
+      .eq("competition_type", type)
+      .order("placement", { ascending: true });
+
+    data = result.data || [];
+    error = result.error;
+  }
 
   if (error) {
     setStatus(editorStatus, `Could not load competition placement: ${error.message}`, true);

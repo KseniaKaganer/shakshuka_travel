@@ -4757,3 +4757,117 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     text-overflow: ellipsis !important;
   }
 }
+
+
+/* ---------- V60 Landing Competition compact scoring ---------- */
+
+/* Admin table: drag, place, name, jumps, P, A, F, average score */
+.landing-score-head,
+.landing-ranking-row {
+  grid-template-columns:
+    20px
+    30px
+    minmax(90px, 1fr)
+    34px
+    56px
+    56px
+    56px
+    62px !important;
+  gap: 5px !important;
+}
+
+.landing-score-head {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.competition-jumps {
+  text-align: center;
+  font-weight: 800;
+}
+
+.competition-total {
+  font-size: 13px;
+}
+
+/* Participant Event leaderboard should fit without horizontal scrolling on normal phones. */
+.landing-leaderboard {
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.landing-leaderboard th,
+.landing-leaderboard td {
+  padding: 8px 5px !important;
+  white-space: normal !important;
+}
+
+.landing-leaderboard th:nth-child(1),
+.landing-leaderboard td:nth-child(1) { width: 7%; }
+
+.landing-leaderboard th:nth-child(2),
+.landing-leaderboard td:nth-child(2) { width: 31%; }
+
+.landing-leaderboard th:nth-child(3),
+.landing-leaderboard td:nth-child(3) { width: 8%; }
+
+.landing-leaderboard th:nth-child(4),
+.landing-leaderboard td:nth-child(4),
+.landing-leaderboard th:nth-child(5),
+.landing-leaderboard td:nth-child(5),
+.landing-leaderboard th:nth-child(6),
+.landing-leaderboard td:nth-child(6) { width: 9%; }
+
+.landing-leaderboard th:nth-child(7),
+.landing-leaderboard td:nth-child(7) { width: 19%; }
+
+@media (max-width: 700px) {
+  .landing-score-head {
+    display: grid !important;
+    font-size: 9px !important;
+  }
+
+  .landing-ranking-row {
+    grid-template-columns:
+      16px
+      26px
+      minmax(76px, 1fr)
+      28px
+      45px
+      45px
+      45px
+      52px !important;
+    gap: 4px !important;
+    overflow: visible !important;
+  }
+
+  .competition-score-input {
+    height: 31px !important;
+    padding: 4px 3px !important;
+    font-size: 11px !important;
+  }
+
+  .competition-participant-name {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+
+  .competition-jumps,
+  .competition-total {
+    font-size: 11px;
+  }
+
+  .landing-leaderboard th {
+    font-size: 9px !important;
+  }
+
+  .landing-leaderboard td {
+    font-size: 11px !important;
+  }
+
+  .landing-score-entry label > span {
+    text-align: center;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+  }
+}
