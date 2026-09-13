@@ -492,6 +492,121 @@ async function loadParticipantQuests() {
 
 
 
+async function loadParticipantCanopyTraining() {
+  const list = document.getElementById("participantCanopyTrainingList");
+  const status = document.getElementById("participantCanopyTrainingStatus");
+  const progress = document.getElementById("participantCanopyProgress");
+  const courseLabel = document.getElementById("participantCanopyCourseLabel");
+
+  if (!list || !status || !participantSessionToken) return;
+
+  status.textContent = "Loading Canopy Training…";
+  status.classList.remove("hidden", "error");
+
+  try {
+    const { data, error } = await client.rpc("get_canopy_training_by_token_v100", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    status.classList.add("hidden");
+    list.innerHTML = "";
+
+    const levels = [...new Set(rows.map(item => item.course_level).filter(Boolean))];
+    if (courseLabel) {
+      courseLabel.textContent = levels.length ? levels.join(" + ") : "No course assigned";
+    }
+
+    const updateProgress = () => {
+      const total = rows.length;
+      const done = rows.filter(item => Boolean(item.checked)).length;
+      if (progress) progress.textContent = `${done} / ${total}`;
+    };
+    updateProgress();
+
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">You are not assigned to CT1 or CT2 yet.</p>';
+      return;
+    }
+
+    levels.forEach(level => {
+      const section = document.createElement("section");
+      section.className = "participant-canopy-course";
+
+      const head = document.createElement("div");
+      head.className = "participant-canopy-course-head";
+
+      const title = document.createElement("strong");
+      title.textContent = level;
+      head.appendChild(title);
+
+      const items = document.createElement("div");
+      items.className = "participant-quest-items";
+
+      rows
+        .filter(item => item.course_level === level)
+        .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
+        .forEach(item => {
+          const label = document.createElement("label");
+          label.className = "participant-quest-row";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = Boolean(item.checked);
+
+          const text = document.createElement("span");
+          text.textContent = item.task_title || "Task";
+
+          checkbox.addEventListener("change", async () => {
+            const requestedValue = checkbox.checked;
+            checkbox.disabled = true;
+
+            try {
+              const { data: result, error: updateError } = await client.rpc(
+                "set_canopy_training_check_by_token_v100",
+                {
+                  p_event_id: eventId,
+                  p_token: participantSessionToken,
+                  p_task_id: item.task_id,
+                  p_checked: requestedValue
+                }
+              );
+
+              if (updateError) throw updateError;
+              if (!result?.ok) throw new Error(result?.error || "Could not update task.");
+
+              item.checked = requestedValue;
+              label.classList.toggle("is-complete", requestedValue);
+              updateProgress();
+            } catch (updateError) {
+              checkbox.checked = !requestedValue;
+              status.textContent = `Could not update task: ${updateError.message}`;
+              status.classList.remove("hidden");
+              status.classList.add("error");
+            } finally {
+              checkbox.disabled = false;
+            }
+          });
+
+          label.classList.toggle("is-complete", checkbox.checked);
+          label.append(checkbox, text);
+          items.appendChild(label);
+        });
+
+      section.append(head, items);
+      list.appendChild(section);
+    });
+  } catch (error) {
+    status.textContent = `Could not load Canopy Training: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+  }
+}
+
+
 function formatCompetitionScore(value) {
   const number = Number(value) || 0;
   return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(/\.0$/, "");
@@ -842,6 +957,7 @@ function showLoggedInView(data) {
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
   loadParticipantQuests();
+  loadParticipantCanopyTraining();
   loadLandingCompetitionLeaderboard();
   loadSocialCompetitionLeaderboard();
   loadBeerFines();

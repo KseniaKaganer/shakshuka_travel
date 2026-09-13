@@ -1565,6 +1565,7 @@ document.getElementById("descriptionInput").value = event.description || "";
 
   await Promise.all([
     loadEventLogbook(),
+    loadAdminCanopyTraining(),
     loadAdminQuests(),
     loadCompetitionPlacements(),
     loadAdminBeerFines()
@@ -1991,6 +1992,239 @@ function exportParticipantsToSpreadsheet() {
 }
 
 exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsheet);
+
+
+
+// ---------------- Canopy Training ----------------
+
+const adminCanopyTrainingStatus = document.getElementById("adminCanopyTrainingStatus");
+const canopyTaskTemplate = document.getElementById("canopyTaskTemplate");
+
+const canopyCourseUi = {
+  CT1: {
+    participants: document.getElementById("canopyCT1Participants"),
+    tasks: document.getElementById("canopyCT1Tasks"),
+    addTask: document.getElementById("addCanopyCT1Task")
+  },
+  CT2: {
+    participants: document.getElementById("canopyCT2Participants"),
+    tasks: document.getElementById("canopyCT2Tasks"),
+    addTask: document.getElementById("addCanopyCT2Task")
+  }
+};
+
+let canopyTrainingAssignments = [];
+
+function setAdminCanopyTrainingStatus(message = "", isError = false) {
+  if (!adminCanopyTrainingStatus) return;
+  adminCanopyTrainingStatus.textContent = message;
+  adminCanopyTrainingStatus.classList.toggle("hidden", !message);
+  adminCanopyTrainingStatus.classList.toggle("error", isError);
+}
+
+function canopyUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function currentCanopyParticipants() {
+  const unique = new Map();
+
+  [...participantsList.querySelectorAll(".participant-row")]
+    .map(row => ({
+      participant_id: row.querySelector(".participant-id")?.value || "",
+      name: row.querySelector(".participant-name")?.value.trim() || "Participant"
+    }))
+    .filter(item => item.participant_id)
+    .forEach(item => {
+      if (!unique.has(item.participant_id)) unique.set(item.participant_id, item);
+    });
+
+  return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function renderCanopyAssignments() {
+  const participants = currentCanopyParticipants();
+
+  Object.entries(canopyCourseUi).forEach(([level, ui]) => {
+    if (!ui.participants) return;
+    ui.participants.innerHTML = "";
+
+    if (!participants.length) {
+      ui.participants.innerHTML = '<p class="muted small-text">Save participants first, then assign them to this course.</p>';
+      return;
+    }
+
+    participants.forEach(person => {
+      const label = document.createElement("label");
+      label.className = "canopy-assignment-row";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = canopyTrainingAssignments.some(item =>
+        item.course_level === level && item.participant_id === person.participant_id
+      );
+
+      const text = document.createElement("span");
+      text.textContent = person.name;
+
+      checkbox.addEventListener("change", async () => {
+        if (checkbox.checked) {
+          if (!canopyTrainingAssignments.some(item =>
+            item.course_level === level && item.participant_id === person.participant_id
+          )) {
+            canopyTrainingAssignments.push({
+              course_level: level,
+              participant_id: person.participant_id
+            });
+          }
+        } else {
+          canopyTrainingAssignments = canopyTrainingAssignments.filter(item =>
+            !(item.course_level === level && item.participant_id === person.participant_id)
+          );
+        }
+
+        await saveAdminCanopyTraining("Course assignments saved.");
+      });
+
+      label.append(checkbox, text);
+      ui.participants.appendChild(label);
+    });
+  });
+}
+
+function collectCanopyTasks() {
+  const tasks = [];
+
+  Object.entries(canopyCourseUi).forEach(([level, ui]) => {
+    if (!ui.tasks) return;
+
+    [...ui.tasks.querySelectorAll(".canopy-task-editor")].forEach((row, index) => {
+      tasks.push({
+        id: row.dataset.taskId || canopyUuid(),
+        course_level: level,
+        title: row.querySelector(".canopy-task-title")?.value.trim() || "",
+        sort_order: index
+      });
+    });
+  });
+
+  return tasks;
+}
+
+function addCanopyTask(level, data = {}) {
+  const ui = canopyCourseUi[level];
+  if (!ui?.tasks || !canopyTaskTemplate) return;
+
+  const fragment = canopyTaskTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".canopy-task-editor");
+  const input = row.querySelector(".canopy-task-title");
+
+  row.dataset.taskId = data.id || data.task_id || canopyUuid();
+  input.value = data.title || data.task_title || "";
+
+  input.addEventListener("change", () => saveAdminCanopyTraining());
+  input.addEventListener("blur", () => {
+    if (input.value.trim()) saveAdminCanopyTraining();
+  });
+
+  row.querySelector(".canopy-task-remove")?.addEventListener("click", async () => {
+    row.remove();
+    await saveAdminCanopyTraining("Task removed.");
+  });
+
+  ui.tasks.appendChild(fragment);
+  if (!input.value) input.focus();
+}
+
+async function saveAdminCanopyTraining(message = "Canopy Training saved.") {
+  if (!currentEventId) {
+    setAdminCanopyTrainingStatus("Save the event first.");
+    return false;
+  }
+
+  const tasks = collectCanopyTasks();
+  if (tasks.some(item => !item.title)) {
+    setAdminCanopyTrainingStatus("Each course task needs text.", true);
+    return false;
+  }
+
+  try {
+    setAdminCanopyTrainingStatus("Saving Canopy Training…");
+
+    const { data, error } = await client.rpc("admin_replace_canopy_training_v100", {
+      p_event_id: currentEventId,
+      p_tasks: tasks,
+      p_assignments: canopyTrainingAssignments
+    });
+
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not save Canopy Training.");
+
+    setAdminCanopyTrainingStatus(message);
+    setTimeout(() => {
+      if (adminCanopyTrainingStatus?.textContent === message) {
+        setAdminCanopyTrainingStatus("");
+      }
+    }, 1300);
+
+    return true;
+  } catch (error) {
+    setAdminCanopyTrainingStatus(`Could not save Canopy Training: ${error.message}`, true);
+    return false;
+  }
+}
+
+async function loadAdminCanopyTraining() {
+  Object.values(canopyCourseUi).forEach(ui => {
+    if (ui.tasks) ui.tasks.innerHTML = "";
+    if (ui.participants) ui.participants.innerHTML = "";
+  });
+  canopyTrainingAssignments = [];
+
+  if (!currentEventId) {
+    setAdminCanopyTrainingStatus("");
+    return;
+  }
+
+  try {
+    setAdminCanopyTrainingStatus("Loading Canopy Training…");
+
+    const { data, error } = await client.rpc("admin_get_canopy_training_v100", {
+      p_event_id: currentEventId
+    });
+
+    if (error) throw error;
+
+    const payload = data || {};
+    const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+    const assignments = Array.isArray(payload.assignments) ? payload.assignments : [];
+
+    canopyTrainingAssignments = assignments.map(item => ({
+      course_level: item.course_level,
+      participant_id: item.participant_id
+    }));
+
+    tasks
+      .sort((a, b) => {
+        if (a.course_level !== b.course_level) return a.course_level.localeCompare(b.course_level);
+        return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0);
+      })
+      .forEach(item => addCanopyTask(item.course_level, item));
+
+    renderCanopyAssignments();
+    setAdminCanopyTrainingStatus("");
+  } catch (error) {
+    setAdminCanopyTrainingStatus(`Could not load Canopy Training: ${error.message}`, true);
+  }
+}
+
+canopyCourseUi.CT1.addTask?.addEventListener("click", () => addCanopyTask("CT1"));
+canopyCourseUi.CT2.addTask?.addEventListener("click", () => addCanopyTask("CT2"));
 
 
 // ---------------- SHAKSHUKA Quests ----------------

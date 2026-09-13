@@ -6554,3 +6554,132 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     gap: 6px !important;
   }
 }
+
+
+/* ---------- V100 Canopy Training ---------- */
+.canopy-training-admin-content {
+  display: grid;
+  gap: 14px;
+  padding-top: 16px !important;
+}
+
+.canopy-course-admin-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+
+.canopy-course-admin-head > div {
+  display: grid;
+  gap: 3px;
+}
+
+.canopy-course-admin-head strong {
+  font-size: 18px;
+}
+
+.canopy-admin-subsection {
+  display: grid;
+  gap: 9px;
+}
+
+.canopy-participant-assignments {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 7px;
+}
+
+.canopy-assignment-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+}
+
+.canopy-assignment-row input {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.canopy-tasks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.canopy-admin-tasks {
+  display: grid;
+  gap: 7px;
+}
+
+.canopy-task-editor {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 34px;
+  gap: 7px;
+  align-items: center;
+}
+
+.canopy-task-editor input {
+  width: 100%;
+  min-width: 0;
+}
+
+.canopy-task-remove {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+}
+
+.participant-canopy-training-list {
+  display: grid;
+  gap: 16px;
+}
+
+.participant-canopy-course {
+  display: grid;
+  gap: 8px;
+}
+
+.participant-canopy-course-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.participant-canopy-course-head strong {
+  color: var(--accent);
+  font-size: 16px;
+}
+
+/* Mobile ordering: Canopy Training immediately after Logbook. */
+@media (max-width: 900px) {
+  #eventLogbookSection { order: 1 !important; }
+  #eventCanopyTrainingSection { order: 2 !important; }
+  #eventLandingCompetitionSection { order: 3 !important; }
+  #eventSocialCompetitionSection { order: 4 !important; }
+  #eventBeerFineSection { order: 5 !important; }
+  #eventParticipantsSection { order: 6 !important; }
+  #eventDetailsSection { order: 7 !important; }
+  #eventQuestsSection { order: 8 !important; }
+}
+
+@media (max-width: 600px) {
+  .canopy-participant-assignments {
+    grid-template-columns: 1fr;
+  }
+
+  .canopy-course-admin-card {
+    padding: 12px;
+  }
+}

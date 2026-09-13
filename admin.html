@@ -285,6 +285,65 @@
 </div>
 </details>
 
+
+<details id="eventCanopyTrainingSection" class="admin-event-quests">
+  <summary class="quests-summary">
+    <div class="admin-box-title">
+      <span class="admin-box-icon" aria-hidden="true">🪂</span>
+      <h2>Canopy Training</h2>
+    </div>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </summary>
+
+  <div class="quests-content canopy-training-admin-content">
+    <div id="adminCanopyTrainingStatus" class="status compact-status hidden"></div>
+
+    <section class="canopy-course-admin-card" data-course-level="CT1">
+      <div class="canopy-course-admin-head">
+        <div>
+          <strong>CT1</strong>
+          <span class="muted small-text">Assign participants and define the course tasks.</span>
+        </div>
+      </div>
+
+      <div class="canopy-admin-subsection">
+        <strong>Participants</strong>
+        <div id="canopyCT1Participants" class="canopy-participant-assignments"></div>
+      </div>
+
+      <div class="canopy-admin-subsection">
+        <div class="canopy-tasks-head">
+          <strong>Tasks</strong>
+          <button id="addCanopyCT1Task" class="secondary-button compact-button" type="button">+ Add task</button>
+        </div>
+        <div id="canopyCT1Tasks" class="canopy-admin-tasks"></div>
+      </div>
+    </section>
+
+    <section class="canopy-course-admin-card" data-course-level="CT2">
+      <div class="canopy-course-admin-head">
+        <div>
+          <strong>CT2</strong>
+          <span class="muted small-text">Assign participants and define the course tasks.</span>
+        </div>
+      </div>
+
+      <div class="canopy-admin-subsection">
+        <strong>Participants</strong>
+        <div id="canopyCT2Participants" class="canopy-participant-assignments"></div>
+      </div>
+
+      <div class="canopy-admin-subsection">
+        <div class="canopy-tasks-head">
+          <strong>Tasks</strong>
+          <button id="addCanopyCT2Task" class="secondary-button compact-button" type="button">+ Add task</button>
+        </div>
+        <div id="canopyCT2Tasks" class="canopy-admin-tasks"></div>
+      </div>
+    </section>
+  </div>
+</details>
+
 <details id="eventQuestsSection" class="admin-event-quests">
   <summary class="quests-summary">
     <div class="admin-box-title">
@@ -470,6 +529,14 @@
 </form><div id="editorStatus" class="status compact-status"></div>
     </section>
   </main>
+
+
+  <template id="canopyTaskTemplate">
+    <div class="canopy-task-editor">
+      <input class="canopy-task-title" type="text" placeholder="Course task…" />
+      <button class="danger-ghost-button canopy-task-remove" type="button" aria-label="Remove task" title="Remove task">×</button>
+    </div>
+  </template>
 
 
   <template id="logbookDayTemplate">
