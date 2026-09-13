@@ -5430,3 +5430,41 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: repeat(3, minmax(0,1fr)) !important;
   }
 }
+
+
+/* ---------- V69 Social Media Competition cleanup ---------- */
+.social-my-score > strong {
+  font-size: 18px;
+}
+
+.social-score-add > span:first-child {
+  font-size: 12px !important;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.social-score-add b {
+  font-size: 14px !important;
+}
+
+.social-plus {
+  font-size: 20px !important;
+  width: 29px;
+  height: 29px;
+}
+
+@media (max-width: 600px) {
+  .social-my-score > strong {
+    font-size: 17px;
+  }
+
+  .social-score-add > span:first-child {
+    font-size: 10px !important;
+  }
+
+  .social-score-add b {
+    font-size: 13px !important;
+  }
+}
