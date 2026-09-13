@@ -832,8 +832,13 @@ function updateDayTitles() {
     const generatedTitle = `Day ${dayNumber}`;
 
     if (title) title.value = generatedTitle;
-    if (displayTitle) displayTitle.textContent = generatedTitle;
-    if (displayDate) displayDate.textContent = formatLogbookDayLabel(dateValue);
+    if (displayTitle) {
+      const formattedDate = formatLogbookDayLabel(dateValue);
+      displayTitle.textContent = formattedDate
+        ? `${generatedTitle} - ${formattedDate}`
+        : generatedTitle;
+    }
+    if (displayDate) displayDate.textContent = "";
   });
 
   refreshNewLogbookDaySelect();
