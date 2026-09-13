@@ -6333,3 +6333,85 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 16px !important;
   }
 }
+
+
+/* ---------- V95 Cleaner smartphone admin cards ---------- */
+@media (max-width: 600px) {
+  /* Make all main Admin collapsible headers the same compact height. */
+  #eventForm .event-details-summary,
+  #eventForm .logbook-summary,
+  #eventForm .quests-summary,
+  #eventForm .participants-summary {
+    min-height: 70px !important;
+    height: auto !important;
+    padding: 14px 16px !important;
+    align-items: center !important;
+  }
+
+  #eventForm .event-details-summary h2,
+  #eventForm .logbook-summary h2,
+  #eventForm .quests-summary h2,
+  #eventForm .participants-summary h2 {
+    margin: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+  }
+
+  #eventForm .admin-box-title {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  #eventForm .admin-box-icon {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    min-height: 17px !important;
+    max-width: 17px !important;
+    max-height: 17px !important;
+    flex: 0 0 17px !important;
+    font-size: 14px !important;
+    line-height: 17px !important;
+  }
+
+  #eventForm .collapse-chevron {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
+  }
+
+  /* Remove the oversized empty feeling from the Logbook card. */
+  #eventLogbookSection,
+  #eventDetailsSection,
+  #eventQuestsSection,
+  #eventBeerFineSection,
+  #eventLandingCompetitionSection,
+  #eventSocialCompetitionSection,
+  #eventParticipantsSection {
+    min-height: 0 !important;
+  }
+
+  /* Cleaner spacing once Logbook is opened. */
+  .logbook-collapsible-content {
+    padding: 14px !important;
+  }
+
+  .logbook-day-adder {
+    margin-bottom: 12px !important;
+  }
+
+  /* Slightly tighten the page heading on phones. */
+  .editor-heading {
+    margin-bottom: 16px !important;
+  }
+
+  .editor-heading .admin-title,
+  #editorTitle {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+  }
+}
