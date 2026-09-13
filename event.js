@@ -675,15 +675,59 @@ async function loadBeerFines() {
     rows.forEach(item=>{
       const list=beerFineEventLists[item.fine_type];
       if(!list) return;
+
       const row=document.createElement("div");
       row.className="beer-fine-event-row";
+
       const name=document.createElement("strong");
       name.textContent=item.display_name||"Participant";
+
       const ratio=document.createElement("span");
       ratio.className="beer-fine-ratio";
       ratio.textContent=`${Number(item.paid_count)||0}/${Number(item.unpaid_count)||0}`;
       ratio.title="Paid / unpaid";
+
       row.append(name,ratio);
+
+      const myParticipantId = participantAccess?.participant_id || null;
+      const isMine = item.participant_id === myParticipantId;
+      const unpaidCount = Number(item.unpaid_count) || 0;
+
+      if (isMine && unpaidCount > 0) {
+        row.classList.add("is-my-beer-fine");
+
+        const paidButton=document.createElement("button");
+        paidButton.type="button";
+        paidButton.className="beer-fine-mark-paid";
+        paidButton.textContent="Mark 1 paid";
+        paidButton.addEventListener("click", async () => {
+          paidButton.disabled = true;
+          paidButton.textContent = "Saving…";
+
+          try {
+            const { data: result, error: payError } = await client.rpc(
+              "participant_mark_beer_fine_paid_v77",
+              {
+                p_event_id: eventId,
+                p_token: participantSessionToken,
+                p_fine_type: item.fine_type
+              }
+            );
+
+            if (payError) throw payError;
+            if (!result?.ok) throw new Error(result?.error || "Could not update Beer Fine.");
+
+            await loadBeerFines();
+          } catch (payError) {
+            console.warn("Could not mark Beer Fine paid:", payError);
+            paidButton.disabled = false;
+            paidButton.textContent = "Try again";
+          }
+        });
+
+        row.appendChild(paidButton);
+      }
+
       list.appendChild(row);
     });
     Object.values(beerFineEventLists).forEach(list=>{
@@ -696,42 +740,6 @@ async function loadBeerFines() {
     });
   } catch(error){ console.warn("Could not load Beer Fine:",error); }
 }
-
-
-// Keep Beer Fine data in sync with admin updates.
-// Refresh periodically while the participant page is open,
-// and immediately when the user returns to the tab/window.
-let beerFineRefreshTimer = null;
-
-function startBeerFineAutoRefresh() {
-  if (beerFineRefreshTimer) clearInterval(beerFineRefreshTimer);
-
-  beerFineRefreshTimer = setInterval(() => {
-    if (!document.hidden && participantSessionToken) {
-      loadBeerFines();
-    }
-  }, 5000);
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && participantSessionToken) {
-    loadBeerFines();
-  }
-});
-
-window.addEventListener("focus", () => {
-  if (participantSessionToken) {
-    loadBeerFines();
-  }
-});
-
-document.querySelector(".beer-fine-collapsible")?.addEventListener("toggle", event => {
-  if (event.currentTarget.open && participantSessionToken) {
-    loadBeerFines();
-  }
-});
-
-startBeerFineAutoRefresh();
 
 
 function showSocialScoreStatus(message = "", isError = false) {

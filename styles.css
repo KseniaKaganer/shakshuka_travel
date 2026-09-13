@@ -5647,3 +5647,46 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding: 0 16px 16px !important;
   }
 }
+
+
+/* ---------- V77 Participant Beer Fine payment ---------- */
+.beer-fine-event-row {
+  grid-template-columns: minmax(0,1fr) auto auto;
+}
+
+.beer-fine-mark-paid {
+  border: 1px solid rgba(242,169,59,.55);
+  border-radius: 9px;
+  background: rgba(242,169,59,.12);
+  color: var(--accent);
+  font-weight: 900;
+  font-size: 11px;
+  padding: 7px 9px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.beer-fine-mark-paid:hover {
+  background: rgba(242,169,59,.20);
+}
+
+.beer-fine-mark-paid:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.beer-fine-event-row.is-my-beer-fine {
+  background: rgba(242,169,59,.035);
+}
+
+@media (max-width:600px) {
+  .beer-fine-event-row {
+    grid-template-columns: minmax(0,1fr) auto;
+  }
+
+  .beer-fine-mark-paid {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    text-align: center;
+  }
+}
