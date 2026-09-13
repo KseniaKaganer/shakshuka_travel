@@ -676,7 +676,8 @@ async function loadBeerFines(force = false) {
     const unpaidAlert = document.getElementById("beerFineUnpaidAlert");
     const myParticipantId = participantAccess?.participant_id || null;
     const hasMyUnpaidFine = rows.some(item =>
-      item.participant_id === myParticipantId && (Number(item.unpaid_count) || 0) > 0
+      item.participant_id === myParticipantId &&
+      (Number(item.paid_count) || 0) < (Number(item.total_count) || 0)
     );
 
     if (unpaidAlert) {
@@ -695,16 +696,17 @@ async function loadBeerFines(force = false) {
 
       const ratio=document.createElement("span");
       ratio.className="beer-fine-ratio";
-      ratio.textContent=`${Number(item.paid_count)||0}/${Number(item.unpaid_count)||0}`;
-      ratio.title="Paid / unpaid";
+      ratio.textContent=`${Number(item.paid_count)||0}/${Number(item.total_count)||0}`;
+      ratio.title="Paid / total fines";
 
       row.append(name,ratio);
 
       const myParticipantId = participantAccess?.participant_id || null;
       const isMine = item.participant_id === myParticipantId;
-      const unpaidCount = Number(item.unpaid_count) || 0;
+      const paidCount = Number(item.paid_count) || 0;
+      const totalCount = Number(item.total_count) || 0;
 
-      if (isMine && unpaidCount > 0) {
+      if (isMine && paidCount < totalCount) {
         row.classList.add("is-my-beer-fine");
 
         const paidButton=document.createElement("button");

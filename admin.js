@@ -2143,12 +2143,18 @@ function refreshBeerFineParticipantOptions() {
 
 async function saveBeerFineRow(row) {
   try {
+    const paidInput = row.querySelector(".beer-fine-paid");
+    const totalInput = row.querySelector(".beer-fine-unpaid");
+    const total = Math.max(0, Number(totalInput?.value) || 0);
+    const paid = Math.min(total, Math.max(0, Number(paidInput?.value) || 0));
+    if (paidInput) paidInput.value = String(paid);
+
     const { error } = await client.rpc("admin_upsert_beer_fine_v70", {
       p_event_id: currentEventId,
       p_participant_id: row.dataset.participantId,
       p_fine_type: row.dataset.fineType,
-      p_paid_count: Math.max(0, Number(row.querySelector(".beer-fine-paid")?.value)||0),
-      p_unpaid_count: Math.max(0, Number(row.querySelector(".beer-fine-unpaid")?.value)||0)
+      p_paid_count: paid,
+      p_unpaid_count: total
     });
     if (error) throw error;
     setBeerFineStatus("Saved.");
@@ -2184,7 +2190,7 @@ function renderBeerFineAdminRow(item) {
     return {label,input};
   };
   const paid=makeInput("Paid","beer-fine-paid",item.paid_count);
-  const unpaid=makeInput("Unpaid","beer-fine-unpaid",item.unpaid_count);
+  const unpaid=makeInput("Total","beer-fine-unpaid",item.total_count ?? item.unpaid_count);
   paid.input.addEventListener("change",()=>saveBeerFineRow(row));
   unpaid.input.addEventListener("change",()=>saveBeerFineRow(row));
   counts.append(paid.label,unpaid.label);
