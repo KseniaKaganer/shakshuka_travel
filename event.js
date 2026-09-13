@@ -612,9 +612,10 @@ async function loadBeerFines(force = false) {
         item.is_me === true ||
         (Boolean(myParticipantId) &&
           String(item.participant_id || "") === String(myParticipantId)) ||
-        (!myParticipantId &&
+        (
           String(item.display_name || "").trim().toLowerCase() ===
-          String(participantAccess?.display_name || "").trim().toLowerCase());
+          String(participantAccess?.display_name || "").trim().toLowerCase()
+        );
 
       return sameParticipant && total > 0 && paid < total;
     });
@@ -651,7 +652,6 @@ async function loadBeerFines(force = false) {
       );
 
       const isMyFine = isMine || (
-        !myParticipantId &&
         String(item.display_name || "").trim().toLowerCase() ===
         String(participantAccess?.display_name || "").trim().toLowerCase()
       );
