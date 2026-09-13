@@ -5714,3 +5714,79 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .admin-landing-score-entry .landing-score-entry {
   margin-top: 0;
 }
+
+
+/* ---------- V84 Event competition cards ---------- */
+.event-page .competition-item.participant-collapsible,
+#event .competition-item.participant-collapsible {
+  margin-top: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.event-page .competition-item.participant-collapsible > summary,
+#event .competition-item.participant-collapsible > summary {
+  min-height: 64px;
+  padding: 18px 20px;
+  border: 0;
+  box-sizing: border-box;
+}
+
+.event-page .competition-item.participant-collapsible[open] > summary,
+#event .competition-item.participant-collapsible[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.event-page .competition-item .competition-item-body,
+#event .competition-item .competition-item-body {
+  padding: 18px 20px 20px;
+}
+
+.competition-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.competition-summary-title > strong {
+  font-size: 16px;
+}
+
+.competition-summary-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.instagram-summary-icon {
+  color: var(--accent);
+}
+
+.instagram-icon {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 600px) {
+  .event-page .competition-item.participant-collapsible > summary,
+  #event .competition-item.participant-collapsible > summary {
+    min-height: 64px;
+    padding: 18px 20px;
+  }
+
+  .competition-summary-title > strong {
+    font-size: 16px;
+  }
+}
