@@ -732,13 +732,8 @@ function eventDateOptions() {
     const day = String(current.getUTCDate()).padStart(2, "0");
     const value = `${year}-${month}-${day}`;
 
-    const dateLabel = current.toLocaleDateString("en-GB", {
-      timeZone: "UTC",
-      weekday: "short",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
+    const shortYear = String(year).slice(-2);
+    const dateLabel = `${day}/${month}/${shortYear}`;
 
     dates.push({
       value,
@@ -1305,7 +1300,7 @@ async function persistEventLogbook(message = "Logbook saved.") {
 function formatDateForExport(dateString) {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
-  return `${day}/${month}/${year}`;
+  return `${day}/${month}/${String(year).slice(-2)}`;
 }
 
 function exportEventLogbookToSpreadsheet() {
