@@ -1441,7 +1441,7 @@ async function openEventEditor(eventId = null, { updateUrl = true } = {}) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,event_type,location_id,venue_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost")
+    .select("id,name,start_date,end_date,event_type,location_id,venue_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost,event_price")
     .eq("id", eventId)
     .single();
 
@@ -1459,6 +1459,7 @@ async function openEventEditor(eventId = null, { updateUrl = true } = {}) {
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
+  document.getElementById("eventPriceInput").value = event.event_price ?? "";
   if (venueSelect) {
     renderVenueOptions(event.venue_id || "");
   }
@@ -1961,6 +1962,13 @@ async function saveEvent(status) {
   const name = document.getElementById("eventNameInput").value.trim();
   const startDate = document.getElementById("startDateInput").value;
   const endDate = document.getElementById("endDateInput").value;
+  const eventPriceRaw = document.getElementById("eventPriceInput")?.value ?? "";
+  const eventPrice = eventPriceRaw === "" ? 0 : Number(eventPriceRaw);
+
+  if (!Number.isFinite(eventPrice) || eventPrice < 0) {
+    setStatus(editorStatus, "Event price must be 0 or higher.", true);
+    return;
+  }
 
   if (!name || !startDate || !endDate) {
     setStatus(editorStatus, "Event title, start date and end date are required.", true);
@@ -1993,6 +2001,7 @@ async function saveEvent(status) {
       venue_type: eventVenueTypeInput?.value || (getEventType() === "tunnel" ? "tunnel" : "dropzone"),
       venue_url: venueUrlInput?.value.trim() || null,
       description: document.getElementById("descriptionInput").value.trim() || null,
+      event_price: eventPrice,
       ticket_price: (eventVenueTypeInput?.value || "dropzone") === "dropzone"
         ? (ticketPriceInput?.value ? Number(ticketPriceInput.value) : null)
         : null,
@@ -2060,7 +2069,7 @@ async function saveEvent(status) {
         water_training_done: participant.waterTrainingDone,
         canopy_course_done: participant.canopyCourseDone,
         payment_paid: participant.paymentPaid,
-        payment_total: participant.paymentTotal,
+        payment_total: eventPrice,
         coach_tickets_paid: participant.coachPaid,
         coach_tickets_total: participant.coachTotal
       };
@@ -2088,6 +2097,14 @@ async function saveEvent(status) {
         membershipId = membership.id;
       }
 }
+
+    // Event price is the master Payment Total for every participant in this event.
+    const { error: paymentTotalError } = await client
+      .from("event_participants")
+      .update({ payment_total: eventPrice })
+      .eq("event_id", currentEventId);
+
+    if (paymentTotalError) throw paymentTotalError;
 
     if (getEventType() === "skydive" && currentEventId) {
       const { error: coachCalcError } = await client.rpc("recalculate_event_coach_ticket_totals_v30", {
