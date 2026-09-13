@@ -2261,6 +2261,13 @@ function buildCompetitionRow(participant, type, saved = {}) {
       input.min = "0";
       input.className = `competition-score-input ${className}`;
       input.value = value ?? 0;
+
+      input.addEventListener("focus", () => {
+        if (Number(input.value) === 0) {
+          requestAnimationFrame(() => input.select());
+        }
+      });
+
       input.addEventListener("change", async () => {
         refreshCompetitionPlacementNumbers(landingCompetitionRanking);
         await saveCompetitionRanking("landing", landingCompetitionRanking);

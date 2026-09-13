@@ -630,6 +630,16 @@ async function addMyLandingScore() {
   }
 }
 
+document.querySelectorAll(
+  "#myLandingPatternScore, #myLandingAccuracyScore, #myLandingFlareScore"
+).forEach(input => {
+  input.addEventListener("focus", () => {
+    if (Number(input.value) === 0) {
+      requestAnimationFrame(() => input.select());
+    }
+  });
+});
+
 document.getElementById("addMyLandingScoreButton")?.addEventListener("click", addMyLandingScore);
 
 
