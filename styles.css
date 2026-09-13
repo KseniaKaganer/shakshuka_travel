@@ -5070,3 +5070,72 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 11px !important;
   }
 }
+
+
+/* ---------- V63 Landing Competition table spacing/readability ---------- */
+
+/* Give less unused space to Participant and more balanced compact columns. */
+.landing-leaderboard th:nth-child(1),
+.landing-leaderboard td:nth-child(1) { width: 7% !important; }
+
+.landing-leaderboard th:nth-child(2),
+.landing-leaderboard td:nth-child(2) { width: 27% !important; }
+
+.landing-leaderboard th:nth-child(3),
+.landing-leaderboard td:nth-child(3) { width: 9% !important; }
+
+.landing-leaderboard th:nth-child(4),
+.landing-leaderboard td:nth-child(4),
+.landing-leaderboard th:nth-child(5),
+.landing-leaderboard td:nth-child(5),
+.landing-leaderboard th:nth-child(6),
+.landing-leaderboard td:nth-child(6) { width: 10% !important; }
+
+.landing-leaderboard th:nth-child(7),
+.landing-leaderboard td:nth-child(7) { width: 18% !important; }
+
+/* Slightly larger, easier-to-read table text. */
+.landing-leaderboard th {
+  font-size: 10px !important;
+}
+
+.landing-leaderboard td {
+  font-size: 13px !important;
+}
+
+.landing-leaderboard .landing-participant-name {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+@media (max-width: 600px) {
+  .landing-leaderboard th {
+    font-size: 8px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  .landing-leaderboard td,
+  .landing-leaderboard .landing-participant-name {
+    font-size: 11px !important;
+  }
+
+  .landing-leaderboard th:nth-child(1),
+  .landing-leaderboard td:nth-child(1) { width: 7% !important; }
+
+  .landing-leaderboard th:nth-child(2),
+  .landing-leaderboard td:nth-child(2) { width: 28% !important; }
+
+  .landing-leaderboard th:nth-child(3),
+  .landing-leaderboard td:nth-child(3) { width: 8% !important; }
+
+  .landing-leaderboard th:nth-child(4),
+  .landing-leaderboard td:nth-child(4),
+  .landing-leaderboard th:nth-child(5),
+  .landing-leaderboard td:nth-child(5),
+  .landing-leaderboard th:nth-child(6),
+  .landing-leaderboard td:nth-child(6) { width: 10% !important; }
+
+  .landing-leaderboard th:nth-child(7),
+  .landing-leaderboard td:nth-child(7) { width: 17% !important; }
+}
