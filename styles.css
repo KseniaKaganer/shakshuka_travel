@@ -3975,3 +3975,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 15px;
   }
 }
+
+
+/* ---------- V50 event loading + payment due ---------- */
+
+.readonly-payment-values b.payment-due {
+  color: #ff5b5b !important;
+}

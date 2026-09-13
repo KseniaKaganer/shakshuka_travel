@@ -106,13 +106,19 @@ function renderPaymentStatus(data) {
   const coachTotal = moneyNumber(data.coach_tickets_total);
   const coachPaid = moneyNumber(data.coach_tickets_paid);
 
+  const paymentLeft = Math.max(0, paymentTotal - paymentPaid);
+  const coachLeft = Math.max(0, coachTotal - coachPaid);
+
   setText("selfPaymentTotal", formatMoney(paymentTotal), "0.00");
   setText("selfPaymentPaid", formatMoney(paymentPaid), "0.00");
-  setText("selfPaymentLeft", formatMoney(Math.max(0, paymentTotal - paymentPaid)), "0.00");
+  setText("selfPaymentLeft", formatMoney(paymentLeft), "0.00");
 
   setText("selfCoachTotal", formatMoney(coachTotal), "0.00");
   setText("selfCoachPaid", formatMoney(coachPaid), "0.00");
-  setText("selfCoachLeft", formatMoney(Math.max(0, coachTotal - coachPaid)), "0.00");
+  setText("selfCoachLeft", formatMoney(coachLeft), "0.00");
+
+  document.getElementById("selfPaymentLeft")?.classList.toggle("payment-due", paymentLeft > 0);
+  document.getElementById("selfCoachLeft")?.classList.toggle("payment-due", coachLeft > 0);
 
   const coachCard = document.getElementById("selfCoachPaymentCard");
   if (coachCard) {
