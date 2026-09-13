@@ -1413,7 +1413,7 @@ function resetEventForm() {
   setEventType("skydive");
   participantsList.innerHTML = "";
   if (eventLogbookDays) eventLogbookDays.innerHTML = "";
-  if (adminQuestCategories) adminQuestCategories.innerHTML = "";
+  if (adminQuestItems) adminQuestItems.innerHTML = "";
   setAdminQuestsStatus("");
   refreshNewLogbookDaySelect();
   updateParticipantCount();
@@ -1423,6 +1423,8 @@ function resetEventForm() {
   hideVenueForm();
   setStatus(editorStatus, "");
 
+  if (landingCompetitionInfoInput) landingCompetitionInfoInput.value = "";
+  if (socialMediaCompetitionInfoInput) socialMediaCompetitionInfoInput.value = "";
   setTextById("editorTitle", "Create Travel Event");
   hideNewLocationForm();
 }
@@ -1444,7 +1446,7 @@ async function openEventEditor(eventId = null, { updateUrl = true } = {}) {
 
   const { data: event, error: eventError } = await client
     .from("events")
-    .select("id,name,start_date,end_date,event_type,location_id,venue_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost,event_price")
+    .select("id,name,start_date,end_date,event_type,location_id,venue_id,venue,venue_type,venue_url,additional_location_info,description,status,ticket_price,tunnel_time_cost,event_price,landing_competition_info,social_media_competition_info")
     .eq("id", eventId)
     .single();
 
@@ -1462,6 +1464,8 @@ async function openEventEditor(eventId = null, { updateUrl = true } = {}) {
   renderLocationOptions(event.location_id || "");
   document.getElementById("venueInput").value = event.venue || "";
 document.getElementById("descriptionInput").value = event.description || "";
+  if (landingCompetitionInfoInput) landingCompetitionInfoInput.value = event.landing_competition_info || "";
+  if (socialMediaCompetitionInfoInput) socialMediaCompetitionInfoInput.value = event.social_media_competition_info || "";
   document.getElementById("eventPriceInput").value = event.event_price ?? "";
   if (venueSelect) {
     renderVenueOptions(event.venue_id || "");
@@ -1973,10 +1977,11 @@ exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsh
 
 // ---------------- SHAKSHUKA Quests ----------------
 
-const adminQuestCategories = document.getElementById("adminQuestCategories");
+const adminQuestItems = document.getElementById("adminQuestItems");
 const adminQuestsStatus = document.getElementById("adminQuestsStatus");
-const addQuestCategoryButton = document.getElementById("addQuestCategoryButton");
-const questCategoryTemplate = document.getElementById("questCategoryTemplate");
+const addQuestItemButton = document.getElementById("addQuestItemButton");
+const landingCompetitionInfoInput = document.getElementById("landingCompetitionInfoInput");
+const socialMediaCompetitionInfoInput = document.getElementById("socialMediaCompetitionInfoInput");
 const questItemTemplate = document.getElementById("questItemTemplate");
 
 function setAdminQuestsStatus(message = "", isError = false) {
@@ -1995,18 +2000,13 @@ function questUuid() {
   });
 }
 
-function collectAdminQuests() {
-  if (!adminQuestCategories) return [];
+function collectAdminQuestItems() {
+  if (!adminQuestItems) return [];
 
-  return [...adminQuestCategories.querySelectorAll(".quest-category-card")].map((card, categoryIndex) => ({
-    id: card.dataset.categoryId || questUuid(),
-    title: card.querySelector(".quest-category-title")?.value.trim() || "",
-    sort_order: categoryIndex,
-    items: [...card.querySelectorAll(".quest-item-editor")].map((item, itemIndex) => ({
-      id: item.dataset.itemId || questUuid(),
-      title: item.querySelector(".quest-item-title")?.value.trim() || "",
-      sort_order: itemIndex
-    }))
+  return [...adminQuestItems.querySelectorAll(".quest-item-editor")].map((row, index) => ({
+    id: row.dataset.itemId || questUuid(),
+    title: row.querySelector(".quest-item-title")?.value.trim() || "",
+    sort_order: index
   }));
 }
 
@@ -2016,25 +2016,18 @@ async function saveAdminQuests(message = "Quests saved.") {
     return false;
   }
 
-  const quests = collectAdminQuests();
+  const items = collectAdminQuestItems();
 
-  const emptyCategory = quests.find(category => !category.title);
-  if (emptyCategory) {
-    setAdminQuestsStatus("Each quest category needs a name.", true);
-    return false;
-  }
-
-  const emptyItem = quests.flatMap(category => category.items).find(item => !item.title);
-  if (emptyItem) {
-    setAdminQuestsStatus("Each quest needs text.", true);
+  if (items.some(item => !item.title)) {
+    setAdminQuestsStatus("Each quest item needs text.", true);
     return false;
   }
 
   try {
     setAdminQuestsStatus("Saving quests…");
-    const { data, error } = await client.rpc("admin_replace_event_quests_v47", {
+    const { data, error } = await client.rpc("admin_replace_event_quest_items_v55", {
       p_event_id: currentEventId,
-      p_quests: quests
+      p_items: items
     });
     if (error) throw error;
 
@@ -2049,8 +2042,8 @@ async function saveAdminQuests(message = "Quests saved.") {
   }
 }
 
-function addQuestItem(categoryCard, data = {}) {
-  if (!questItemTemplate) return;
+function addQuestItem(data = {}) {
+  if (!questItemTemplate || !adminQuestItems) return;
 
   const fragment = questItemTemplate.content.cloneNode(true);
   const row = fragment.querySelector(".quest-item-editor");
@@ -2069,43 +2062,14 @@ function addQuestItem(categoryCard, data = {}) {
     await saveAdminQuests("Quest removed.");
   });
 
-  categoryCard.querySelector(".quest-items")?.appendChild(fragment);
-}
+  adminQuestItems.appendChild(fragment);
 
-function addQuestCategory(data = {}) {
-  if (!questCategoryTemplate || !adminQuestCategories) return;
-
-  const fragment = questCategoryTemplate.content.cloneNode(true);
-  const card = fragment.querySelector(".quest-category-card");
-  const titleInput = card.querySelector(".quest-category-title");
-
-  card.dataset.categoryId = data.id || questUuid();
-  titleInput.value = data.title || "";
-
-  titleInput.addEventListener("change", () => saveAdminQuests());
-  titleInput.addEventListener("blur", () => {
-    if (titleInput.value.trim()) saveAdminQuests();
-  });
-
-  card.querySelector(".add-quest-item")?.addEventListener("click", () => {
-    addQuestItem(card);
-    card.querySelector(".quest-item-editor:last-child .quest-item-title")?.focus();
-  });
-
-  card.querySelector(".remove-quest-category")?.addEventListener("click", async () => {
-    card.remove();
-    await saveAdminQuests("Category removed.");
-  });
-
-  (data.items || []).forEach(item => addQuestItem(card, item));
-  adminQuestCategories.appendChild(fragment);
-
-  if (!data.title) titleInput.focus();
+  if (!data.title) input.focus();
 }
 
 async function loadAdminQuests() {
-  if (!adminQuestCategories) return;
-  adminQuestCategories.innerHTML = "";
+  if (!adminQuestItems) return;
+  adminQuestItems.innerHTML = "";
 
   if (!currentEventId) {
     setAdminQuestsStatus("");
@@ -2114,25 +2078,25 @@ async function loadAdminQuests() {
 
   try {
     setAdminQuestsStatus("Loading quests…");
-    const { data, error } = await client.rpc("admin_get_event_quests_v47", {
+    const { data, error } = await client.rpc("admin_get_event_quest_items_v55", {
       p_event_id: currentEventId
     });
     if (error) throw error;
 
-    let quests = data;
-    if (typeof quests === "string") {
-      try { quests = JSON.parse(quests); } catch { quests = []; }
+    let items = data;
+    if (typeof items === "string") {
+      try { items = JSON.parse(items); } catch { items = []; }
     }
-    if (!Array.isArray(quests)) quests = [];
+    if (!Array.isArray(items)) items = [];
 
-    quests.forEach(category => addQuestCategory(category));
+    items.forEach(item => addQuestItem(item));
     setAdminQuestsStatus("");
   } catch (error) {
     setAdminQuestsStatus(`Could not load quests: ${error.message}`, true);
   }
 }
 
-addQuestCategoryButton?.addEventListener("click", () => addQuestCategory());
+addQuestItemButton?.addEventListener("click", () => addQuestItem());
 
 
 async function saveEvent(status) {
@@ -2178,6 +2142,8 @@ async function saveEvent(status) {
       venue_type: eventVenueTypeInput?.value || (getEventType() === "tunnel" ? "tunnel" : "dropzone"),
       venue_url: venueUrlInput?.value.trim() || null,
       description: document.getElementById("descriptionInput").value.trim() || null,
+      landing_competition_info: landingCompetitionInfoInput?.value.trim() || null,
+      social_media_competition_info: socialMediaCompetitionInfoInput?.value.trim() || null,
       event_price: eventPrice,
       ticket_price: (eventVenueTypeInput?.value || "dropzone") === "dropzone"
         ? (ticketPriceInput?.value ? Number(ticketPriceInput.value) : null)
@@ -2284,7 +2250,7 @@ async function saveEvent(status) {
 
     if (paymentTotalError) throw paymentTotalError;
 
-    if (adminQuestCategories?.children.length) {
+    if (adminQuestItems?.children.length) {
       const questsSaved = await saveAdminQuests();
       if (!questsSaved) throw new Error("Could not save SHAKSHUKA Quests.");
     }

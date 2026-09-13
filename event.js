@@ -406,7 +406,7 @@ async function loadParticipantQuests() {
   status.classList.remove("hidden", "error");
 
   try {
-    const { data, error } = await client.rpc("get_participant_quests_by_token_v47", {
+    const { data, error } = await client.rpc("get_participant_quest_items_by_token_v55", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });
@@ -422,78 +422,55 @@ async function loadParticipantQuests() {
       return;
     }
 
-    const categories = new Map();
+    const items = document.createElement("div");
+    items.className = "participant-quest-items";
 
-    rows.forEach(row => {
-      const key = row.category_id;
-      if (!categories.has(key)) {
-        categories.set(key, {
-          title: row.category_title || "Quests",
-          items: []
-        });
-      }
-      categories.get(key).items.push(row);
-    });
+    rows.forEach(item => {
+      const label = document.createElement("label");
+      label.className = "participant-quest-row";
 
-    categories.forEach(category => {
-      const section = document.createElement("section");
-      section.className = "participant-quest-category";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(item.checked);
 
-      const title = document.createElement("h4");
-      title.textContent = category.title;
-      section.appendChild(title);
+      const text = document.createElement("span");
+      text.textContent = item.item_title || "Quest";
 
-      const items = document.createElement("div");
-      items.className = "participant-quest-items";
+      checkbox.addEventListener("change", async () => {
+        const requestedValue = checkbox.checked;
+        checkbox.disabled = true;
 
-      category.items.forEach(item => {
-        const label = document.createElement("label");
-        label.className = "participant-quest-row";
+        try {
+          const { data: result, error: updateError } = await client.rpc(
+            "set_participant_quest_check_by_token_v47",
+            {
+              p_event_id: eventId,
+              p_token: participantSessionToken,
+              p_item_id: item.item_id,
+              p_checked: requestedValue
+            }
+          );
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = Boolean(item.checked);
+          if (updateError) throw updateError;
+          if (!result?.ok) throw new Error("Could not verify participant session.");
 
-        const text = document.createElement("span");
-        text.textContent = item.item_title || "Quest";
-
-        checkbox.addEventListener("change", async () => {
-          const requestedValue = checkbox.checked;
-          checkbox.disabled = true;
-
-          try {
-            const { data: result, error: updateError } = await client.rpc(
-              "set_participant_quest_check_by_token_v47",
-              {
-                p_event_id: eventId,
-                p_token: participantSessionToken,
-                p_item_id: item.item_id,
-                p_checked: requestedValue
-              }
-            );
-
-            if (updateError) throw updateError;
-            if (!result?.ok) throw new Error("Could not verify participant session.");
-
-            label.classList.toggle("is-complete", requestedValue);
-          } catch (updateError) {
-            checkbox.checked = !requestedValue;
-            status.textContent = `Could not update quest: ${updateError.message}`;
-            status.classList.remove("hidden");
-            status.classList.add("error");
-          } finally {
-            checkbox.disabled = false;
-          }
-        });
-
-        label.classList.toggle("is-complete", checkbox.checked);
-        label.append(checkbox, text);
-        items.appendChild(label);
+          label.classList.toggle("is-complete", requestedValue);
+        } catch (updateError) {
+          checkbox.checked = !requestedValue;
+          status.textContent = `Could not update quest: ${updateError.message}`;
+          status.classList.remove("hidden");
+          status.classList.add("error");
+        } finally {
+          checkbox.disabled = false;
+        }
       });
 
-      section.appendChild(items);
-      list.appendChild(section);
+      label.classList.toggle("is-complete", checkbox.checked);
+      label.append(checkbox, text);
+      items.appendChild(label);
     });
+
+    list.appendChild(items);
   } catch (error) {
     status.textContent = `Could not load quests: ${error.message}`;
     status.classList.remove("hidden");
@@ -680,6 +657,8 @@ async function loadEvent() {
         ticket_price,
         tunnel_time_cost,
         description,
+        landing_competition_info,
+        social_media_competition_info,
         status,
         locations (
           name,
@@ -711,6 +690,8 @@ async function loadEvent() {
 
     setText("eventLocation", locationLine);
     setText("eventDescription", event.description);
+    setText("landingCompetitionInfo", event.landing_competition_info || "Details coming soon.", "");
+    setText("socialMediaCompetitionInfo", event.social_media_competition_info || "Details coming soon.", "");
 
     const livingInfo = document.getElementById("livingLocationInfo");
     const livingTitle = document.getElementById("livingLocationTitle");

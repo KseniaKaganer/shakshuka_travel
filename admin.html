@@ -292,8 +292,45 @@
 
   <div class="quests-content">
     <div id="adminQuestsStatus" class="status compact-status hidden"></div>
-    <div id="adminQuestCategories" class="admin-quest-categories"></div>
-    <button id="addQuestCategoryButton" class="secondary-button" type="button">+ Add category</button>
+    <div id="adminQuestItems" class="admin-quest-items"></div>
+    <button id="addQuestItemButton" class="secondary-button" type="button">+ Add quest item</button>
+  </div>
+</details>
+
+<details id="eventCompetitionsSection" class="admin-event-quests">
+  <summary class="quests-summary">
+    <div>
+      <h2>Competitions</h2>
+    </div>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </summary>
+
+  <div class="quests-content competition-admin-list">
+    <details class="competition-admin-item">
+      <summary>
+        <strong>Landing Competition</strong>
+        <span class="collapse-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="competition-admin-body">
+        <label class="field">
+          <span>Competition information</span>
+          <textarea id="landingCompetitionInfoInput" rows="4" placeholder="Rules, scoring, prizes, meeting point…"></textarea>
+        </label>
+      </div>
+    </details>
+
+    <details class="competition-admin-item">
+      <summary>
+        <strong>Social media competition</strong>
+        <span class="collapse-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="competition-admin-body">
+        <label class="field">
+          <span>Competition information</span>
+          <textarea id="socialMediaCompetitionInfoInput" rows="4" placeholder="Rules, hashtags, prizes, deadline…"></textarea>
+        </label>
+      </div>
+    </details>
   </div>
 </details>
 </div>
@@ -429,20 +466,9 @@
     </section>
   </template>
 
-  <template id="questCategoryTemplate">
-    <section class="quest-category-card">
-      <div class="quest-category-header">
-        <input class="quest-category-title" type="text" placeholder="Category name" />
-        <button class="danger-ghost-button quest-icon-button remove-quest-category" type="button" aria-label="Remove category" title="Remove category">×</button>
-      </div>
-      <div class="quest-items"></div>
-      <button class="ghost-button add-quest-item" type="button">+ Add quest</button>
-    </section>
-  </template>
-
   <template id="questItemTemplate">
     <div class="quest-item-editor">
-      <input class="quest-item-title" type="text" placeholder="Quest / task" />
+      <input class="quest-item-title" type="text" placeholder="Quest item" />
       <button class="danger-ghost-button quest-icon-button remove-quest-item" type="button" aria-label="Remove quest" title="Remove quest">×</button>
     </div>
   </template>

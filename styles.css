@@ -4304,3 +4304,65 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   color: var(--text);
   font-size: 13px;
 }
+
+
+/* ---------- V55 flat quests + competitions ---------- */
+
+.admin-quest-items {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.competition-admin-list,
+.competition-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.competition-admin-item,
+.competition-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,.02);
+}
+
+.competition-admin-item > summary,
+.competition-item > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 50px;
+  padding: 12px 14px;
+}
+
+.competition-admin-item > summary::-webkit-details-marker,
+.competition-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.competition-admin-item[open] > summary,
+.competition-item[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.competition-admin-body,
+.competition-item-body {
+  padding: 12px 14px 14px;
+}
+
+.competition-item-body p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.competition-admin-item[open] > summary .collapse-chevron,
+.competition-item[open] > summary .collapse-chevron {
+  transform: rotate(180deg);
+}
