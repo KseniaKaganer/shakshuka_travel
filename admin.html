@@ -297,6 +297,30 @@
   </div>
 </details>
 
+<details id="eventBeerFineSection" class="admin-event-quests">
+  <summary>
+    <div class="summary-title-with-count"><h2>Beer Fine</h2></div>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </summary>
+  <div class="admin-quests-content beer-fine-admin-content">
+    <div class="beer-fine-admin-toolbar">
+      <select id="beerFineParticipantSelect" aria-label="Participant"><option value="">Select participant</option></select>
+      <select id="beerFineTypeSelect" aria-label="Fine type">
+        <option value="beer_line">Beer Line</option>
+        <option value="yellow_card">Yellow Card</option>
+        <option value="red_card">Red Card</option>
+      </select>
+      <button id="addBeerFineButton" class="primary-button compact-button" type="button">+ Add fine</button>
+    </div>
+    <div id="beerFineAdminStatus" class="status compact-status hidden"></div>
+    <div class="beer-fine-sections">
+      <section class="beer-fine-section"><div class="beer-fine-section-title"><strong>Beer Line</strong></div><div id="beerFineBeerLineList" class="beer-fine-admin-list"></div></section>
+      <section class="beer-fine-section"><div class="beer-fine-section-title"><strong>Yellow Card</strong></div><div id="beerFineYellowCardList" class="beer-fine-admin-list"></div></section>
+      <section class="beer-fine-section"><div class="beer-fine-section-title"><strong>Red Card</strong></div><div id="beerFineRedCardList" class="beer-fine-admin-list"></div></section>
+    </div>
+  </div>
+</details>
+
 <details id="eventCompetitionsSection" class="admin-event-quests">
   <summary class="quests-summary">
     <div>

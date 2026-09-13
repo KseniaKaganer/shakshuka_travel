@@ -644,6 +644,47 @@ document.getElementById("addMyLandingScoreButton")?.addEventListener("click", ad
 
 
 
+
+// ---------------- Beer Fine ----------------
+const beerFineEventLists = {
+  beer_line: document.getElementById("beerFineEventBeerLineList"),
+  yellow_card: document.getElementById("beerFineEventYellowCardList"),
+  red_card: document.getElementById("beerFineEventRedCardList")
+};
+
+async function loadBeerFines() {
+  Object.values(beerFineEventLists).forEach(list=>{if(list) list.innerHTML="";});
+  if(!participantSessionToken) return;
+  try {
+    const {data,error}=await client.rpc("get_beer_fines_by_token_v70",{p_event_id:eventId,p_token:participantSessionToken});
+    if(error) throw error;
+    const rows=Array.isArray(data)?data:[];
+    rows.forEach(item=>{
+      const list=beerFineEventLists[item.fine_type];
+      if(!list) return;
+      const row=document.createElement("div");
+      row.className="beer-fine-event-row";
+      const name=document.createElement("strong");
+      name.textContent=item.display_name||"Participant";
+      const ratio=document.createElement("span");
+      ratio.className="beer-fine-ratio";
+      ratio.textContent=`${Number(item.paid_count)||0}/${Number(item.unpaid_count)||0}`;
+      ratio.title="Paid / unpaid";
+      row.append(name,ratio);
+      list.appendChild(row);
+    });
+    Object.values(beerFineEventLists).forEach(list=>{
+      if(list && !list.children.length){
+        const empty=document.createElement("div");
+        empty.className="beer-fine-empty muted small-text";
+        empty.textContent="No fines";
+        list.appendChild(empty);
+      }
+    });
+  } catch(error){ console.warn("Could not load Beer Fine:",error); }
+}
+
+
 function showSocialScoreStatus(message = "", isError = false) {
   const status = document.getElementById("socialScoreStatus");
   if (!status) return;
@@ -730,6 +771,7 @@ async function addMySocialScore(action, button) {
 
     showSocialScoreStatus(`+${data.points_added} points`);
     await loadSocialCompetitionLeaderboard();
+  loadBeerFines();
 
     setTimeout(() => {
       const status = document.getElementById("socialScoreStatus");

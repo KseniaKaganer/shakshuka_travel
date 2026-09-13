@@ -5468,3 +5468,28 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 13px !important;
   }
 }
+
+
+/* ---------- V70 Beer Fine ---------- */
+.beer-fine-admin-content,.beer-fine-event-sections,.beer-fine-sections{display:grid;gap:10px}
+.beer-fine-admin-toolbar{display:grid;grid-template-columns:minmax(140px,1.3fr) minmax(120px,1fr) auto;gap:8px;align-items:center}
+.beer-fine-section{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02)}
+.beer-fine-section-title{padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
+.beer-fine-admin-list,.beer-fine-event-list{display:grid}
+.beer-fine-admin-row,.beer-fine-event-row{display:grid;align-items:center;gap:8px;padding:8px 12px;min-height:44px;border-bottom:1px solid var(--line)}
+.beer-fine-admin-row:last-child,.beer-fine-event-row:last-child{border-bottom:0}
+.beer-fine-admin-row{grid-template-columns:minmax(90px,1fr) 52px 150px 30px}
+.beer-fine-event-row{grid-template-columns:minmax(0,1fr) auto}
+.beer-fine-ratio{font-weight:900;color:var(--accent);text-align:center;font-variant-numeric:tabular-nums}
+.beer-fine-count-editor{display:grid;grid-template-columns:repeat(2,70px);gap:6px}
+.beer-fine-count-editor label{display:grid;gap:3px}
+.beer-fine-count-editor label span{font-size:9px;color:var(--muted);text-transform:uppercase;text-align:center}
+.beer-fine-count-editor input{width:100%;min-width:0;text-align:center;padding:6px 4px}
+.beer-fine-remove{width:30px;height:30px;padding:0}
+.beer-fine-empty{padding:10px 12px}
+@media(max-width:600px){
+ .beer-fine-admin-toolbar{grid-template-columns:1fr 1fr}
+ .beer-fine-admin-toolbar #addBeerFineButton{grid-column:1/-1}
+ .beer-fine-admin-row{grid-template-columns:minmax(74px,1fr) 44px 124px 28px;gap:4px;padding:7px 8px}
+ .beer-fine-count-editor{grid-template-columns:repeat(2,60px);gap:4px}
+}

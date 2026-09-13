@@ -1550,7 +1550,8 @@ document.getElementById("descriptionInput").value = event.description || "";
   await Promise.all([
     loadEventLogbook(),
     loadAdminQuests(),
-    loadCompetitionPlacements()
+    loadCompetitionPlacements(),
+    loadAdminBeerFines()
   ]);
   setStatus(editorStatus, "");
 }
@@ -2098,6 +2099,143 @@ async function loadAdminQuests() {
 }
 
 addQuestItemButton?.addEventListener("click", () => addQuestItem());
+
+
+
+// ---------------- Beer Fine ----------------
+const beerFineParticipantSelect = document.getElementById("beerFineParticipantSelect");
+const beerFineTypeSelect = document.getElementById("beerFineTypeSelect");
+const addBeerFineButton = document.getElementById("addBeerFineButton");
+const beerFineAdminStatus = document.getElementById("beerFineAdminStatus");
+const beerFineLists = {
+  beer_line: document.getElementById("beerFineBeerLineList"),
+  yellow_card: document.getElementById("beerFineYellowCardList"),
+  red_card: document.getElementById("beerFineRedCardList")
+};
+
+function setBeerFineStatus(message = "", isError = false) {
+  if (!beerFineAdminStatus) return;
+  beerFineAdminStatus.textContent = message;
+  beerFineAdminStatus.classList.toggle("hidden", !message);
+  beerFineAdminStatus.classList.toggle("error", isError);
+}
+
+function refreshBeerFineParticipantOptions() {
+  if (!beerFineParticipantSelect) return;
+  const current = beerFineParticipantSelect.value;
+  const rows = [...participantsList.querySelectorAll(".participant-row")]
+    .map(row => ({
+      id: row.querySelector(".participant-id")?.value || "",
+      name: row.querySelector(".participant-name")?.value.trim() || "Participant"
+    }))
+    .filter(x => x.id)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  beerFineParticipantSelect.innerHTML = '<option value="">Select participant</option>';
+  rows.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p.id;
+    option.textContent = p.name;
+    beerFineParticipantSelect.appendChild(option);
+  });
+  if (rows.some(p=>p.id===current)) beerFineParticipantSelect.value=current;
+}
+
+async function saveBeerFineRow(row) {
+  try {
+    const { error } = await client.rpc("admin_upsert_beer_fine_v70", {
+      p_event_id: currentEventId,
+      p_participant_id: row.dataset.participantId,
+      p_fine_type: row.dataset.fineType,
+      p_paid_count: Math.max(0, Number(row.querySelector(".beer-fine-paid")?.value)||0),
+      p_unpaid_count: Math.max(0, Number(row.querySelector(".beer-fine-unpaid")?.value)||0)
+    });
+    if (error) throw error;
+    setBeerFineStatus("Saved.");
+  } catch (error) {
+    setBeerFineStatus(`Could not save: ${error.message}`, true);
+  }
+}
+
+function renderBeerFineAdminRow(item) {
+  const list=beerFineLists[item.fine_type];
+  if (!list) return;
+  const row=document.createElement("div");
+  row.className="beer-fine-admin-row";
+  row.dataset.participantId=item.participant_id;
+  row.dataset.fineType=item.fine_type;
+
+  const name=document.createElement("strong");
+  name.className="beer-fine-name";
+  name.textContent=item.display_name||"Participant";
+
+  const ratio=document.createElement("span");
+  ratio.className="beer-fine-ratio";
+
+  const counts=document.createElement("div");
+  counts.className="beer-fine-count-editor";
+
+  const makeInput=(labelText, cls, value)=>{
+    const label=document.createElement("label");
+    const span=document.createElement("span");
+    span.textContent=labelText;
+    const input=document.createElement("input");
+    input.type="number"; input.min="0"; input.step="1";
+    input.className=cls; input.value=String(value??0);
+    input.addEventListener("focus",()=>{ if(Number(input.value)===0) requestAnimationFrame(()=>input.select()); });
+    label.append(span,input);
+    return {label,input};
+  };
+  const paid=makeInput("Paid","beer-fine-paid",item.paid_count);
+  const unpaid=makeInput("Unpaid","beer-fine-unpaid",item.unpaid_count);
+  const refreshRatio=()=>ratio.textContent=`${Math.max(0,Number(paid.input.value)||0)}/${Math.max(0,Number(unpaid.input.value)||0)}`;
+  paid.input.addEventListener("input",refreshRatio);
+  unpaid.input.addEventListener("input",refreshRatio);
+  paid.input.addEventListener("change",()=>saveBeerFineRow(row));
+  unpaid.input.addEventListener("change",()=>saveBeerFineRow(row));
+  counts.append(paid.label,unpaid.label);
+  refreshRatio();
+
+  const remove=document.createElement("button");
+  remove.type="button"; remove.className="danger-ghost-button beer-fine-remove"; remove.textContent="×";
+  remove.addEventListener("click",async()=>{
+    try {
+      const {error}=await client.rpc("admin_delete_beer_fine_v70",{
+        p_event_id:currentEventId,p_participant_id:row.dataset.participantId,p_fine_type:row.dataset.fineType
+      });
+      if(error) throw error;
+      row.remove();
+    } catch(error){ setBeerFineStatus(`Could not remove: ${error.message}`,true); }
+  });
+  row.append(name,ratio,counts,remove);
+  list.appendChild(row);
+}
+
+async function loadAdminBeerFines() {
+  Object.values(beerFineLists).forEach(list=>{if(list) list.innerHTML="";});
+  refreshBeerFineParticipantOptions();
+  if(!currentEventId) return;
+  try {
+    const {data,error}=await client.rpc("admin_get_beer_fines_v70",{p_event_id:currentEventId});
+    if(error) throw error;
+    (Array.isArray(data)?data:[]).forEach(renderBeerFineAdminRow);
+    setBeerFineStatus("");
+  } catch(error){ setBeerFineStatus(`Could not load: ${error.message}`,true); }
+}
+
+addBeerFineButton?.addEventListener("click",async()=>{
+  const participantId=beerFineParticipantSelect?.value;
+  const fineType=beerFineTypeSelect?.value;
+  if(!participantId||!fineType||!currentEventId){ setBeerFineStatus("Choose participant and fine type.",true); return; }
+  try {
+    const {error}=await client.rpc("admin_add_beer_fine_v70",{
+      p_event_id:currentEventId,p_participant_id:participantId,p_fine_type:fineType
+    });
+    if(error) throw error;
+    await loadAdminBeerFines();
+    setBeerFineStatus("Fine added.");
+  } catch(error){ setBeerFineStatus(`Could not add: ${error.message}`,true); }
+});
 
 
 // ---------------- Competitions ----------------
