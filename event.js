@@ -417,6 +417,14 @@ async function loadParticipantQuests() {
     status.classList.add("hidden");
     list.innerHTML = "";
 
+    const progressEl = document.getElementById("participantQuestProgress");
+    const updateQuestProgress = () => {
+      const total = rows.length;
+      const done = rows.filter(item => Boolean(item.checked)).length;
+      if (progressEl) progressEl.textContent = `${done} / ${total}`;
+    };
+    updateQuestProgress();
+
     if (!rows.length) {
       list.innerHTML = '<p class="muted">No quests yet.</p>';
       return;
@@ -454,7 +462,9 @@ async function loadParticipantQuests() {
           if (updateError) throw updateError;
           if (!result?.ok) throw new Error("Could not verify participant session.");
 
+          item.checked = requestedValue;
           label.classList.toggle("is-complete", requestedValue);
+          updateQuestProgress();
         } catch (updateError) {
           checkbox.checked = !requestedValue;
           status.textContent = `Could not update quest: ${updateError.message}`;

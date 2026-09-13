@@ -4366,3 +4366,122 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .competition-item[open] > summary .collapse-chevron {
   transform: rotate(180deg);
 }
+
+
+/* ---------- V56 quest progress + competition ranking ---------- */
+
+.quest-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.quest-progress-count {
+  color: var(--accent);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.competition-ranking-block {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.competition-ranking-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.competition-ranking-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.competition-ranking-list {
+  display: grid;
+  gap: 7px;
+}
+
+.competition-ranking-row {
+  display: grid;
+  grid-template-columns: 22px 34px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  cursor: grab;
+}
+
+.competition-ranking-row.is-dragging {
+  opacity: .55;
+}
+
+.competition-drag-handle {
+  color: var(--muted);
+  font-weight: 900;
+  cursor: grab;
+  user-select: none;
+}
+
+.competition-place {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  font-weight: 900;
+}
+
+.landing-score-head,
+.landing-ranking-row {
+  grid-template-columns: 22px 34px minmax(120px,1.5fr) repeat(3,minmax(72px,.8fr)) minmax(72px,.8fr);
+}
+
+.landing-score-head {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 6px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.competition-score-input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.competition-total {
+  text-align: center;
+  color: var(--accent);
+}
+
+@media (max-width: 700px) {
+  .landing-score-head {
+    display: none;
+  }
+
+  .landing-ranking-row {
+    grid-template-columns: 20px 30px minmax(0,1fr) repeat(3,58px) 62px;
+    gap: 5px;
+    overflow-x: auto;
+  }
+
+  .competition-score-input {
+    padding: 5px;
+    font-size: 12px;
+  }
+}

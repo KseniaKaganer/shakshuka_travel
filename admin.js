@@ -1549,7 +1549,8 @@ document.getElementById("descriptionInput").value = event.description || "";
 
   await Promise.all([
     loadEventLogbook(),
-    loadAdminQuests()
+    loadAdminQuests(),
+    loadCompetitionPlacements()
   ]);
   setStatus(editorStatus, "");
 }
@@ -2097,6 +2098,229 @@ async function loadAdminQuests() {
 }
 
 addQuestItemButton?.addEventListener("click", () => addQuestItem());
+
+
+// ---------------- Competitions ----------------
+
+const landingCompetitionRanking = document.getElementById("landingCompetitionRanking");
+const socialCompetitionRanking = document.getElementById("socialCompetitionRanking");
+
+function currentCompetitionParticipants() {
+  return [...participantsList.querySelectorAll(".participant-row")]
+    .map(row => ({
+      participant_id: row.querySelector(".participant-id")?.value || "",
+      name: row.querySelector(".participant-name")?.value.trim() || "Participant"
+    }))
+    .filter(item => item.participant_id);
+}
+
+function competitionTotalScore(row) {
+  const pattern = Number(row.querySelector(".competition-pattern")?.value) || 0;
+  const accuracy = Number(row.querySelector(".competition-accuracy")?.value) || 0;
+  const flare = Number(row.querySelector(".competition-flare")?.value) || 0;
+  return pattern + accuracy + flare;
+}
+
+function refreshCompetitionPlacementNumbers(container) {
+  [...container.querySelectorAll(".competition-ranking-row")].forEach((row, index) => {
+    const place = row.querySelector(".competition-place");
+    if (place) place.textContent = String(index + 1);
+
+    const total = row.querySelector(".competition-total");
+    if (total) total.textContent = competitionTotalScore(row).toFixed(2);
+  });
+}
+
+async function saveCompetitionRanking(type, container) {
+  if (!currentEventId || !container) return;
+
+  const rows = [...container.querySelectorAll(".competition-ranking-row")];
+  const payload = rows.map((row, index) => ({
+    event_id: currentEventId,
+    competition_type: type,
+    participant_id: row.dataset.participantId,
+    placement: index + 1,
+    pattern_score: type === "landing" ? (Number(row.querySelector(".competition-pattern")?.value) || 0) : null,
+    accuracy_score: type === "landing" ? (Number(row.querySelector(".competition-accuracy")?.value) || 0) : null,
+    flare_score: type === "landing" ? (Number(row.querySelector(".competition-flare")?.value) || 0) : null
+  }));
+
+  const participantIds = payload.map(item => item.participant_id);
+
+  if (payload.length) {
+    const { error } = await client
+      .from("competition_results")
+      .upsert(payload, { onConflict: "event_id,competition_type,participant_id" });
+
+    if (error) {
+      setStatus(editorStatus, `Could not save competition placement: ${error.message}`, true);
+      return;
+    }
+  }
+
+  // Remove stale rows for participants no longer in this competition list.
+  const { data: existing, error: existingError } = await client
+    .from("competition_results")
+    .select("id,participant_id")
+    .eq("event_id", currentEventId)
+    .eq("competition_type", type);
+
+  if (!existingError) {
+    const staleIds = (existing || [])
+      .filter(row => !participantIds.includes(row.participant_id))
+      .map(row => row.id);
+
+    if (staleIds.length) {
+      await client.from("competition_results").delete().in("id", staleIds);
+    }
+  }
+
+  refreshCompetitionPlacementNumbers(container);
+}
+
+function enableCompetitionDrag(container, type) {
+  let dragged = null;
+
+  container.addEventListener("dragstart", event => {
+    const row = event.target.closest(".competition-ranking-row");
+    if (!row) return;
+    dragged = row;
+    row.classList.add("is-dragging");
+    event.dataTransfer.effectAllowed = "move";
+  });
+
+  container.addEventListener("dragend", async () => {
+    if (dragged) dragged.classList.remove("is-dragging");
+    dragged = null;
+    refreshCompetitionPlacementNumbers(container);
+    await saveCompetitionRanking(type, container);
+  });
+
+  container.addEventListener("dragover", event => {
+    event.preventDefault();
+    if (!dragged) return;
+
+    const target = event.target.closest(".competition-ranking-row");
+    if (!target || target === dragged) return;
+
+    const rect = target.getBoundingClientRect();
+    const after = event.clientY > rect.top + rect.height / 2;
+    container.insertBefore(dragged, after ? target.nextSibling : target);
+  });
+}
+
+function buildCompetitionRow(participant, type, saved = {}) {
+  const row = document.createElement("div");
+  row.className = `competition-ranking-row ${type === "landing" ? "landing-ranking-row" : ""}`;
+  row.draggable = true;
+  row.dataset.participantId = participant.participant_id;
+
+  const place = document.createElement("span");
+  place.className = "competition-place";
+  place.textContent = "1";
+
+  const drag = document.createElement("span");
+  drag.className = "competition-drag-handle";
+  drag.textContent = "⋮⋮";
+  drag.title = "Drag to change placement";
+
+  const name = document.createElement("strong");
+  name.className = "competition-participant-name";
+  name.textContent = participant.name;
+
+  if (type === "landing") {
+    const makeScoreInput = (className, value) => {
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "0.01";
+      input.min = "0";
+      input.className = `competition-score-input ${className}`;
+      input.value = value ?? 0;
+      input.addEventListener("change", async () => {
+        refreshCompetitionPlacementNumbers(landingCompetitionRanking);
+        await saveCompetitionRanking("landing", landingCompetitionRanking);
+      });
+      return input;
+    };
+
+    const total = document.createElement("strong");
+    total.className = "competition-total";
+
+    row.append(
+      drag,
+      place,
+      name,
+      makeScoreInput("competition-pattern", saved.pattern_score),
+      makeScoreInput("competition-accuracy", saved.accuracy_score),
+      makeScoreInput("competition-flare", saved.flare_score),
+      total
+    );
+  } else {
+    row.append(drag, place, name);
+  }
+
+  return row;
+}
+
+async function loadCompetitionRanking(type, container) {
+  if (!container) return;
+  container.innerHTML = "";
+
+  const participants = currentCompetitionParticipants();
+
+  if (!participants.length || !currentEventId) {
+    container.innerHTML = '<p class="muted small-text">No participants yet.</p>';
+    return;
+  }
+
+  const { data, error } = await client
+    .from("competition_results")
+    .select("participant_id,placement,pattern_score,accuracy_score,flare_score")
+    .eq("event_id", currentEventId)
+    .eq("competition_type", type)
+    .order("placement", { ascending: true });
+
+  if (error) {
+    setStatus(editorStatus, `Could not load competition placement: ${error.message}`, true);
+    return;
+  }
+
+  const savedMap = new Map((data || []).map(item => [item.participant_id, item]));
+  const ordered = [...participants].sort((a, b) => {
+    const pa = savedMap.get(a.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
+    const pb = savedMap.get(b.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
+    if (pa !== pb) return pa - pb;
+    return a.name.localeCompare(b.name);
+  });
+
+  ordered.forEach(participant => {
+    container.appendChild(buildCompetitionRow(
+      participant,
+      type,
+      savedMap.get(participant.participant_id) || {}
+    ));
+  });
+
+  refreshCompetitionPlacementNumbers(container);
+}
+
+async function loadCompetitionPlacements() {
+  await Promise.all([
+    loadCompetitionRanking("landing", landingCompetitionRanking),
+    loadCompetitionRanking("social", socialCompetitionRanking)
+  ]);
+}
+
+enableCompetitionDrag(landingCompetitionRanking, "landing");
+enableCompetitionDrag(socialCompetitionRanking, "social");
+
+document.getElementById("refreshLandingCompetitionParticipants")?.addEventListener("click", () => {
+  loadCompetitionRanking("landing", landingCompetitionRanking);
+});
+
+document.getElementById("refreshSocialCompetitionParticipants")?.addEventListener("click", () => {
+  loadCompetitionRanking("social", socialCompetitionRanking);
+});
 
 
 async function saveEvent(status) {
