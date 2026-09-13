@@ -4161,3 +4161,110 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 12px;
   }
 }
+
+
+/* ---------- V53 force Admin payment to 3 columns on mobile ---------- */
+
+/*
+  Support both the newer payment-editor markup and the older payment-row markup,
+  so the mobile layout remains 3 columns even if cached HTML is still present.
+*/
+.participant-payment-editor .payment-editor-grid,
+.payment-box .payment-row.payment-row-no-label {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  align-items: end !important;
+  width: 100% !important;
+}
+
+.payment-box .payment-row-head.payment-row-no-label {
+  align-items: center !important;
+}
+
+.payment-box .payment-row-head.payment-row-no-label > span {
+  min-width: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+
+.payment-box .payment-field,
+.participant-payment-editor .payment-editor-field {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.payment-box .payment-field input,
+.payment-box .payment-left,
+.participant-payment-editor .payment-editor-field input,
+.participant-payment-editor .payment-editor-field .payment-left {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 44px !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+}
+
+/* Never inject labels inside the value boxes. */
+.payment-box .payment-field::before,
+.payment-box .payment-field::after,
+.payment-box .payment-left::before,
+.payment-box .payment-left::after,
+.participant-payment-editor .payment-field::before,
+.participant-payment-editor .payment-left::before,
+.participant-payment-editor .payment-left::after {
+  content: none !important;
+  display: none !important;
+}
+
+.payment-box .payment-left,
+.participant-payment-editor .payment-left {
+  display: flex !important;
+  align-items: center !important;
+  color: var(--accent) !important;
+  font-weight: 800 !important;
+}
+
+@media (max-width: 600px) {
+  .participant-payment-editor .payment-editor-grid,
+  .payment-box .payment-row.payment-row-no-label {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .payment-box .payment-row-head.payment-row-no-label > span,
+  .participant-payment-editor .payment-editor-field > span {
+    font-size: 9px !important;
+  }
+
+  .payment-box .payment-field input,
+  .payment-box .payment-left,
+  .participant-payment-editor .payment-editor-field input,
+  .participant-payment-editor .payment-editor-field .payment-left {
+    height: 42px !important;
+    padding: 7px 8px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .participant-payment-editor .payment-editor-grid,
+  .payment-box .payment-row.payment-row-no-label {
+    gap: 5px !important;
+  }
+
+  .payment-box .payment-field input,
+  .payment-box .payment-left,
+  .participant-payment-editor .payment-editor-field input,
+  .participant-payment-editor .payment-editor-field .payment-left {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    font-size: 12px !important;
+  }
+}
