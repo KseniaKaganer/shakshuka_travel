@@ -7,16 +7,12 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar event-topbar">
     <a class="back-link" href="index.html">← All events</a>
-    <div class="brand-small">SHAKSHUKA TRAVEL</div>
 
     <div id="participantSessionIndicator" class="participant-session-indicator hidden">
       <span class="participant-session-dot"></span>
-      <div>
-        <strong>Logged in</strong>
-        <span id="participantSessionName"></span>
-      </div>
+      <strong id="participantSessionName" class="participant-session-name"></strong>
       <button id="participantSignOut" class="ghost-button compact-button" type="button">Exit</button>
     </div>
   </header>
@@ -57,9 +53,9 @@
 
     <article id="event" class="event-detail hidden">
       <div class="event-detail__top">
-        <div>
-          <div id="eventDates" class="date-large"></div>
+        <div class="event-hero-copy">
           <h1 id="eventName"></h1>
+          <div id="eventDates" class="date-large"></div>
           <div id="eventParticipantWelcome" class="event-participant-welcome">
             <span>Welcome,</span>
             <strong id="participantWelcomeName">Participant</strong>

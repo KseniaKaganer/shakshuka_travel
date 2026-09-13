@@ -4629,3 +4629,73 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     height: 38px !important;
   }
 }
+
+
+/* ---------- V58 participant event header ---------- */
+
+.event-topbar {
+  justify-content: space-between;
+}
+
+.event-topbar .participant-session-indicator {
+  margin-left: auto;
+}
+
+.participant-session-name {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.event-hero-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.event-hero-copy #eventName {
+  margin: 0;
+}
+
+.event-hero-copy .date-large {
+  margin: 0;
+}
+
+.event-hero-copy .event-participant-welcome {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .event-topbar {
+    gap: 10px;
+  }
+
+  .event-topbar .back-link {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .participant-session-indicator {
+    gap: 7px;
+  }
+
+  .participant-session-name {
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+  }
+
+  .event-hero-copy {
+    gap: 6px;
+  }
+
+  .event-hero-copy #eventName {
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.08;
+  }
+
+  .event-hero-copy .date-large {
+    font-size: 20px;
+  }
+}
