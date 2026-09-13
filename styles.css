@@ -4871,3 +4871,128 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-weight: 900 !important;
   }
 }
+
+
+/* ---------- V61 Landing Competition mobile fit ---------- */
+
+/* The leaderboard must fit the card width without an inner horizontal scroller. */
+.landing-leaderboard-wrap {
+  overflow-x: hidden !important;
+}
+
+.landing-leaderboard {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.landing-leaderboard th,
+.landing-leaderboard td {
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+/* Compact column proportions that still keep the participant name readable. */
+.landing-leaderboard th:nth-child(1),
+.landing-leaderboard td:nth-child(1) { width: 7% !important; }
+
+.landing-leaderboard th:nth-child(2),
+.landing-leaderboard td:nth-child(2) { width: 32% !important; }
+
+.landing-leaderboard th:nth-child(3),
+.landing-leaderboard td:nth-child(3) { width: 8% !important; }
+
+.landing-leaderboard th:nth-child(4),
+.landing-leaderboard td:nth-child(4),
+.landing-leaderboard th:nth-child(5),
+.landing-leaderboard td:nth-child(5),
+.landing-leaderboard th:nth-child(6),
+.landing-leaderboard td:nth-child(6) { width: 9% !important; }
+
+.landing-leaderboard th:nth-child(7),
+.landing-leaderboard td:nth-child(7) { width: 17% !important; }
+
+.landing-participant-name {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+/* Full category names in participant score entry, while keeping one-row mobile layout. */
+.landing-score-entry label > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .competition-item-body {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .landing-leaderboard th {
+    font-size: 8px !important;
+    padding: 7px 2px !important;
+  }
+
+  .landing-leaderboard td {
+    font-size: 10px !important;
+    padding: 8px 2px !important;
+  }
+
+  .landing-leaderboard th:nth-child(1),
+  .landing-leaderboard td:nth-child(1) { width: 7% !important; }
+
+  .landing-leaderboard th:nth-child(2),
+  .landing-leaderboard td:nth-child(2) { width: 33% !important; }
+
+  .landing-leaderboard th:nth-child(3),
+  .landing-leaderboard td:nth-child(3) { width: 8% !important; }
+
+  .landing-leaderboard th:nth-child(4),
+  .landing-leaderboard td:nth-child(4),
+  .landing-leaderboard th:nth-child(5),
+  .landing-leaderboard td:nth-child(5),
+  .landing-leaderboard th:nth-child(6),
+  .landing-leaderboard td:nth-child(6) { width: 8% !important; }
+
+  .landing-leaderboard th:nth-child(7),
+  .landing-leaderboard td:nth-child(7) { width: 20% !important; }
+
+  .landing-my-score {
+    padding: 10px !important;
+  }
+
+  .landing-score-entry {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 38px !important;
+    gap: 5px !important;
+  }
+
+  .landing-score-entry label > span {
+    font-size: 9px !important;
+    text-align: left !important;
+  }
+
+  .landing-score-entry input {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-leaderboard th {
+    font-size: 7px !important;
+  }
+
+  .landing-leaderboard td {
+    font-size: 9px !important;
+  }
+
+  .landing-score-entry label > span {
+    font-size: 8px !important;
+  }
+}
