@@ -266,7 +266,7 @@
     <h2>Logbook</h2>
   </div>
   <div class="summary-right-actions">
-<button id="exportLogbookButton" class="secondary-button summary-export-button" type="button">⇩ Export</button>
+
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
   </div>
 </summary>
@@ -278,6 +278,7 @@
       </select>
     </label>
     <button id="addLogbookDayButton" class="primary-button add-day-match-button" type="button" title="Add day" aria-label="Add day">+</button>
+    <button id="exportLogbookButton" class="secondary-button icon-only-export-button" type="button" title="Export logbook" aria-label="Export logbook">⇩</button>
   </div>
   <div id="eventLogbookStatus" class="status hidden"></div>
   <div id="eventLogbookDays" class="event-logbook-days"></div>
@@ -457,9 +458,7 @@
     </div>
   </div>
   <div class="summary-right-actions">
-    <button id="exportParticipantsButton" class="secondary-button compact-export-button summary-export-button" type="button" title="Export participant data to spreadsheet">
-      ⇩ Export
-    </button>
+    <button id="exportParticipantsButton" class="secondary-button compact-export-button summary-export-button icon-only-export-button" type="button" title="Export participant data to spreadsheet" aria-label="Export participants">⇩</button>
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
   </div>
 </summary>
