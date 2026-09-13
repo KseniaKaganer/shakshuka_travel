@@ -6237,3 +6237,44 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .logbook-day-adder {
   align-items: end !important;
 }
+
+
+/* ---------- V93 Logbook Day controls on one row ---------- */
+.logbook-day-adder {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.logbook-day-adder select {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.logbook-day-adder #addLogbookDayButton,
+.logbook-day-adder #exportLogbookButton {
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .logbook-day-adder {
+    gap: 7px !important;
+  }
+
+  .logbook-day-adder #addLogbookDayButton,
+  .logbook-day-adder #exportLogbookButton {
+    flex-basis: 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+  }
+}
