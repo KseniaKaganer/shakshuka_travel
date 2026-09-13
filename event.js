@@ -654,11 +654,24 @@ const beerFineEventLists = {
 
 async function loadBeerFines() {
   Object.values(beerFineEventLists).forEach(list=>{if(list) list.innerHTML="";});
-  if(!participantSessionToken) return;
+  if(!participantSessionToken) {
+    document.getElementById("beerFineUnpaidAlert")?.classList.add("hidden");
+    return;
+  }
   try {
     const {data,error}=await client.rpc("get_beer_fines_by_token_v70",{p_event_id:eventId,p_token:participantSessionToken});
     if(error) throw error;
     const rows=Array.isArray(data)?data:[];
+    const unpaidAlert = document.getElementById("beerFineUnpaidAlert");
+    const myParticipantId = participantAccess?.participant_id || null;
+    const hasMyUnpaidFine = rows.some(item =>
+      item.participant_id === myParticipantId && (Number(item.unpaid_count) || 0) > 0
+    );
+
+    if (unpaidAlert) {
+      unpaidAlert.classList.toggle("hidden", !hasMyUnpaidFine);
+    }
+
     rows.forEach(item=>{
       const list=beerFineEventLists[item.fine_type];
       if(!list) return;

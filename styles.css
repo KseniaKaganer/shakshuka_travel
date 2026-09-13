@@ -5578,3 +5578,25 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: minmax(74px,1fr) 124px 28px !important;
   }
 }
+
+
+/* ---------- V73 Beer Fine unpaid alert ---------- */
+.beer-fine-unpaid-alert {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 83, 83, .55);
+  border-radius: 12px;
+  background: rgba(255, 83, 83, .10);
+  color: #ff5f5f;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: .1px;
+}
+
+@media (max-width: 600px) {
+  .beer-fine-unpaid-alert {
+    font-size: 15px;
+    padding: 11px 10px;
+  }
+}
