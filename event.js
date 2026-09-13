@@ -120,9 +120,43 @@ function renderPaymentStatus(data) {
   document.getElementById("selfPaymentLeft")?.classList.toggle("payment-due", paymentLeft > 0);
   document.getElementById("selfCoachLeft")?.classList.toggle("payment-due", coachLeft > 0);
 
+  const notesBox = document.getElementById("participantPaymentNotesBox");
+  const notesText = document.getElementById("participantPaymentNotesText");
+  const paymentNotes = String(data.payment_notes || "").trim();
+
+  if (notesBox && notesText) {
+    notesText.textContent = paymentNotes;
+    notesBox.classList.toggle("hidden", !paymentNotes);
+  }
+
   const coachCard = document.getElementById("selfCoachPaymentCard");
   if (coachCard) {
     coachCard.classList.toggle("hidden", (data.event_type || loadedEvent?.event_type) === "tunnel");
+  }
+}
+
+
+async function loadParticipantPaymentNotes() {
+  if (!participantSessionToken) return;
+
+  try {
+    const { data, error } = await client.rpc("get_participant_payment_notes_by_token_v54", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+
+    const notes = String(data?.payment_notes || "").trim();
+    const box = document.getElementById("participantPaymentNotesBox");
+    const text = document.getElementById("participantPaymentNotesText");
+
+    if (box && text) {
+      text.textContent = notes;
+      box.classList.toggle("hidden", !notes);
+    }
+  } catch (error) {
+    console.warn("Could not load payment notes:", error);
   }
 }
 
@@ -478,6 +512,7 @@ function showLoggedInView(data) {
   setText("participantWelcomeName", data.display_name, "Participant");
   renderParticipantFields(data);
   renderPaymentStatus(data);
+  loadParticipantPaymentNotes();
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
   loadParticipantQuests();

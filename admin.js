@@ -38,6 +38,7 @@ const tunnelParticipantFields = document.getElementById("tunnelParticipantFields
 const skydiveParticipantFields = document.getElementById("skydiveParticipantFields");
 const participantEventTypeBadge = document.getElementById("participantEventTypeBadge");
 const modalPaymentTotal = document.getElementById("modalPaymentTotal");
+const modalPaymentNotes = document.getElementById("modalPaymentNotes");
 const modalPaymentPaid = document.getElementById("modalPaymentPaid");
 const modalPaymentLeft = document.getElementById("modalPaymentLeft");
 const modalCoachTotal = document.getElementById("modalCoachTotal");
@@ -303,10 +304,7 @@ function renderSelectedVenue() {
 
   const venue = venues.find(item => item.id === venueSelect.value);
 
-  // Keep the selected venue compact when not editing.
-  // The readonly fields stay populated but are hidden; the saved venue dropdown
-  // is the normal non-edit view, matching Living location.
-  selectedVenueDetails?.classList.add("hidden");
+  selectedVenueDetails?.classList.toggle("hidden", !venue);
 
   if (!venue) {
     if (eventVenueTypeInput) eventVenueTypeInput.value = getEventType() === "tunnel" ? "tunnel" : "dropzone";
@@ -329,7 +327,6 @@ function renderSelectedVenue() {
 
 function showVenueForm(mode = "new") {
   newVenueBox?.classList.remove("hidden");
-  selectedVenueDetails?.classList.add("hidden");
   editingVenueId = mode === "edit" ? venueSelect?.value || null : null;
 
   if (editingVenueId) {
@@ -1479,7 +1476,7 @@ document.getElementById("descriptionInput").value = event.description || "";
     if (venueUrlInput) venueUrlInput.value = event.venue_url || "";
     if (ticketPriceInput) ticketPriceInput.value = event.ticket_price ?? "";
     if (tunnelTimeCostInput) tunnelTimeCostInput.value = event.tunnel_time_cost ?? "";
-    selectedVenueDetails?.classList.add("hidden");
+    selectedVenueDetails?.classList.toggle("hidden", !event.venue);
     updateEventVenueFields();
   }
   setEventType(event.event_type || "skydive");
@@ -1503,6 +1500,7 @@ document.getElementById("descriptionInput").value = event.description || "";
       canopy_course_done,
       payment_paid,
       payment_total,
+      payment_notes,
       coach_tickets_paid,
       coach_tickets_total,
       participants(id,display_name,phone,email,notes)
@@ -1539,6 +1537,7 @@ document.getElementById("descriptionInput").value = event.description || "";
       canopyCourseDone: membership.canopy_course_done,
       paymentPaid: membership.payment_paid,
       paymentTotal: membership.payment_total,
+      paymentNotes: membership.payment_notes,
       coachPaid: membership.coach_tickets_paid,
       coachTotal: membership.coach_tickets_total
     });
@@ -1619,6 +1618,7 @@ async function openParticipantModal(row) {
 
   modalPaymentPaid.value = row.querySelector(".participant-payment-paid").value || "0";
   modalPaymentTotal.value = row.querySelector(".participant-payment-total").value || "0";
+  if (modalPaymentNotes) modalPaymentNotes.value = row.querySelector(".participant-payment-notes")?.value || "";
   modalCoachPaid.value = row.querySelector(".participant-coach-paid").value || "0";
   modalCoachTotal.value = row.querySelector(".participant-coach-total").value || "0";
   updatePaymentCalculations();
@@ -1659,6 +1659,7 @@ function addParticipantRow(data = {}, openImmediately = false) {
   row.querySelector(".participant-canopy-course").value = boolString(data.canopyCourseDone);
   row.querySelector(".participant-payment-paid").value = moneyNumber(data.paymentPaid);
   row.querySelector(".participant-payment-total").value = moneyNumber(data.paymentTotal);
+  row.querySelector(".participant-payment-notes").value = data.paymentNotes || "";
   row.querySelector(".participant-coach-paid").value = moneyNumber(data.coachPaid);
   row.querySelector(".participant-coach-total").value = moneyNumber(data.coachTotal);
 row.querySelector(".participant-id").value = data.participantId || "";
@@ -1713,6 +1714,7 @@ document.getElementById("acceptParticipantEdit").addEventListener("click", () =>
   editingParticipantRow.querySelector(".participant-canopy-course").value = boolString(modalCanopyCourseDone.checked);
   editingParticipantRow.querySelector(".participant-payment-paid").value = moneyNumber(modalPaymentPaid.value);
   editingParticipantRow.querySelector(".participant-payment-total").value = moneyNumber(modalPaymentTotal.value);
+  editingParticipantRow.querySelector(".participant-payment-notes").value = modalPaymentNotes?.value.trim() || "";
   editingParticipantRow.querySelector(".participant-coach-paid").value =
     getEventType() === "tunnel" ? 0 : moneyNumber(modalCoachPaid.value);
   editingParticipantRow.querySelector(".participant-coach-total").value =
@@ -1862,6 +1864,7 @@ function readParticipantRows() {
     canopyCourseDone: row.querySelector(".participant-canopy-course").value === "true",
     paymentPaid: moneyNumber(row.querySelector(".participant-payment-paid").value),
     paymentTotal: moneyNumber(row.querySelector(".participant-payment-total").value),
+    paymentNotes: row.querySelector(".participant-payment-notes").value.trim(),
     coachPaid: moneyNumber(row.querySelector(".participant-coach-paid").value),
     coachTotal: moneyNumber(row.querySelector(".participant-coach-total").value),
     participantId: row.querySelector(".participant-id").value || null,
@@ -2244,6 +2247,7 @@ async function saveEvent(status) {
         canopy_course_done: participant.canopyCourseDone,
         payment_paid: participant.paymentPaid,
         payment_total: eventPrice,
+        payment_notes: participant.paymentNotes || null,
         coach_tickets_paid: participant.coachPaid,
         coach_tickets_total: participant.coachTotal
       };

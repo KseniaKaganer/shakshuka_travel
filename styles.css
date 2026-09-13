@@ -4268,3 +4268,39 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 12px !important;
   }
 }
+
+
+/* ---------- V54 payment notes ---------- */
+
+.payment-notes-field {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.payment-notes-field textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.participant-payment-notes {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+}
+
+.participant-payment-notes > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.participant-payment-notes p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: var(--text);
+  font-size: 13px;
+}
