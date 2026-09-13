@@ -674,16 +674,25 @@ async function loadBeerFines(force = false) {
       if(list) list.innerHTML="";
     });
     const unpaidAlert = document.getElementById("beerFineUnpaidAlert");
-    const myParticipantId = participantAccess?.participant_id || null;
+    const myParticipantId =
+      participantAccess?.participant_id ||
+      participantAccess?.id ||
+      participantAccess?.participantId ||
+      null;
     const hasMyUnpaidFine = rows.some(item => {
       const paid = Number(item.paid_count) || 0;
       const total = Number(
         item.total_count != null ? item.total_count : item.unpaid_count
       ) || 0;
 
-      return String(item.participant_id || "") === String(myParticipantId || "") &&
-        total > 0 &&
-        paid < total;
+      const sameParticipant =
+        (Boolean(myParticipantId) &&
+          String(item.participant_id || "") === String(myParticipantId)) ||
+        (!myParticipantId &&
+          String(item.display_name || "").trim().toLowerCase() ===
+          String(participantAccess?.display_name || "").trim().toLowerCase());
+
+      return sameParticipant && total > 0 && paid < total;
     });
 
     if (unpaidAlert) {
@@ -712,10 +721,16 @@ async function loadBeerFines(force = false) {
 
       row.append(name,ratio);
 
-      const myParticipantId = participantAccess?.participant_id || null;
-      const isMine = String(item.participant_id || "") === String(myParticipantId || "");
+      const isMine = Boolean(myParticipantId) &&
+        String(item.participant_id || "") === String(myParticipantId);
 
-      if (isMine && totalCount > 0 && paidCount < totalCount) {
+      const isMyFine = isMine || (
+        !myParticipantId &&
+        String(item.display_name || "").trim().toLowerCase() ===
+        String(participantAccess?.display_name || "").trim().toLowerCase()
+      );
+
+      if (isMyFine && totalCount > 0 && paidCount < totalCount) {
         row.classList.add("is-my-beer-fine");
 
         const paidButton=document.createElement("button");
