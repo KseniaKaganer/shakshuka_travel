@@ -585,49 +585,50 @@
           </label>
         </div>
       </div>
-<div class="payment-box">
+<div class="payment-box participant-payment-editor">
         <div class="payment-box-head">
           <div>
             <h3>Payment</h3>
-            <p class="muted small-text">Left to pay is calculated automatically.</p>
           </div>
         </div>
 
-        <div class="payment-section">
-          <div class="payment-row payment-row-head payment-row-no-label">
-            <span>Total</span>
-            <span>Paid</span>
-            <span>Left to pay</span>
-          </div>
-
-          <div class="payment-row payment-row-no-label">
-            <label class="payment-field">
+        <div class="payment-section payment-editor-section">
+          <div class="payment-editor-grid">
+            <label class="payment-editor-field">
+              <span>Total</span>
               <input id="modalPaymentTotal" type="number" min="0" step="0.01" value="0" />
             </label>
-            <label class="payment-field">
+
+            <label class="payment-editor-field">
+              <span>Paid</span>
               <input id="modalPaymentPaid" type="number" min="0" step="0.01" value="0" />
             </label>
-            <output id="modalPaymentLeft" class="payment-left">0.00</output>
+
+            <div class="payment-editor-field payment-editor-left">
+              <span>Left to pay</span>
+              <output id="modalPaymentLeft" class="payment-left">0.00</output>
+            </div>
           </div>
         </div>
 
-        <div id="coachTicketsPaymentRow" class="coach-payment-section">
+        <div id="coachTicketsPaymentRow" class="coach-payment-section payment-editor-section">
           <strong class="coach-payment-title">Coach tickets</strong>
 
-          <div class="payment-row payment-row-head payment-row-no-label">
-            <span>Total</span>
-            <span>Paid</span>
-            <span>Left to pay</span>
-          </div>
-
-          <div class="payment-row payment-row-no-label">
-            <label class="payment-field">
+          <div class="payment-editor-grid">
+            <label class="payment-editor-field">
+              <span>Total</span>
               <input id="modalCoachTotal" type="number" min="0" step="0.01" value="0" />
             </label>
-            <label class="payment-field">
+
+            <label class="payment-editor-field">
+              <span>Paid</span>
               <input id="modalCoachPaid" type="number" min="0" step="0.01" value="0" />
             </label>
-            <output id="modalCoachLeft" class="payment-left">0.00</output>
+
+            <div class="payment-editor-field payment-editor-left">
+              <span>Left to pay</span>
+              <output id="modalCoachLeft" class="payment-left">0.00</output>
+            </div>
           </div>
         </div>
       </div>
