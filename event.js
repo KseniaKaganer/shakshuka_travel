@@ -820,7 +820,6 @@ async function addMySocialScore(action, button) {
 
     showSocialScoreStatus(`+${data.points_added} points`);
     await loadSocialCompetitionLeaderboard();
-  loadBeerFines();
 
     setTimeout(() => {
       const status = document.getElementById("socialScoreStatus");
@@ -854,6 +853,7 @@ function showLoggedInView(data) {
   loadParticipantQuests();
   loadLandingCompetitionLeaderboard();
   loadSocialCompetitionLeaderboard();
+  loadBeerFines();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
