@@ -2003,11 +2003,15 @@ const canopyTaskTemplate = document.getElementById("canopyTaskTemplate");
 const canopyCourseUi = {
   CT1: {
     participants: document.getElementById("canopyCT1Participants"),
+    participantSelect: document.getElementById("canopyCT1ParticipantSelect"),
+    addParticipant: document.getElementById("addCanopyCT1Participant"),
     tasks: document.getElementById("canopyCT1Tasks"),
     addTask: document.getElementById("addCanopyCT1Task")
   },
   CT2: {
     participants: document.getElementById("canopyCT2Participants"),
+    participantSelect: document.getElementById("canopyCT2ParticipantSelect"),
+    addParticipant: document.getElementById("addCanopyCT2Participant"),
     tasks: document.getElementById("canopyCT2Tasks"),
     addTask: document.getElementById("addCanopyCT2Task")
   }
@@ -2052,47 +2056,65 @@ function renderCanopyAssignments() {
 
   Object.entries(canopyCourseUi).forEach(([level, ui]) => {
     if (!ui.participants) return;
+
+    const assignedIds = new Set(
+      canopyTrainingAssignments
+        .filter(item => item.course_level === level)
+        .map(item => item.participant_id)
+    );
+
+    // Dropdown contains only participants not already assigned to this course.
+    if (ui.participantSelect) {
+      const previous = ui.participantSelect.value;
+      ui.participantSelect.innerHTML = '<option value="">Select participant</option>';
+
+      participants
+        .filter(person => !assignedIds.has(person.participant_id))
+        .forEach(person => {
+          const option = document.createElement("option");
+          option.value = person.participant_id;
+          option.textContent = person.name;
+          ui.participantSelect.appendChild(option);
+        });
+
+      if ([...ui.participantSelect.options].some(option => option.value === previous)) {
+        ui.participantSelect.value = previous;
+      }
+    }
+
     ui.participants.innerHTML = "";
 
-    if (!participants.length) {
-      ui.participants.innerHTML = '<p class="muted small-text">Save participants first, then assign them to this course.</p>';
+    const assignedPeople = participants.filter(person => assignedIds.has(person.participant_id));
+
+    if (!assignedPeople.length) {
+      ui.participants.innerHTML = '<p class="muted small-text">No participants assigned yet.</p>';
       return;
     }
 
-    participants.forEach(person => {
-      const label = document.createElement("label");
-      label.className = "canopy-assignment-row";
+    assignedPeople.forEach(person => {
+      const row = document.createElement("div");
+      row.className = "canopy-assigned-participant";
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = canopyTrainingAssignments.some(item =>
-        item.course_level === level && item.participant_id === person.participant_id
-      );
+      const name = document.createElement("strong");
+      name.textContent = person.name;
 
-      const text = document.createElement("span");
-      text.textContent = person.name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "danger-ghost-button canopy-assignment-remove";
+      remove.textContent = "×";
+      remove.title = `Remove ${person.name} from ${level}`;
+      remove.setAttribute("aria-label", `Remove ${person.name} from ${level}`);
 
-      checkbox.addEventListener("change", async () => {
-        if (checkbox.checked) {
-          if (!canopyTrainingAssignments.some(item =>
-            item.course_level === level && item.participant_id === person.participant_id
-          )) {
-            canopyTrainingAssignments.push({
-              course_level: level,
-              participant_id: person.participant_id
-            });
-          }
-        } else {
-          canopyTrainingAssignments = canopyTrainingAssignments.filter(item =>
-            !(item.course_level === level && item.participant_id === person.participant_id)
-          );
-        }
-
+      remove.addEventListener("click", async () => {
+        canopyTrainingAssignments = canopyTrainingAssignments.filter(item =>
+          !(item.course_level === level && item.participant_id === person.participant_id)
+        );
+        renderCanopyAssignments();
         await saveAdminCanopyTraining("Course assignments saved.");
       });
 
-      label.append(checkbox, text);
-      ui.participants.appendChild(label);
+      row.append(name, remove);
+      ui.participants.appendChild(row);
     });
   });
 }
@@ -2223,8 +2245,51 @@ async function loadAdminCanopyTraining() {
   }
 }
 
-canopyCourseUi.CT1.addTask?.addEventListener("click", () => addCanopyTask("CT1"));
-canopyCourseUi.CT2.addTask?.addEventListener("click", () => addCanopyTask("CT2"));
+function addCanopyParticipant(level) {
+  const ui = canopyCourseUi[level];
+  const participantId = ui?.participantSelect?.value || "";
+
+  if (!participantId) {
+    setAdminCanopyTrainingStatus(`Select a participant for ${level}.`, true);
+    return;
+  }
+
+  if (!canopyTrainingAssignments.some(item =>
+    item.course_level === level && item.participant_id === participantId
+  )) {
+    canopyTrainingAssignments.push({
+      course_level: level,
+      participant_id: participantId
+    });
+  }
+
+  renderCanopyAssignments();
+  saveAdminCanopyTraining("Course assignments saved.");
+}
+
+canopyCourseUi.CT1.addTask?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  addCanopyTask("CT1");
+});
+
+canopyCourseUi.CT2.addTask?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  addCanopyTask("CT2");
+});
+
+canopyCourseUi.CT1.addParticipant?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  addCanopyParticipant("CT1");
+});
+
+canopyCourseUi.CT2.addParticipant?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  addCanopyParticipant("CT2");
+});
 
 
 // ---------------- SHAKSHUKA Quests ----------------

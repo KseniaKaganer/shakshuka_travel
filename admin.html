@@ -298,49 +298,67 @@
   <div class="quests-content canopy-training-admin-content">
     <div id="adminCanopyTrainingStatus" class="status compact-status hidden"></div>
 
-    <section class="canopy-course-admin-card" data-course-level="CT1">
-      <div class="canopy-course-admin-head">
+    <details class="canopy-course-admin-card" data-course-level="CT1">
+      <summary class="canopy-course-summary">
         <div>
           <strong>CT1</strong>
-          <span class="muted small-text">Assign participants and define the course tasks.</span>
+          <span class="muted small-text">Participants & tasks</span>
+        </div>
+        <span class="collapse-chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="canopy-course-admin-body">
+        <div class="canopy-admin-subsection">
+          <strong>Participants</strong>
+          <div class="canopy-add-participant-row">
+            <select id="canopyCT1ParticipantSelect" aria-label="Select participant for CT1">
+              <option value="">Select participant</option>
+            </select>
+            <button id="addCanopyCT1Participant" class="primary-button compact-button" type="button">+ Add</button>
+          </div>
+          <div id="canopyCT1Participants" class="canopy-participant-assignments"></div>
+        </div>
+
+        <div class="canopy-admin-subsection">
+          <div class="canopy-tasks-head">
+            <strong>Tasks</strong>
+            <button id="addCanopyCT1Task" class="secondary-button compact-button" type="button">+ Add task</button>
+          </div>
+          <div id="canopyCT1Tasks" class="canopy-admin-tasks"></div>
         </div>
       </div>
+    </details>
 
-      <div class="canopy-admin-subsection">
-        <strong>Participants</strong>
-        <div id="canopyCT1Participants" class="canopy-participant-assignments"></div>
-      </div>
-
-      <div class="canopy-admin-subsection">
-        <div class="canopy-tasks-head">
-          <strong>Tasks</strong>
-          <button id="addCanopyCT1Task" class="secondary-button compact-button" type="button">+ Add task</button>
-        </div>
-        <div id="canopyCT1Tasks" class="canopy-admin-tasks"></div>
-      </div>
-    </section>
-
-    <section class="canopy-course-admin-card" data-course-level="CT2">
-      <div class="canopy-course-admin-head">
+    <details class="canopy-course-admin-card" data-course-level="CT2">
+      <summary class="canopy-course-summary">
         <div>
           <strong>CT2</strong>
-          <span class="muted small-text">Assign participants and define the course tasks.</span>
+          <span class="muted small-text">Participants & tasks</span>
+        </div>
+        <span class="collapse-chevron" aria-hidden="true">⌄</span>
+      </summary>
+
+      <div class="canopy-course-admin-body">
+        <div class="canopy-admin-subsection">
+          <strong>Participants</strong>
+          <div class="canopy-add-participant-row">
+            <select id="canopyCT2ParticipantSelect" aria-label="Select participant for CT2">
+              <option value="">Select participant</option>
+            </select>
+            <button id="addCanopyCT2Participant" class="primary-button compact-button" type="button">+ Add</button>
+          </div>
+          <div id="canopyCT2Participants" class="canopy-participant-assignments"></div>
+        </div>
+
+        <div class="canopy-admin-subsection">
+          <div class="canopy-tasks-head">
+            <strong>Tasks</strong>
+            <button id="addCanopyCT2Task" class="secondary-button compact-button" type="button">+ Add task</button>
+          </div>
+          <div id="canopyCT2Tasks" class="canopy-admin-tasks"></div>
         </div>
       </div>
-
-      <div class="canopy-admin-subsection">
-        <strong>Participants</strong>
-        <div id="canopyCT2Participants" class="canopy-participant-assignments"></div>
-      </div>
-
-      <div class="canopy-admin-subsection">
-        <div class="canopy-tasks-head">
-          <strong>Tasks</strong>
-          <button id="addCanopyCT2Task" class="secondary-button compact-button" type="button">+ Add task</button>
-        </div>
-        <div id="canopyCT2Tasks" class="canopy-admin-tasks"></div>
-      </div>
-    </section>
+    </details>
   </div>
 </details>
 

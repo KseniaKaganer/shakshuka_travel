@@ -6683,3 +6683,99 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding: 12px;
   }
 }
+
+
+/* ---------- V101 Canopy Training UX ---------- */
+.canopy-course-admin-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.canopy-course-summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 58px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.canopy-course-summary::-webkit-details-marker {
+  display: none;
+}
+
+.canopy-course-summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.canopy-course-summary > div > strong {
+  font-size: 18px;
+}
+
+.canopy-course-admin-card[open] > .canopy-course-summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.canopy-course-admin-card[open] > .canopy-course-summary .collapse-chevron {
+  transform: rotate(180deg);
+}
+
+.canopy-course-admin-body {
+  display: grid;
+  gap: 16px;
+  padding: 14px;
+}
+
+.canopy-add-participant-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.canopy-add-participant-row select {
+  width: 100%;
+  min-width: 0;
+}
+
+.canopy-participant-assignments {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+}
+
+.canopy-assigned-participant {
+  min-height: 40px;
+  padding: 7px 8px 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.canopy-assignment-remove {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .canopy-course-summary {
+    min-height: 54px;
+    padding: 12px;
+  }
+
+  .canopy-course-admin-body {
+    padding: 12px;
+  }
+
+  .canopy-add-participant-row {
+    grid-template-columns: minmax(0, 1fr) 58px;
+  }
+}
