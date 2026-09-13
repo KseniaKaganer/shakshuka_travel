@@ -4098,3 +4098,66 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-column: auto;
   }
 }
+
+
+/* ---------- V52 compact three-column payment layout ---------- */
+
+.participant-payment-editor .payment-editor-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+
+.participant-payment-editor .payment-editor-left {
+  grid-column: auto !important;
+}
+
+.participant-payment-editor .payment-left::before,
+.participant-payment-editor .payment-left::after {
+  content: none !important;
+  display: none !important;
+}
+
+.participant-payment-editor .payment-editor-field input,
+.participant-payment-editor .payment-editor-field .payment-left {
+  height: 46px;
+  padding: 9px 11px;
+}
+
+@media (max-width: 600px) {
+  .participant-payment-editor .payment-editor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .participant-payment-editor .payment-editor-left {
+    grid-column: auto !important;
+  }
+
+  .participant-payment-editor .payment-editor-field > span {
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .participant-payment-editor .payment-editor-field input,
+  .participant-payment-editor .payment-editor-field .payment-left {
+    height: 43px;
+    padding: 8px 9px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 350px) {
+  .participant-payment-editor .payment-editor-grid {
+    gap: 5px !important;
+  }
+
+  .participant-payment-editor .payment-editor-field > span {
+    font-size: 8px;
+  }
+
+  .participant-payment-editor .payment-editor-field input,
+  .participant-payment-editor .payment-editor-field .payment-left {
+    padding: 7px;
+    font-size: 12px;
+  }
+}
