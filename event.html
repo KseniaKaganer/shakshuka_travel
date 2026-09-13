@@ -212,13 +212,70 @@
             </div>
           </details>
 
-          <details class="competition-item">
+          <details class="competition-item social-media-competition-item">
             <summary>
               <strong>Social media competition</strong>
               <span class="collapse-chevron">⌄</span>
             </summary>
+
             <div class="competition-item-body">
               <p id="socialMediaCompetitionInfo"></p>
+
+              <div class="social-media-rules">
+                <span><strong>#skyshakshuka</strong> +2</span>
+                <span><strong>Story</strong> +3</span>
+                <span><strong>Post</strong> +5</span>
+                <span><strong>Reel</strong> +10</span>
+              </div>
+
+              <div class="social-leaderboard-wrap">
+                <table class="social-leaderboard">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Participant</th>
+                      <th>#Sh</th>
+                      <th>St</th>
+                      <th>Po</th>
+                      <th>Re</th>
+                      <th>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody id="socialLeaderboardBody"></tbody>
+                </table>
+              </div>
+
+              <div class="social-my-score">
+                <strong>Add to my score</strong>
+
+                <div class="social-score-actions">
+                  <button class="social-score-add" type="button" data-social-action="hashtag">
+                    <span>#skyshakshuka</span>
+                    <b>+2</b>
+                    <span class="social-plus">+</span>
+                  </button>
+
+                  <button class="social-score-add" type="button" data-social-action="story">
+                    <span>Story</span>
+                    <b>+3</b>
+                    <span class="social-plus">+</span>
+                  </button>
+
+                  <button class="social-score-add" type="button" data-social-action="post">
+                    <span>Post</span>
+                    <b>+5</b>
+                    <span class="social-plus">+</span>
+                  </button>
+
+                  <button class="social-score-add" type="button" data-social-action="reel">
+                    <span>Reel</span>
+                    <b>+10</b>
+                    <span class="social-plus">+</span>
+                  </button>
+                </div>
+
+                <div id="socialScoreStatus" class="status compact-status hidden"></div>
+              </div>
             </div>
           </details>
         </div>

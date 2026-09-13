@@ -2146,6 +2146,23 @@ function refreshCompetitionPlacementNumbers(container) {
     rows.forEach(row => container.appendChild(row));
   }
 
+  if (container === socialCompetitionRanking) {
+    const rows = [...container.querySelectorAll(".competition-ranking-row")];
+
+    rows.sort((a, b) => {
+      const scoreA = Number(a.dataset.socialScore) || 0;
+      const scoreB = Number(b.dataset.socialScore) || 0;
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      const nameA = a.querySelector(".competition-participant-name")?.textContent || "";
+      const nameB = b.querySelector(".competition-participant-name")?.textContent || "";
+      return nameA.localeCompare(nameB);
+    });
+
+    rows.forEach(row => container.appendChild(row));
+  }
+
   [...container.querySelectorAll(".competition-ranking-row")].forEach((row, index) => {
     const place = row.querySelector(".competition-place");
     if (place) place.textContent = String(index + 1);
@@ -2293,7 +2310,31 @@ function buildCompetitionRow(participant, type, saved = {}) {
       total
     );
   } else {
-    row.append(drag, place, name);
+    row.draggable = false;
+
+    const hashtag = document.createElement("span");
+    hashtag.className = "social-count";
+    hashtag.textContent = String(saved.hashtag_count ?? 0);
+
+    const story = document.createElement("span");
+    story.className = "social-count";
+    story.textContent = String(saved.story_count ?? 0);
+
+    const post = document.createElement("span");
+    post.className = "social-count";
+    post.textContent = String(saved.post_count ?? 0);
+
+    const reel = document.createElement("span");
+    reel.className = "social-count";
+    reel.textContent = String(saved.reel_count ?? 0);
+
+    const score = document.createElement("strong");
+    score.className = "competition-total social-total";
+    score.textContent = String(saved.total_score ?? 0);
+
+    row.dataset.socialScore = String(saved.total_score ?? 0);
+
+    row.append(place, name, hashtag, story, post, reel, score);
   }
 
   return row;
@@ -2320,13 +2361,9 @@ async function loadCompetitionRanking(type, container) {
     data = result.data || [];
     error = result.error;
   } else {
-    const result = await client
-      .from("competition_results")
-      .select("participant_id,placement,pattern_score,accuracy_score,flare_score")
-      .eq("event_id", currentEventId)
-      .eq("competition_type", type)
-      .order("placement", { ascending: true });
-
+    const result = await client.rpc("admin_get_social_competition_v66", {
+      p_event_id: currentEventId
+    });
     data = result.data || [];
     error = result.error;
   }
@@ -2361,9 +2398,13 @@ async function loadCompetitionRanking(type, container) {
       return a.name.localeCompare(b.name);
     }
 
-    const pa = savedMap.get(a.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
-    const pb = savedMap.get(b.participant_id)?.placement ?? Number.MAX_SAFE_INTEGER;
-    if (pa !== pb) return pa - pb;
+    const aSaved = savedMap.get(a.participant_id) || {};
+    const bSaved = savedMap.get(b.participant_id) || {};
+
+    const aScore = Number(aSaved.total_score) || 0;
+    const bScore = Number(bSaved.total_score) || 0;
+
+    if (aScore !== bScore) return bScore - aScore;
     return a.name.localeCompare(b.name);
   });
 
@@ -2386,7 +2427,7 @@ async function loadCompetitionPlacements() {
 }
 
 // Landing Competition is ordered automatically by score.
-enableCompetitionDrag(socialCompetitionRanking, "social");
+// Social media ranking is also automatic by score.
 
 document.getElementById("refreshLandingCompetitionParticipants")?.addEventListener("click", () => {
   loadCompetitionRanking("landing", landingCompetitionRanking);

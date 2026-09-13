@@ -5139,3 +5139,213 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .landing-leaderboard th:nth-child(7),
   .landing-leaderboard td:nth-child(7) { width: 17% !important; }
 }
+
+
+/* ---------- V66 Social Media Competition ---------- */
+
+.social-score-head,
+.social-ranking-list .competition-ranking-row {
+  display: grid;
+  grid-template-columns: 30px minmax(95px,1fr) 44px 44px 44px 44px 58px;
+  gap: 5px;
+  align-items: center;
+}
+
+.social-score-head {
+  padding: 0 10px 6px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.social-ranking-list .competition-ranking-row {
+  cursor: default !important;
+}
+
+.social-count,
+.social-total {
+  text-align: center;
+}
+
+.social-total {
+  color: var(--accent);
+}
+
+.social-media-rules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.social-media-rules span {
+  padding: 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.social-leaderboard-wrap {
+  width: 100%;
+  overflow-x: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.social-leaderboard {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.social-leaderboard th,
+.social-leaderboard td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-leaderboard th {
+  color: var(--muted);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.social-leaderboard th:nth-child(2),
+.social-leaderboard td:nth-child(2) {
+  text-align: left;
+  width: 31%;
+}
+
+.social-leaderboard th:nth-child(1),
+.social-leaderboard td:nth-child(1) { width: 7%; }
+
+.social-leaderboard th:nth-child(3),
+.social-leaderboard td:nth-child(3),
+.social-leaderboard th:nth-child(4),
+.social-leaderboard td:nth-child(4),
+.social-leaderboard th:nth-child(5),
+.social-leaderboard td:nth-child(5),
+.social-leaderboard th:nth-child(6),
+.social-leaderboard td:nth-child(6) { width: 10%; }
+
+.social-leaderboard th:nth-child(7),
+.social-leaderboard td:nth-child(7) { width: 22%; }
+
+.social-leaderboard tr.is-me {
+  background: rgba(242,169,59,.08);
+}
+
+.social-leaderboard tr.is-me .social-participant-name,
+.social-total-score {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.social-my-score {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.social-score-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 6px;
+}
+
+.social-score-add {
+  min-width: 0;
+  padding: 8px 5px;
+  display: grid;
+  gap: 3px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.social-score-add > span:first-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.social-score-add b {
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.social-plus {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #111;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 600px) {
+  .social-score-head,
+  .social-ranking-list .competition-ranking-row {
+    grid-template-columns: 26px minmax(72px,1fr) 34px 34px 34px 34px 46px;
+    gap: 3px;
+  }
+
+  .social-score-head {
+    font-size: 8px;
+  }
+
+  .social-ranking-list .competition-participant-name,
+  .social-count,
+  .social-total {
+    font-size: 10px;
+  }
+
+  .social-media-rules {
+    gap: 4px;
+  }
+
+  .social-media-rules span {
+    padding: 6px 3px;
+    font-size: 9px;
+  }
+
+  .social-leaderboard th,
+  .social-leaderboard td {
+    padding: 7px 2px;
+    font-size: 10px;
+  }
+
+  .social-leaderboard th {
+    font-size: 7px;
+  }
+
+  .social-score-actions {
+    gap: 4px;
+  }
+
+  .social-score-add {
+    padding: 7px 3px;
+  }
+
+  .social-score-add > span:first-child {
+    font-size: 8px;
+  }
+}

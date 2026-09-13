@@ -643,6 +643,108 @@ document.querySelectorAll(
 document.getElementById("addMyLandingScoreButton")?.addEventListener("click", addMyLandingScore);
 
 
+
+function showSocialScoreStatus(message = "", isError = false) {
+  const status = document.getElementById("socialScoreStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("hidden", !message);
+  status.classList.toggle("error", isError);
+}
+
+async function loadSocialCompetitionLeaderboard() {
+  const body = document.getElementById("socialLeaderboardBody");
+  if (!body || !participantSessionToken) return;
+
+  try {
+    const { data, error } = await client.rpc("get_social_competition_leaderboard_by_token_v66", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    body.innerHTML = "";
+
+    if (!rows.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 7;
+      cell.className = "muted";
+      cell.textContent = "No participants yet.";
+      row.appendChild(cell);
+      body.appendChild(row);
+      return;
+    }
+
+    rows.forEach((entry, index) => {
+      const row = document.createElement("tr");
+      if (entry.participant_id === participantAccess?.participant_id) {
+        row.classList.add("is-me");
+      }
+
+      const values = [
+        index + 1,
+        entry.display_name || "Participant",
+        Number(entry.hashtag_count) || 0,
+        Number(entry.story_count) || 0,
+        Number(entry.post_count) || 0,
+        Number(entry.reel_count) || 0,
+        Number(entry.total_score) || 0
+      ];
+
+      values.forEach((value, cellIndex) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        if (cellIndex === 1) cell.classList.add("social-participant-name");
+        if (cellIndex === 6) cell.classList.add("social-total-score");
+        row.appendChild(cell);
+      });
+
+      body.appendChild(row);
+    });
+  } catch (error) {
+    console.warn("Could not load social media competition:", error);
+    showSocialScoreStatus(`Could not load scores: ${error.message}`, true);
+  }
+}
+
+async function addMySocialScore(action, button) {
+  if (!participantSessionToken || !action) return;
+
+  button.disabled = true;
+  showSocialScoreStatus("Adding…");
+
+  try {
+    const { data, error } = await client.rpc("add_participant_social_score_by_token_v66", {
+      p_event_id: eventId,
+      p_token: participantSessionToken,
+      p_action: action
+    });
+
+    if (error) throw error;
+    if (!data?.ok) throw new Error(data?.error || "Could not verify participant session.");
+
+    showSocialScoreStatus(`+${data.points_added} points`);
+    await loadSocialCompetitionLeaderboard();
+
+    setTimeout(() => {
+      const status = document.getElementById("socialScoreStatus");
+      if (status?.textContent?.startsWith("+")) showSocialScoreStatus("");
+    }, 1400);
+  } catch (error) {
+    showSocialScoreStatus(`Could not add score: ${error.message}`, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+document.querySelectorAll("[data-social-action]").forEach(button => {
+  button.addEventListener("click", () => addMySocialScore(button.dataset.socialAction, button));
+});
+
+
 function showLoggedInView(data) {
   participantAccess = data;
   loginScreen.classList.add("hidden");
@@ -658,6 +760,7 @@ function showLoggedInView(data) {
   loadParticipantLogbook();
   loadParticipantQuests();
   loadLandingCompetitionLeaderboard();
+  loadSocialCompetitionLeaderboard();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
