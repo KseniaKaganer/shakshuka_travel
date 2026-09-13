@@ -698,6 +698,42 @@ async function loadBeerFines() {
 }
 
 
+// Keep Beer Fine data in sync with admin updates.
+// Refresh periodically while the participant page is open,
+// and immediately when the user returns to the tab/window.
+let beerFineRefreshTimer = null;
+
+function startBeerFineAutoRefresh() {
+  if (beerFineRefreshTimer) clearInterval(beerFineRefreshTimer);
+
+  beerFineRefreshTimer = setInterval(() => {
+    if (!document.hidden && participantSessionToken) {
+      loadBeerFines();
+    }
+  }, 5000);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && participantSessionToken) {
+    loadBeerFines();
+  }
+});
+
+window.addEventListener("focus", () => {
+  if (participantSessionToken) {
+    loadBeerFines();
+  }
+});
+
+document.querySelector(".beer-fine-collapsible")?.addEventListener("toggle", event => {
+  if (event.currentTarget.open && participantSessionToken) {
+    loadBeerFines();
+  }
+});
+
+startBeerFineAutoRefresh();
+
+
 function showSocialScoreStatus(message = "", isError = false) {
   const status = document.getElementById("socialScoreStatus");
   if (!status) return;
