@@ -6087,3 +6087,107 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     max-height: 18px !important;
   }
 }
+
+
+/* ---------- V89 Admin header icons: always small and LEFT of title ---------- */
+#eventForm summary .admin-box-title,
+#eventForm .event-details-summary .admin-box-title,
+#eventForm .logbook-summary .admin-box-title,
+#eventForm .quests-summary .admin-box-title,
+#eventForm .participants-summary .admin-box-title {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 9px !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+#eventForm summary .admin-box-title > .admin-box-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: static !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  flex: 0 0 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 15px !important;
+  line-height: 18px !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+#eventForm summary .admin-box-title > h2,
+#eventForm summary .admin-box-title > .summary-title-with-count,
+#eventForm summary .admin-box-title > .summary-title-with-count h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  line-height: 1.2 !important;
+}
+
+#eventForm summary .admin-instagram-icon svg {
+  display: block !important;
+  position: static !important;
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  max-width: 17px !important;
+  max-height: 17px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* Prevent competition headings from inheriting the old oversized inner-card layout. */
+#eventLandingCompetitionSection > summary,
+#eventSocialCompetitionSection > summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+@media (max-width: 600px) {
+  #eventForm summary .admin-box-title {
+    gap: 8px !important;
+  }
+
+  #eventForm summary .admin-box-title > .admin-box-icon {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    min-height: 17px !important;
+    max-width: 17px !important;
+    max-height: 17px !important;
+    flex-basis: 17px !important;
+    font-size: 14px !important;
+    line-height: 17px !important;
+  }
+
+  #eventForm summary .admin-instagram-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+  }
+}
