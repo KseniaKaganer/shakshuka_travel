@@ -6278,3 +6278,58 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     min-height: 36px !important;
   }
 }
+
+
+/* ---------- V94 Logbook controls: guaranteed mobile fit ---------- */
+.logbook-day-adder {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 34px 34px !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.logbook-day-adder .logbook-add-day-field {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.logbook-day-adder .logbook-add-day-field select,
+.logbook-day-adder select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.logbook-day-adder #addLogbookDayButton,
+.logbook-day-adder #exportLogbookButton {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: none !important;
+}
+
+@media (max-width: 480px) {
+  .logbook-day-adder {
+    grid-template-columns: minmax(0, 1fr) 32px 32px !important;
+    gap: 5px !important;
+  }
+
+  .logbook-day-adder #addLogbookDayButton,
+  .logbook-day-adder #exportLogbookButton {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    font-size: 16px !important;
+  }
+}
