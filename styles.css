@@ -6817,3 +6817,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     gap: 6px !important;
   }
 }
+
+
+/* ---------- V103 Canopy Training: no CT1/CT2 arrow buttons ---------- */
+.canopy-course-summary .collapse-chevron {
+  display: none !important;
+}
+
+.canopy-course-summary {
+  padding-right: 14px !important;
+}

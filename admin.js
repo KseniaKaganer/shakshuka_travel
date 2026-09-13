@@ -2063,13 +2063,18 @@ function renderCanopyAssignments() {
         .map(item => item.participant_id)
     );
 
-    // Dropdown contains only participants not already assigned to this course.
+    const assignedAnywhere = new Set(
+      canopyTrainingAssignments.map(item => item.participant_id)
+    );
+
+    // A participant can be assigned to only one course, so hide anyone
+    // already assigned to CT1 or CT2 from both dropdowns.
     if (ui.participantSelect) {
       const previous = ui.participantSelect.value;
       ui.participantSelect.innerHTML = '<option value="">Select participant</option>';
 
       participants
-        .filter(person => !assignedIds.has(person.participant_id))
+        .filter(person => !assignedAnywhere.has(person.participant_id))
         .forEach(person => {
           const option = document.createElement("option");
           option.value = person.participant_id;
@@ -2254,14 +2259,16 @@ function addCanopyParticipant(level) {
     return;
   }
 
-  if (!canopyTrainingAssignments.some(item =>
-    item.course_level === level && item.participant_id === participantId
-  )) {
-    canopyTrainingAssignments.push({
-      course_level: level,
-      participant_id: participantId
-    });
-  }
+  // A participant may belong to only ONE Canopy Training course.
+  // Assigning them to CT1 removes them from CT2, and vice versa.
+  canopyTrainingAssignments = canopyTrainingAssignments.filter(item =>
+    item.participant_id !== participantId
+  );
+
+  canopyTrainingAssignments.push({
+    course_level: level,
+    participant_id: participantId
+  });
 
   renderCanopyAssignments();
   saveAdminCanopyTraining("Course assignments saved.");
