@@ -5790,3 +5790,121 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     font-size: 16px;
   }
 }
+
+
+/* ---------- V85 Event competition cards: same design as other top-level boxes ---------- */
+#event .landing-competition-item,
+#event .social-media-competition-item {
+  margin-top: 18px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+#event .landing-competition-item > summary,
+#event .social-media-competition-item > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 18px 20px;
+  border: 0 !important;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+#event .landing-competition-item > summary::-webkit-details-marker,
+#event .social-media-competition-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+#event .landing-competition-item[open] > summary,
+#event .social-media-competition-item[open] > summary {
+  border-bottom: 1px solid var(--line) !important;
+}
+
+#event .landing-competition-item .participant-collapse-content,
+#event .social-media-competition-item .participant-collapse-content {
+  padding: 18px 20px 20px;
+  border-top: 0;
+}
+
+.competition-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.competition-summary-title > strong {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.competition-header-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.social-instagram-icon {
+  color: var(--accent);
+}
+
+.social-instagram-icon svg {
+  display: block;
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+@media (max-width: 600px) {
+  #event .landing-competition-item > summary,
+  #event .social-media-competition-item > summary {
+    min-height: 64px;
+    padding: 18px 20px;
+  }
+
+  .competition-summary-title > strong {
+    font-size: 18px;
+  }
+}
+
+/* Beer Fine participant action button must remain visible in its own row. */
+#event .beer-fine-event-row .beer-fine-mark-paid {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-width: 92px;
+  min-height: 34px;
+  padding: 7px 10px !important;
+  border: 1px solid rgba(242,169,59,.55) !important;
+  border-radius: 9px !important;
+  background: rgba(242,169,59,.12) !important;
+  color: var(--accent) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  line-height: 1.1;
+  white-space: nowrap;
+}

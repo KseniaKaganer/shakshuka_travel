@@ -609,6 +609,7 @@ async function loadBeerFines(force = false) {
       ) || 0;
 
       const sameParticipant =
+        item.is_me === true ||
         (Boolean(myParticipantId) &&
           String(item.participant_id || "") === String(myParticipantId)) ||
         (!myParticipantId &&
@@ -644,8 +645,10 @@ async function loadBeerFines(force = false) {
 
       row.append(name,ratio);
 
-      const isMine = Boolean(myParticipantId) &&
-        String(item.participant_id || "") === String(myParticipantId);
+      const isMine = item.is_me === true || (
+        Boolean(myParticipantId) &&
+        String(item.participant_id || "") === String(myParticipantId)
+      );
 
       const isMyFine = isMine || (
         !myParticipantId &&
