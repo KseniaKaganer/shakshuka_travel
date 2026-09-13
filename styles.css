@@ -5977,3 +5977,113 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   color: #ff6464 !important;
   font-weight: 800;
 }
+
+
+/* ---------- V88 Admin top-level competition cards + header icons ---------- */
+.admin-box-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-box-title h2 {
+  margin: 0 !important;
+  line-height: 1.2;
+}
+
+.admin-box-icon {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  display: inline-grid;
+  place-items: center;
+  align-self: center;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.admin-instagram-icon {
+  color: var(--accent);
+}
+
+.admin-instagram-icon svg {
+  display: block;
+  width: 19px !important;
+  height: 19px !important;
+  min-width: 19px !important;
+  min-height: 19px !important;
+  max-width: 19px !important;
+  max-height: 19px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.admin-competition-top-level {
+  margin-top: 0;
+}
+
+.admin-competition-top-level > .quests-summary {
+  min-height: 70px;
+  padding: 20px !important;
+}
+
+.admin-competition-top-level > .quests-content {
+  padding: 0 20px 20px !important;
+  border-top: 1px solid var(--line);
+}
+
+.admin-competition-top-level .competition-admin-body {
+  padding-top: 16px !important;
+}
+
+/* The competition boxes now stand alone, exactly like Quests and Beer Fine. */
+#eventLandingCompetitionSection,
+#eventSocialCompetitionSection {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* Keep icons centered beside text on both admin and participant pages. */
+.admin-box-title,
+.event-summary-title,
+.competition-summary-title {
+  align-items: center !important;
+}
+
+.admin-box-icon,
+.event-header-icon,
+.competition-header-icon {
+  align-self: center !important;
+  margin-top: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .admin-box-title {
+    gap: 9px;
+  }
+
+  .admin-box-icon {
+    width: 18px;
+    height: 18px;
+    flex-basis: 18px;
+    font-size: 15px;
+  }
+
+  .admin-instagram-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+  }
+}

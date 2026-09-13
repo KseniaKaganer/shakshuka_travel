@@ -73,7 +73,8 @@
       <form id="eventForm" class="editor-grid editor-grid-v13" onsubmit="return false;">
 <div class="editor-left-column"><details class="panel form-panel editor-main event-details-collapsible">
           <summary class="event-details-summary">
-            <div>
+            <div class="admin-box-title">
+              <span class="admin-box-icon" aria-hidden="true">ℹ️</span>
               <h2>Event details</h2>
             </div>
             <span class="collapse-chevron" aria-hidden="true">⌄</span>
@@ -260,7 +261,8 @@
           </div>
         </details><details id="eventLogbookSection" class="admin-event-logbook hidden">
 <summary class="logbook-summary">
-  <div>
+  <div class="admin-box-title">
+    <span class="admin-box-icon" aria-hidden="true">📖</span>
     <h2>Logbook</h2>
   </div>
   <div class="summary-right-actions">
@@ -284,7 +286,8 @@
 
 <details id="eventQuestsSection" class="admin-event-quests">
   <summary class="quests-summary">
-    <div>
+    <div class="admin-box-title">
+      <span class="admin-box-icon" aria-hidden="true">🧩</span>
       <h2>SHAKSHUKA Quests</h2>
     </div>
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
@@ -299,7 +302,10 @@
 
 <details id="eventBeerFineSection" class="admin-event-quests">
   <summary class="quests-summary beer-fine-summary">
-    <div class="summary-title-with-count"><h2>Beer Fine</h2></div>
+    <div class="admin-box-title">
+      <span class="admin-box-icon" aria-hidden="true">🍺</span>
+      <div class="summary-title-with-count"><h2>Beer Fine</h2></div>
+    </div>
     <span class="collapse-chevron" aria-hidden="true">⌄</span>
   </summary>
   <div class="quests-content beer-fine-admin-content">
@@ -321,21 +327,15 @@
   </div>
 </details>
 
-<details id="eventCompetitionsSection" class="admin-event-quests">
-  <summary class="quests-summary">
-    <div>
-      <h2>Competitions</h2>
-    </div>
-    <span class="collapse-chevron" aria-hidden="true">⌄</span>
-  </summary>
-
-  <div class="quests-content competition-admin-list">
-    <details class="competition-admin-item">
-      <summary>
-        <strong>Landing Competition</strong>
+<details id="eventLandingCompetitionSection" class="admin-event-quests admin-competition-top-level">
+      <summary class="quests-summary">
+        <div class="admin-box-title">
+          <span class="admin-box-icon" aria-hidden="true">🎯</span>
+          <h2>Landing Competition</h2>
+        </div>
         <span class="collapse-chevron" aria-hidden="true">⌄</span>
       </summary>
-      <div class="competition-admin-body">
+      <div class="quests-content competition-admin-body">
         <label class="field">
           <span>Competition information</span>
           <textarea id="landingCompetitionInfoInput" rows="4" placeholder="Rules, scoring, prizes, meeting point…"></textarea>
@@ -398,12 +398,21 @@
       </div>
     </details>
 
-    <details class="competition-admin-item">
-      <summary>
-        <strong>Social Media Competition</strong>
+<details id="eventSocialCompetitionSection" class="admin-event-quests admin-competition-top-level">
+      <summary class="quests-summary">
+        <div class="admin-box-title">
+          <span class="admin-box-icon admin-instagram-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5"></rect>
+            <circle cx="12" cy="12" r="4"></circle>
+            <circle cx="17.5" cy="6.5" r="1"></circle>
+          </svg>
+        </span>
+          <h2>Social Media Competition</h2>
+        </div>
         <span class="collapse-chevron" aria-hidden="true">⌄</span>
       </summary>
-      <div class="competition-admin-body">
+      <div class="quests-content competition-admin-body">
         <label class="field">
           <span>Competition information</span>
           <textarea id="socialMediaCompetitionInfoInput" rows="4" placeholder="Rules, hashtags, prizes, deadline…"></textarea>
@@ -434,14 +443,13 @@
         </div>
       </div>
     </details>
-  </div>
-</details>
 </div>
 
 <details class="panel form-panel editor-side participants-collapsible">
 <summary class="participants-summary">
   <div class="summary-title-row">
-    <div>
+    <div class="admin-box-title">
+      <span class="admin-box-icon" aria-hidden="true">👥</span>
       <div class="summary-title-with-count">
         <h2>Participants</h2>
         <span id="participantCount" class="count-pill">0</span>
