@@ -341,6 +341,41 @@
           <textarea id="landingCompetitionInfoInput" rows="4" placeholder="Rules, scoring, prizes, meeting point…"></textarea>
         </label>
 
+        <div class="admin-landing-score-entry">
+          <div class="landing-my-score-head">
+            <strong>Add score</strong>
+            <span class="muted small-text">Select a participant and add one jump score.</span>
+          </div>
+
+          <label class="field admin-landing-participant-field">
+            <span>Participant</span>
+            <select id="adminLandingScoreParticipant">
+              <option value="">Select participant</option>
+            </select>
+          </label>
+
+          <div class="landing-score-entry">
+            <label>
+              <span>Pattern</span>
+              <input id="adminLandingPatternScore" type="number" min="0" max="10" step="0.1" value="0" />
+            </label>
+
+            <label>
+              <span>Accuracy</span>
+              <input id="adminLandingAccuracyScore" type="number" min="0" max="10" step="0.1" value="0" />
+            </label>
+
+            <label>
+              <span>Flare</span>
+              <input id="adminLandingFlareScore" type="number" min="0" max="10" step="0.1" value="0" />
+            </label>
+
+            <button id="adminAddLandingScoreButton" class="primary-button landing-add-score-button" type="button" title="Add score" aria-label="Add score">+</button>
+          </div>
+
+          <div id="adminLandingScoreStatus" class="status compact-status hidden"></div>
+        </div>
+
         <div class="competition-ranking-block">
           <div class="competition-ranking-head">
             <div>
@@ -365,7 +400,7 @@
 
     <details class="competition-admin-item">
       <summary>
-        <strong>Social media competition</strong>
+        <strong>Social Media Competition</strong>
         <span class="collapse-chevron" aria-hidden="true">⌄</span>
       </summary>
       <div class="competition-admin-body">

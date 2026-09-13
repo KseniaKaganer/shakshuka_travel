@@ -2242,6 +2242,38 @@ addBeerFineButton?.addEventListener("click",async()=>{
 const landingCompetitionRanking = document.getElementById("landingCompetitionRanking");
 const socialCompetitionRanking = document.getElementById("socialCompetitionRanking");
 
+const adminLandingScoreParticipant = document.getElementById("adminLandingScoreParticipant");
+const adminLandingPatternScore = document.getElementById("adminLandingPatternScore");
+const adminLandingAccuracyScore = document.getElementById("adminLandingAccuracyScore");
+const adminLandingFlareScore = document.getElementById("adminLandingFlareScore");
+const adminAddLandingScoreButton = document.getElementById("adminAddLandingScoreButton");
+const adminLandingScoreStatus = document.getElementById("adminLandingScoreStatus");
+
+function setAdminLandingScoreStatus(message = "", isError = false) {
+  if (!adminLandingScoreStatus) return;
+  adminLandingScoreStatus.textContent = message;
+  adminLandingScoreStatus.classList.toggle("hidden", !message);
+  adminLandingScoreStatus.classList.toggle("error", isError);
+}
+
+function refreshAdminLandingParticipantSelect(participants = currentCompetitionParticipants()) {
+  if (!adminLandingScoreParticipant) return;
+
+  const previous = adminLandingScoreParticipant.value;
+  adminLandingScoreParticipant.innerHTML = '<option value="">Select participant</option>';
+
+  participants.forEach(participant => {
+    const option = document.createElement("option");
+    option.value = participant.participant_id;
+    option.textContent = participant.name;
+    adminLandingScoreParticipant.appendChild(option);
+  });
+
+  if (participants.some(item => item.participant_id === previous)) {
+    adminLandingScoreParticipant.value = previous;
+  }
+}
+
 function currentCompetitionParticipants() {
   return [...participantsList.querySelectorAll(".participant-row")]
     .map(row => ({
@@ -2491,6 +2523,10 @@ async function loadCompetitionRanking(type, container) {
 
   const participants = currentCompetitionParticipants();
 
+  if (type === "landing") {
+    refreshAdminLandingParticipantSelect(participants);
+  }
+
   if (!participants.length || !currentEventId) {
     container.innerHTML = '<p class="muted small-text">No participants yet.</p>';
     return;
@@ -2573,6 +2609,87 @@ async function loadCompetitionPlacements() {
 
 // Landing Competition is ordered automatically by score.
 // Social media ranking is also automatic by score.
+
+[adminLandingPatternScore, adminLandingAccuracyScore, adminLandingFlareScore]
+  .filter(Boolean)
+  .forEach(input => {
+    input.addEventListener("focus", () => {
+      if (Number(input.value) === 0) {
+        requestAnimationFrame(() => input.select());
+      }
+    });
+  });
+
+adminAddLandingScoreButton?.addEventListener("click", async () => {
+  const participantId = adminLandingScoreParticipant?.value || "";
+  if (!participantId) {
+    setAdminLandingScoreStatus("Select a participant.", true);
+    return;
+  }
+
+  const pattern = Number(adminLandingPatternScore?.value ?? 0);
+  const accuracy = Number(adminLandingAccuracyScore?.value ?? 0);
+  const flare = Number(adminLandingFlareScore?.value ?? 0);
+
+  const values = [
+    ["Pattern", pattern],
+    ["Accuracy", accuracy],
+    ["Flare", flare]
+  ];
+
+  const invalid = values.find(([, value]) =>
+    !Number.isFinite(value) || value < 0 || value > 10
+  );
+
+  if (invalid) {
+    setAdminLandingScoreStatus(`${invalid[0]} must be between 0 and 10.`, true);
+    return;
+  }
+
+  if (pattern === 0 && accuracy === 0 && flare === 0) {
+    setAdminLandingScoreStatus("Enter at least one score above 0.", true);
+    return;
+  }
+
+  const row = [...landingCompetitionRanking.querySelectorAll(".competition-ranking-row")]
+    .find(item => item.dataset.participantId === participantId);
+
+  if (!row) {
+    setAdminLandingScoreStatus("Participant was not found in the competition list.", true);
+    return;
+  }
+
+  adminAddLandingScoreButton.disabled = true;
+  setAdminLandingScoreStatus("Adding score…");
+
+  try {
+    const patternInput = row.querySelector(".competition-pattern");
+    const accuracyInput = row.querySelector(".competition-accuracy");
+    const flareInput = row.querySelector(".competition-flare");
+
+    if (patternInput) patternInput.value = String((Number(patternInput.value) || 0) + pattern);
+    if (accuracyInput) accuracyInput.value = String((Number(accuracyInput.value) || 0) + accuracy);
+    if (flareInput) flareInput.value = String((Number(flareInput.value) || 0) + flare);
+
+    refreshCompetitionPlacementNumbers(landingCompetitionRanking);
+    await saveCompetitionRanking("landing", landingCompetitionRanking);
+
+    if (adminLandingPatternScore) adminLandingPatternScore.value = "0";
+    if (adminLandingAccuracyScore) adminLandingAccuracyScore.value = "0";
+    if (adminLandingFlareScore) adminLandingFlareScore.value = "0";
+
+    setAdminLandingScoreStatus("Score added.");
+    setTimeout(() => {
+      if (adminLandingScoreStatus?.textContent === "Score added.") {
+        setAdminLandingScoreStatus("");
+      }
+    }, 1800);
+  } catch (error) {
+    setAdminLandingScoreStatus(`Could not add score: ${error.message}`, true);
+  } finally {
+    adminAddLandingScoreButton.disabled = false;
+  }
+});
 
 document.getElementById("refreshLandingCompetitionParticipants")?.addEventListener("click", () => {
   loadCompetitionRanking("landing", landingCompetitionRanking);

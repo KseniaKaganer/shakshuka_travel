@@ -5690,3 +5690,27 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     text-align: center;
   }
 }
+
+
+/* ---------- V83 Admin Landing score entry ---------- */
+.admin-landing-score-entry {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.admin-landing-participant-field {
+  margin: 0;
+}
+
+.admin-landing-participant-field select {
+  width: 100%;
+}
+
+.admin-landing-score-entry .landing-score-entry {
+  margin-top: 0;
+}
