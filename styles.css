@@ -5954,3 +5954,26 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 #beerFineUnpaidAlert.beer-fine-unpaid-alert.hidden {
   display: none !important;
 }
+
+
+/* ---------- V87 Header icon alignment + own Beer Fine summary ---------- */
+/* Keep every icon directly LEFT of the complete header text block. */
+.event-summary-title,
+.competition-summary-title {
+  align-items: center !important;
+}
+
+.event-header-icon,
+.competition-header-icon {
+  align-self: center !important;
+  margin-top: 0 !important;
+}
+
+.beer-fine-my-summary {
+  margin-top: 3px !important;
+}
+
+.beer-fine-my-summary.has-unpaid {
+  color: #ff6464 !important;
+  font-weight: 800;
+}

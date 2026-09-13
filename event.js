@@ -624,6 +624,9 @@ async function loadBeerFines(force = false) {
       unpaidAlert.classList.toggle("hidden", !hasMyUnpaidFine);
     }
 
+    let myPaidFines = 0;
+    let myTotalFines = 0;
+
     rows.forEach(item=>{
       const list=beerFineEventLists[item.fine_type];
       if(!list) return;
@@ -655,6 +658,11 @@ async function loadBeerFines(force = false) {
         String(item.display_name || "").trim().toLowerCase() ===
         String(participantAccess?.display_name || "").trim().toLowerCase()
       );
+
+      if (isMyFine) {
+        myPaidFines += paidCount;
+        myTotalFines += totalCount;
+      }
 
       if (isMyFine && totalCount > 0 && paidCount < totalCount) {
         row.classList.add("is-my-beer-fine");
@@ -693,6 +701,12 @@ async function loadBeerFines(force = false) {
 
       list.appendChild(row);
     });
+    const myFineSummary = document.getElementById("participantBeerFineSummary");
+    if (myFineSummary) {
+      myFineSummary.textContent = `Your fines: ${myPaidFines} / ${myTotalFines} paid`;
+      myFineSummary.classList.toggle("has-unpaid", myPaidFines < myTotalFines);
+    }
+
     Object.values(beerFineEventLists).forEach(list=>{
       if(list && !list.children.length){
         const empty=document.createElement("div");
