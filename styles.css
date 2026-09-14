@@ -7992,3 +7992,150 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     justify-content: flex-end !important;
   }
 }
+
+
+/* ---------- V116 Schedule edit: 2 rows + taller time controls ---------- */
+
+/* Edit container: two rows. */
+.schedule-day-item-display.is-editing {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto !important;
+  gap: 9px 10px !important;
+  align-items: center !important;
+}
+
+/* The left wrapper participates directly in the parent grid. */
+.schedule-edit-left {
+  display: contents !important;
+}
+
+/* Row 1: From + Until only. */
+.schedule-edit-time-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+.schedule-edit-time-row:first-of-type {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+}
+
+.schedule-edit-time-row:nth-of-type(2) {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin-left: 225px !important;
+  justify-self: start !important;
+}
+
+/* Taller boxes so 09 / 00 are fully visible. */
+.schedule-edit-time-row .schedule-time-selects {
+  width: 172px !important;
+  height: 50px !important;
+  grid-template-columns: 80px auto 80px !important;
+  align-items: center !important;
+}
+
+.schedule-edit-time-row .schedule-time-selects select {
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 48px !important;
+  box-sizing: border-box !important;
+}
+
+/* Row 2: Activity + scope + buttons. */
+.schedule-edit-left .schedule-day-item-title {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 44px !important;
+}
+
+.schedule-edit-left .schedule-item-scope-badge {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: start !important;
+  margin-right: 230px !important;
+}
+
+.schedule-edit-buttons-v113 {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+.schedule-edit-buttons-v113 > button {
+  min-height: 44px !important;
+}
+
+/* Keep the time row together on mobile, then allow row 2 to use the full width. */
+@media (max-width: 760px) {
+  .schedule-day-item-display.is-editing {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+  }
+
+  .schedule-edit-time-row:first-of-type {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .schedule-edit-time-row:nth-of-type(2) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin-left: 215px !important;
+  }
+
+  .schedule-edit-left .schedule-day-item-title {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+
+  .schedule-edit-left .schedule-item-scope-badge {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    justify-self: start !important;
+    margin: 0 !important;
+  }
+
+  .schedule-edit-buttons-v113 {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    justify-self: end !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-edit-time-row .schedule-time-selects {
+    width: 154px !important;
+    grid-template-columns: 71px auto 71px !important;
+  }
+
+  .schedule-edit-time-row .schedule-time-selects select {
+    width: 71px !important;
+    min-width: 71px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  .schedule-edit-time-row:nth-of-type(2) {
+    margin-left: 194px !important;
+  }
+
+  .schedule-time-range-label {
+    font-size: 10px !important;
+  }
+}
