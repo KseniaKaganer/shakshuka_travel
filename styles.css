@@ -8858,3 +8858,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding-right: 40px;
   }
 }
+
+
+/* ---------- V126 Admin Rooms dropdown height ---------- */
+.admin-room-flat-select {
+  height: 48px !important;
+  min-height: 48px !important;
+  line-height: 46px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
