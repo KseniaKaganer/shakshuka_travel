@@ -7647,3 +7647,83 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding-right: 6px !important;
   }
 }
+
+
+/* ---------- V111 Schedule day title inline with date ---------- */
+.schedule-day-summary {
+  gap: 10px !important;
+}
+
+.schedule-day-summary-inline {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-day-date-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.schedule-day-title-inline-input {
+  flex: 1 1 220px;
+  min-width: 120px;
+  max-width: 360px;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  border-radius: 9px !important;
+}
+
+.schedule-day-summary > .count-pill {
+  flex: 0 0 auto;
+}
+
+/* The old separate Day title field is no longer used. */
+.schedule-day-title-field {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  .schedule-day-summary-inline {
+    gap: 7px;
+  }
+
+  .schedule-day-date-label {
+    font-size: 13px;
+  }
+
+  .schedule-day-title-inline-input {
+    min-width: 90px;
+    max-width: none;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 5px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .schedule-day-summary {
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
+  .schedule-day-summary-inline {
+    gap: 5px;
+  }
+
+  .schedule-day-date-label {
+    font-size: 12px;
+  }
+
+  .schedule-day-title-inline-input {
+    min-width: 72px;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+}

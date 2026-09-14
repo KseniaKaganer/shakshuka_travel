@@ -2520,17 +2520,40 @@ function renderAdminSchedule() {
     summary.className = "schedule-day-summary";
 
     const summaryLeft = document.createElement("div");
-    summaryLeft.className = "schedule-day-summary-text";
+    summaryLeft.className = "schedule-day-summary-inline";
 
     const dayLabel = document.createElement("strong");
+    dayLabel.className = "schedule-day-date-label";
     dayLabel.textContent = formatScheduleAdminDate(dayDate, index);
 
-    const storedTitle = adminScheduleData.days.find(item => item.day_date === dayDate)?.title || "";
-    const titlePreview = document.createElement("span");
-    titlePreview.className = "muted small-text";
-    titlePreview.textContent = storedTitle || "No day title";
+    let savedTitle = adminScheduleData.days.find(item => item.day_date === dayDate)?.title || "";
 
-    summaryLeft.append(dayLabel, titlePreview);
+    const dayTitleInput = document.createElement("input");
+    dayTitleInput.type = "text";
+    dayTitleInput.className = "schedule-day-title-inline-input";
+    dayTitleInput.maxLength = 80;
+    dayTitleInput.placeholder = "Day title";
+    dayTitleInput.value = savedTitle;
+    dayTitleInput.setAttribute("aria-label", `Title for ${formatScheduleAdminDate(dayDate, index)}`);
+
+    // The title lives inside the collapsible summary, so editing it should not
+    // open/close the day card.
+    ["click", "pointerdown", "mousedown", "touchstart"].forEach(eventName => {
+      dayTitleInput.addEventListener(eventName, event => event.stopPropagation());
+    });
+    dayTitleInput.addEventListener("keydown", event => event.stopPropagation());
+
+    const saveInlineDayTitle = async () => {
+      const nextTitle = dayTitleInput.value.trim();
+      if (nextTitle === savedTitle) return;
+      await saveScheduleDayTitle(dayDate, nextTitle);
+      savedTitle = nextTitle;
+    };
+
+    dayTitleInput.addEventListener("change", saveInlineDayTitle);
+    dayTitleInput.addEventListener("blur", saveInlineDayTitle);
+
+    summaryLeft.append(dayLabel, dayTitleInput);
 
     const count = document.createElement("span");
     count.className = "count-pill";
@@ -2540,27 +2563,6 @@ function renderAdminSchedule() {
 
     const body = document.createElement("div");
     body.className = "schedule-day-body";
-
-    const dayTitleField = document.createElement("label");
-    dayTitleField.className = "field schedule-day-title-field";
-    dayTitleField.innerHTML = "<span>Day title</span>";
-
-    const dayTitleInput = document.createElement("input");
-    dayTitleInput.type = "text";
-    dayTitleInput.maxLength = 80;
-    dayTitleInput.placeholder = "Travel day / Jump day / Free day…";
-    dayTitleInput.value = storedTitle;
-    dayTitleInput.addEventListener("change", async () => {
-      await saveScheduleDayTitle(dayDate, dayTitleInput.value);
-      titlePreview.textContent = dayTitleInput.value.trim() || "No day title";
-    });
-    dayTitleInput.addEventListener("blur", async () => {
-      if (dayTitleInput.value.trim() !== storedTitle) {
-        await saveScheduleDayTitle(dayDate, dayTitleInput.value);
-        titlePreview.textContent = dayTitleInput.value.trim() || "No day title";
-      }
-    });
-    dayTitleField.appendChild(dayTitleInput);
 
     const items = document.createElement("div");
     items.className = "schedule-day-items";
@@ -2575,7 +2577,7 @@ function renderAdminSchedule() {
     addLabel.className = "schedule-add-label";
     addLabel.textContent = "Add schedule item";
 
-    body.append(dayTitleField, items, addLabel, buildNewScheduleItemRow(dayDate));
+    body.append(items, addLabel, buildNewScheduleItemRow(dayDate));
     day.append(summary, body);
     adminScheduleDays.appendChild(day);
   });
