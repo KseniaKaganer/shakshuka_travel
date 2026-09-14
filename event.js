@@ -493,6 +493,143 @@ async function loadParticipantQuests() {
 
 
 
+
+async function loadParticipantRoom() {
+  const content = document.getElementById("participantRoomContent");
+  const status = document.getElementById("participantRoomsStatus");
+  if (!content || !status || !participantSessionToken) return;
+
+  status.textContent = "Loading room…";
+  status.classList.remove("hidden", "error");
+  content.innerHTML = "";
+
+  try {
+    const { data, error } = await client.rpc("get_own_room_by_token_v117", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+    if (error) throw error;
+
+    status.classList.add("hidden");
+
+    if (!data?.assigned) {
+      content.innerHTML = '<p class="muted">You are not assigned to a room yet.</p>';
+      return;
+    }
+
+    const card = document.createElement("div");
+    card.className = "participant-room-card";
+
+    const head = document.createElement("div");
+    head.className = "participant-room-head";
+
+    const title = document.createElement("strong");
+    title.textContent = data.is_hotel
+      ? (data.room_number ? `Room ${data.room_number}` : "Hotel room")
+      : `Room ${data.room_index}`;
+
+    head.appendChild(title);
+
+    if (data.is_hotel) {
+      const numberWrap = document.createElement("label");
+      numberWrap.className = "participant-room-number-field";
+
+      const label = document.createElement("span");
+      label.textContent = "Room number";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.inputMode = "numeric";
+      input.maxLength = 3;
+      input.pattern = "\\d{3}";
+      input.placeholder = "000";
+      input.value = data.room_number || "";
+      input.setAttribute("aria-label", "Hotel room number");
+
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "secondary-button compact-button";
+      save.textContent = "Save";
+
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/\D/g, "").slice(0,3);
+      });
+
+      save.addEventListener("click", async () => {
+        const value = input.value.trim();
+        if (value && !/^\d{3}$/.test(value)) {
+          status.textContent = "Room number must be exactly 3 digits.";
+          status.classList.remove("hidden");
+          status.classList.add("error");
+          return;
+        }
+
+        save.disabled = true;
+        try {
+          const { data: result, error: updateError } = await client.rpc(
+            "set_own_room_number_by_token_v117",
+            {
+              p_event_id: eventId,
+              p_token: participantSessionToken,
+              p_room_number: value || null
+            }
+          );
+          if (updateError) throw updateError;
+          if (result?.ok === false) throw new Error(result?.error || "Could not save room number.");
+
+          status.textContent = "Room number saved.";
+          status.classList.remove("hidden", "error");
+          setTimeout(() => status.classList.add("hidden"), 1200);
+          await loadParticipantRoom();
+        } catch (updateError) {
+          status.textContent = `Could not save room number: ${updateError.message}`;
+          status.classList.remove("hidden");
+          status.classList.add("error");
+        } finally {
+          save.disabled = false;
+        }
+      });
+
+      numberWrap.append(label, input, save);
+      head.appendChild(numberWrap);
+    }
+
+    const roommates = document.createElement("div");
+    roommates.className = "participant-roommates";
+
+    const roommatesTitle = document.createElement("strong");
+    roommatesTitle.textContent = "Roommates";
+    roommates.appendChild(roommatesTitle);
+
+    const names = Array.isArray(data.participants) ? data.participants : [];
+    if (!names.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No participants assigned.";
+      roommates.appendChild(empty);
+    } else {
+      names.forEach(person => {
+        const row = document.createElement("div");
+        row.className = "participant-roommate";
+        row.textContent = person.display_name || "Participant";
+        if (person.participant_id === participantAccess?.participant_id) {
+          row.classList.add("is-me");
+          row.textContent += " · You";
+        }
+        roommates.appendChild(row);
+      });
+    }
+
+    card.append(head, roommates);
+    content.appendChild(card);
+  } catch (error) {
+    status.textContent = `Could not load room: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+  }
+}
+
+
 async function loadParticipantSchedule() {
   const list = document.getElementById("participantScheduleList");
   const status = document.getElementById("participantScheduleStatus");
@@ -1075,6 +1212,7 @@ function showLoggedInView(data) {
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
   loadParticipantSchedule();
+  loadParticipantRoom();
   loadParticipantQuests();
   loadParticipantCanopyTraining();
   loadLandingCompetitionLeaderboard();

@@ -1566,6 +1566,7 @@ document.getElementById("descriptionInput").value = event.description || "";
   await Promise.all([
     loadEventLogbook(),
     loadAdminSchedule(),
+    loadAdminRooms(),
     loadAdminCanopyTraining(),
     loadAdminQuests(),
     loadCompetitionPlacements(),
@@ -1995,6 +1996,289 @@ function exportParticipantsToSpreadsheet() {
 exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsheet);
 
 
+
+
+
+// ---------------- Rooms ----------------
+const adminRoomsStatus = document.getElementById("adminRoomsStatus");
+const adminRoomsHint = document.getElementById("adminRoomsHint");
+const adminRoomsList = document.getElementById("adminRoomsList");
+const addRoomButton = document.getElementById("addRoomButton");
+
+let adminRoomsData = {
+  is_hotel: false,
+  rooms: []
+};
+
+function setAdminRoomsStatus(message = "", isError = false) {
+  if (!adminRoomsStatus) return;
+  adminRoomsStatus.textContent = message;
+  adminRoomsStatus.classList.toggle("hidden", !message);
+  adminRoomsStatus.classList.toggle("error", isError);
+}
+
+function currentRoomParticipants() {
+  const unique = new Map();
+
+  [...participantsList.querySelectorAll(".participant-row")]
+    .map(row => ({
+      participant_id: row.querySelector(".participant-id")?.value || "",
+      name: row.querySelector(".participant-name")?.value.trim() || "Participant"
+    }))
+    .filter(item => item.participant_id)
+    .forEach(item => {
+      if (!unique.has(item.participant_id)) unique.set(item.participant_id, item);
+    });
+
+  return [...unique.values()].sort((a,b) => a.name.localeCompare(b.name));
+}
+
+function assignedRoomParticipantIds() {
+  return new Set(
+    (adminRoomsData.rooms || []).flatMap(room =>
+      (room.participants || []).map(person => person.participant_id)
+    )
+  );
+}
+
+async function saveAdminRoomNumber(room, value) {
+  if (!currentEventId || !room?.id) return;
+
+  const clean = String(value || "").trim();
+  if (adminRoomsData.is_hotel && clean && !/^\d{3}$/.test(clean)) {
+    setAdminRoomsStatus("Hotel room number must be exactly 3 digits.", true);
+    return false;
+  }
+
+  try {
+    const { data, error } = await client.rpc("admin_set_room_number_v117", {
+      p_event_id: currentEventId,
+      p_room_id: room.id,
+      p_room_number: clean || null
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not save room number.");
+    room.room_number = clean || null;
+    setAdminRoomsStatus("Room saved.");
+    setTimeout(() => setAdminRoomsStatus(""), 900);
+    return true;
+  } catch (error) {
+    setAdminRoomsStatus(`Could not save room: ${error.message}`, true);
+    return false;
+  }
+}
+
+async function addAdminRoom() {
+  if (!currentEventId) {
+    setAdminRoomsStatus("Save the event first, then add rooms.", true);
+    return;
+  }
+
+  try {
+    const { data, error } = await client.rpc("admin_add_room_v117", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add room.");
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not add room: ${error.message}`, true);
+  }
+}
+
+async function deleteAdminRoom(room) {
+  if (!currentEventId || !room?.id) return;
+  try {
+    const { data, error } = await client.rpc("admin_delete_room_v117", {
+      p_event_id: currentEventId,
+      p_room_id: room.id
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not delete room.");
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not delete room: ${error.message}`, true);
+  }
+}
+
+async function addParticipantToRoom(room, participantId) {
+  if (!currentEventId || !room?.id || !participantId) return;
+
+  try {
+    const { data, error } = await client.rpc("admin_add_room_participant_v117", {
+      p_event_id: currentEventId,
+      p_room_id: room.id,
+      p_participant_id: participantId
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add participant.");
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not add participant: ${error.message}`, true);
+  }
+}
+
+async function removeParticipantFromRoom(room, participantId) {
+  if (!currentEventId || !room?.id || !participantId) return;
+
+  try {
+    const { data, error } = await client.rpc("admin_remove_room_participant_v117", {
+      p_event_id: currentEventId,
+      p_room_id: room.id,
+      p_participant_id: participantId
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not remove participant.");
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not remove participant: ${error.message}`, true);
+  }
+}
+
+function renderAdminRooms() {
+  if (!adminRoomsList) return;
+  adminRoomsList.innerHTML = "";
+
+  const rooms = Array.isArray(adminRoomsData.rooms) ? adminRoomsData.rooms : [];
+  const participants = currentRoomParticipants();
+  const assignedIds = assignedRoomParticipantIds();
+
+  if (adminRoomsHint) {
+    adminRoomsHint.textContent = adminRoomsData.is_hotel
+      ? "Hotel: room number is 3 digits. Participants can also update the number of their own room."
+      : "House: rooms are numbered automatically.";
+  }
+
+  if (!rooms.length) {
+    adminRoomsList.innerHTML = '<p class="muted">No rooms yet. Press + Add room.</p>';
+    return;
+  }
+
+  rooms.forEach((room, index) => {
+    const card = document.createElement("section");
+    card.className = "admin-room-card";
+
+    const head = document.createElement("div");
+    head.className = "admin-room-card-head";
+
+    const title = document.createElement("strong");
+    title.textContent = adminRoomsData.is_hotel ? `Room ${index + 1}` : `Room ${room.room_index || index + 1}`;
+
+    const headRight = document.createElement("div");
+    headRight.className = "admin-room-head-actions";
+
+    if (adminRoomsData.is_hotel) {
+      const roomNumber = document.createElement("input");
+      roomNumber.type = "text";
+      roomNumber.inputMode = "numeric";
+      roomNumber.maxLength = 3;
+      roomNumber.pattern = "\\d{3}";
+      roomNumber.className = "admin-room-number-input";
+      roomNumber.placeholder = "000";
+      roomNumber.value = room.room_number || "";
+      roomNumber.setAttribute("aria-label", "Hotel room number");
+      roomNumber.addEventListener("input", () => {
+        roomNumber.value = roomNumber.value.replace(/\D/g, "").slice(0,3);
+      });
+      roomNumber.addEventListener("change", () => saveAdminRoomNumber(room, roomNumber.value));
+      headRight.appendChild(roomNumber);
+    }
+
+    const removeRoom = document.createElement("button");
+    removeRoom.type = "button";
+    removeRoom.className = "danger-ghost-button room-delete-button";
+    removeRoom.textContent = "×";
+    removeRoom.title = "Delete room";
+    removeRoom.setAttribute("aria-label", "Delete room");
+    removeRoom.addEventListener("click", () => deleteAdminRoom(room));
+    headRight.appendChild(removeRoom);
+
+    head.append(title, headRight);
+
+    const people = document.createElement("div");
+    people.className = "admin-room-people";
+
+    (room.participants || []).forEach(person => {
+      const row = document.createElement("div");
+      row.className = "admin-room-person";
+
+      const name = document.createElement("span");
+      name.textContent = person.display_name || "Participant";
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "icon-button";
+      remove.textContent = "×";
+      remove.title = "Remove from room";
+      remove.setAttribute("aria-label", `Remove ${person.display_name || "participant"} from room`);
+      remove.addEventListener("click", () => removeParticipantFromRoom(room, person.participant_id));
+
+      row.append(name, remove);
+      people.appendChild(row);
+    });
+
+    const addRow = document.createElement("div");
+    addRow.className = "admin-room-add-person";
+
+    const select = document.createElement("select");
+    select.innerHTML = '<option value="">Select participant</option>';
+
+    participants
+      .filter(person => !assignedIds.has(person.participant_id))
+      .forEach(person => {
+        const option = document.createElement("option");
+        option.value = person.participant_id;
+        option.textContent = person.name;
+        select.appendChild(option);
+      });
+
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "primary-button compact-button";
+    add.textContent = "+";
+    add.title = "Add person to room";
+    add.setAttribute("aria-label", "Add person to room");
+    add.disabled = select.options.length <= 1;
+    add.addEventListener("click", () => {
+      if (select.value) addParticipantToRoom(room, select.value);
+    });
+
+    addRow.append(select, add);
+
+    card.append(head, people, addRow);
+    adminRoomsList.appendChild(card);
+  });
+}
+
+async function loadAdminRooms() {
+  if (!adminRoomsList) return;
+
+  if (!currentEventId) {
+    adminRoomsData = { is_hotel: false, rooms: [] };
+    renderAdminRooms();
+    return;
+  }
+
+  try {
+    setAdminRoomsStatus("Loading rooms…");
+    const { data, error } = await client.rpc("admin_get_rooms_v117", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+
+    adminRoomsData = {
+      is_hotel: Boolean(data?.is_hotel),
+      rooms: Array.isArray(data?.rooms) ? data.rooms : []
+    };
+
+    renderAdminRooms();
+    setAdminRoomsStatus("");
+  } catch (error) {
+    setAdminRoomsStatus(`Could not load rooms: ${error.message}`, true);
+  }
+}
+
+addRoomButton?.addEventListener("click", addAdminRoom);
 
 
 // ---------------- Schedule ----------------
