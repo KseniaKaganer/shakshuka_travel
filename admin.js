@@ -2091,6 +2091,54 @@ function createScheduleTimeSelects(timeValue = "") {
   return { wrap, hour, minute };
 }
 
+function createScheduleEndTimeSelects(timeValue = "") {
+  const hasValue = Boolean(timeValue);
+  const parts = scheduleTimeParts(timeValue || "09:00");
+  const wrap = document.createElement("div");
+  wrap.className = "schedule-time-selects schedule-end-time-selects";
+
+  const hour = document.createElement("select");
+  hour.className = "schedule-hour-select";
+  hour.setAttribute("aria-label", "End hour");
+
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "--";
+  hour.appendChild(none);
+
+  for (let h = 0; h < 24; h += 1) {
+    const option = document.createElement("option");
+    option.value = String(h).padStart(2, "0");
+    option.textContent = String(h).padStart(2, "0");
+    if (hasValue && option.value === parts.hour) option.selected = true;
+    hour.appendChild(option);
+  }
+
+  const colon = document.createElement("span");
+  colon.textContent = ":";
+
+  const minute = document.createElement("select");
+  minute.className = "schedule-minute-select";
+  minute.setAttribute("aria-label", "End minutes");
+  ["00","15","30","45"].forEach(value => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    if (value === parts.minute) option.selected = true;
+    minute.appendChild(option);
+  });
+
+  const sync = () => {
+    minute.disabled = !hour.value;
+    colon.classList.toggle("muted", !hour.value);
+  };
+  hour.addEventListener("change", sync);
+  sync();
+
+  wrap.append(hour, colon, minute);
+  return { wrap, hour, minute };
+}
+
 function itemVisibleOnScheduleDay(item, dayDate) {
   if (item.applies_to_all) {
     return !adminScheduleData.exclusions.some(ex =>
@@ -2147,6 +2195,7 @@ async function upsertScheduleItem(item, dayDate, isNew = false) {
       p_item_date: item.applies_to_all ? null : dayDate,
       p_applies_to_all: Boolean(item.applies_to_all),
       p_item_time: item.item_time || null,
+      p_end_time: item.end_time || null,
       p_title: item.title.trim(),
       p_details: (item.details || "").trim()
     });
@@ -2158,6 +2207,7 @@ async function upsertScheduleItem(item, dayDate, isNew = false) {
       item_date: item.applies_to_all ? null : dayDate,
       applies_to_all: Boolean(item.applies_to_all),
       item_time: item.item_time || null,
+      end_time: item.end_time || null,
       title: item.title.trim(),
       details: (item.details || "").trim(),
       sort_order: Number(item.sort_order) || 0
@@ -2222,7 +2272,9 @@ function buildScheduleItemEditor(item, dayDate) {
 
     const when = document.createElement("div");
     when.className = "schedule-display-time";
-    when.textContent = item.item_time ? String(item.item_time).slice(0,5) : "";
+    const startText = item.item_time ? String(item.item_time).slice(0,5) : "";
+    const endText = item.end_time ? String(item.end_time).slice(0,5) : "";
+    when.textContent = endText ? `${startText} – ${endText}` : startText;
 
     const body = document.createElement("div");
     body.className = "schedule-display-body";
@@ -2261,7 +2313,8 @@ function buildScheduleItemEditor(item, dayDate) {
     row.innerHTML = "";
     row.classList.add("is-editing");
 
-    const time = createScheduleTimeSelects(item.item_time);
+    const startTime = createScheduleTimeSelects(item.item_time);
+    const endTime = createScheduleEndTimeSelects(item.end_time);
 
     const title = document.createElement("input");
     title.type = "text";
@@ -2303,13 +2356,25 @@ function buildScheduleItemEditor(item, dayDate) {
         return;
       }
 
+      const nextStart = `${startTime.hour.value}:${startTime.minute.value}`;
+      const nextEnd = endTime.hour.value
+        ? `${endTime.hour.value}:${endTime.minute.value}`
+        : null;
+
+      if (nextEnd && nextEnd <= nextStart) {
+        setAdminScheduleStatus("End time must be later than start time.", true);
+        return;
+      }
+
       const previous = {
         item_time: item.item_time,
+        end_time: item.end_time,
         title: item.title,
         details: item.details
       };
 
-      item.item_time = `${time.hour.value}:${time.minute.value}`;
+      item.item_time = nextStart;
+      item.end_time = nextEnd;
       item.title = title.value.trim();
       item.details = details.value.trim();
 
@@ -2318,6 +2383,7 @@ function buildScheduleItemEditor(item, dayDate) {
         renderView();
       } else {
         item.item_time = previous.item_time;
+        item.end_time = previous.end_time;
         item.title = previous.title;
         item.details = previous.details;
       }
@@ -2326,9 +2392,22 @@ function buildScheduleItemEditor(item, dayDate) {
     cancel.addEventListener("click", renderView);
     remove.addEventListener("click", () => deleteScheduleItemFromDay(item, dayDate));
 
+    const timeRange = document.createElement("div");
+    timeRange.className = "schedule-edit-time-range";
+
+    const fromLabel = document.createElement("span");
+    fromLabel.className = "schedule-time-range-label";
+    fromLabel.textContent = "From";
+
+    const untilLabel = document.createElement("span");
+    untilLabel.className = "schedule-time-range-label";
+    untilLabel.textContent = "Until";
+
+    timeRange.append(fromLabel, startTime.wrap, untilLabel, endTime.wrap);
+
     const top = document.createElement("div");
     top.className = "schedule-edit-top";
-    top.append(time.wrap, title, scope);
+    top.append(timeRange, title, scope);
 
     const buttons = document.createElement("div");
     buttons.className = "schedule-edit-buttons";
@@ -2343,9 +2422,10 @@ function buildScheduleItemEditor(item, dayDate) {
 
 function buildNewScheduleItemRow(dayDate) {
   const row = document.createElement("div");
-  row.className = "schedule-new-item-row schedule-new-item-row-v106";
+  row.className = "schedule-new-item-row schedule-new-item-row-v108";
 
-  const time = createScheduleTimeSelects("08:00");
+  const startTime = createScheduleTimeSelects("08:00");
+  const endTime = createScheduleEndTimeSelects("");
 
   const title = document.createElement("input");
   title.type = "text";
@@ -2372,11 +2452,22 @@ function buildNewScheduleItemRow(dayDate) {
       return;
     }
 
+    const nextStart = `${startTime.hour.value}:${startTime.minute.value}`;
+    const nextEnd = endTime.hour.value
+      ? `${endTime.hour.value}:${endTime.minute.value}`
+      : null;
+
+    if (nextEnd && nextEnd <= nextStart) {
+      setAdminScheduleStatus("End time must be later than start time.", true);
+      return;
+    }
+
     const item = {
       id: null,
       item_date: scope.value === "all" ? null : dayDate,
       applies_to_all: scope.value === "all",
-      item_time: `${time.hour.value}:${time.minute.value}`,
+      item_time: nextStart,
+      end_time: nextEnd,
       title: title.value.trim(),
       details: "",
       sort_order: scheduleItemsForDay(dayDate).length
@@ -2385,9 +2476,22 @@ function buildNewScheduleItemRow(dayDate) {
     await upsertScheduleItem(item, dayDate, true);
   });
 
+  const timeRange = document.createElement("div");
+  timeRange.className = "schedule-new-time-range";
+
+  const fromLabel = document.createElement("span");
+  fromLabel.className = "schedule-time-range-label";
+  fromLabel.textContent = "From";
+
+  const untilLabel = document.createElement("span");
+  untilLabel.className = "schedule-time-range-label";
+  untilLabel.textContent = "Until";
+
+  timeRange.append(fromLabel, startTime.wrap, untilLabel, endTime.wrap);
+
   const firstLine = document.createElement("div");
-  firstLine.className = "schedule-new-item-first-line";
-  firstLine.append(time.wrap, scope, add);
+  firstLine.className = "schedule-new-item-first-line schedule-new-item-first-line-v108";
+  firstLine.append(timeRange, scope, add);
 
   const secondLine = document.createElement("div");
   secondLine.className = "schedule-new-item-second-line";

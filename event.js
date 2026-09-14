@@ -575,7 +575,9 @@ async function loadParticipantSchedule() {
 
             if (item.item_time) {
               const time = document.createElement("span");
-              time.textContent = String(item.item_time).slice(0,5);
+              const startText = String(item.item_time).slice(0,5);
+              const endText = item.end_time ? String(item.end_time).slice(0,5) : "";
+              time.textContent = endText ? `${startText} – ${endText}` : startText;
               when.appendChild(time);
             }
 
