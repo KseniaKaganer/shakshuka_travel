@@ -8490,3 +8490,94 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     flex-direction: column;
   }
 }
+
+
+/* ---------- V121 Event Rooms: simple flat list ---------- */
+.participant-room-flat-list {
+  display: grid;
+  gap: 0;
+}
+
+.participant-room-flat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.participant-room-flat-row:last-child {
+  border-bottom: 0;
+}
+
+.participant-room-flat-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.participant-room-flat-number {
+  min-width: 30px;
+  font-size: 14px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.participant-room-flat-names {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.participant-room-flat-name.is-me {
+  font-weight: 800;
+}
+
+.participant-room-name-separator {
+  color: var(--muted);
+  white-space: pre;
+}
+
+.participant-room-inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.participant-room-inline-edit input {
+  width: 70px;
+  text-align: center;
+}
+
+.participant-room-inline-edit .compact-button {
+  min-width: 64px;
+}
+
+.participant-room-flat-row.is-own-room {
+  background: rgba(242,169,59,.035);
+}
+
+@media (max-width: 600px) {
+  .participant-room-flat-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+    padding: 10px 2px;
+  }
+
+  .participant-room-flat-info {
+    width: 100%;
+  }
+
+  .participant-room-inline-edit {
+    margin-left: 40px;
+  }
+}
