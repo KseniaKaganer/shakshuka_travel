@@ -8835,3 +8835,26 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     width: 100%;
   }
 }
+
+
+/* ---------- V125 Admin Rooms select text visibility ---------- */
+.admin-room-flat-select {
+  min-width: 210px;
+  padding-left: 14px;
+  padding-right: 40px;
+  line-height: 1.2;
+  text-overflow: clip;
+}
+
+.admin-room-flat-select option {
+  font-size: 15px;
+}
+
+@media (max-width: 760px) {
+  .admin-room-flat-select {
+    min-width: 0;
+    width: 100%;
+    padding-left: 14px;
+    padding-right: 40px;
+  }
+}
