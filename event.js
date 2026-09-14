@@ -574,7 +574,6 @@ async function loadParticipantRoom() {
             person.person_id === participantAccess?.participant_id
           ) {
             name.classList.add("is-me");
-            name.textContent += " · You";
           }
 
           names.appendChild(name);
