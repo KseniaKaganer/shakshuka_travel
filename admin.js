@@ -2213,78 +2213,148 @@ async function deleteScheduleItemFromDay(item, dayDate) {
 
 function buildScheduleItemEditor(item, dayDate) {
   const row = document.createElement("div");
-  row.className = "schedule-day-item-editor";
+  row.className = "schedule-day-item-display";
   if (item.applies_to_all) row.classList.add("is-all-days");
 
-  const time = createScheduleTimeSelects(item.item_time);
+  const renderView = () => {
+    row.innerHTML = "";
+    row.classList.remove("is-editing");
 
-  const title = document.createElement("input");
-  title.type = "text";
-  title.className = "schedule-day-item-title";
-  title.value = item.title || "";
-  title.placeholder = "Activity";
+    const when = document.createElement("div");
+    when.className = "schedule-display-time";
+    when.textContent = item.item_time ? String(item.item_time).slice(0,5) : "";
 
-  const details = document.createElement("textarea");
-  details.className = "schedule-day-item-details";
-  details.rows = 2;
-  details.maxLength = 180;
-  details.value = item.details || "";
-  details.placeholder = "Short details";
+    const body = document.createElement("div");
+    body.className = "schedule-display-body";
 
-  const scope = document.createElement("span");
-  scope.className = "schedule-item-scope-badge";
-  scope.textContent = item.applies_to_all ? "All days" : "This day";
+    const title = document.createElement("strong");
+    title.textContent = item.title || "Activity";
+    body.appendChild(title);
 
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "danger-ghost-button schedule-item-delete";
-  remove.textContent = "×";
-  remove.title = item.applies_to_all ? "Remove from this day" : "Delete item";
-  remove.setAttribute("aria-label", remove.title);
+    if (item.details) {
+      const details = document.createElement("p");
+      details.textContent = item.details;
+      body.appendChild(details);
+    }
 
-  const saveChanges = async () => {
-    item.item_time = `${time.hour.value}:${time.minute.value}`;
-    item.title = title.value.trim();
-    item.details = details.value.trim();
-    await upsertScheduleItem(item, dayDate);
+    const actions = document.createElement("div");
+    actions.className = "schedule-display-actions";
+
+    if (item.applies_to_all) {
+      const scope = document.createElement("span");
+      scope.className = "schedule-item-scope-badge";
+      scope.textContent = "All days";
+      actions.appendChild(scope);
+    }
+
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "secondary-button compact-button schedule-edit-item";
+    edit.textContent = "Edit";
+    edit.addEventListener("click", renderEdit);
+
+    actions.appendChild(edit);
+    row.append(when, body, actions);
   };
 
-  time.hour.addEventListener("change", saveChanges);
-  time.minute.addEventListener("change", saveChanges);
-  title.addEventListener("change", saveChanges);
-  title.addEventListener("blur", () => {
-    if (title.value.trim()) saveChanges();
-  });
-  details.addEventListener("change", saveChanges);
-  remove.addEventListener("click", () => deleteScheduleItemFromDay(item, dayDate));
+  const renderEdit = () => {
+    row.innerHTML = "";
+    row.classList.add("is-editing");
 
-  const top = document.createElement("div");
-  top.className = "schedule-day-item-top";
-  top.append(time.wrap, title, scope, remove);
+    const time = createScheduleTimeSelects(item.item_time);
 
-  row.append(top, details);
+    const title = document.createElement("input");
+    title.type = "text";
+    title.className = "schedule-day-item-title";
+    title.value = item.title || "";
+    title.placeholder = "Activity";
+
+    const details = document.createElement("textarea");
+    details.className = "schedule-day-item-details";
+    details.rows = 2;
+    details.maxLength = 180;
+    details.value = item.details || "";
+    details.placeholder = "Short details";
+
+    const scope = document.createElement("span");
+    scope.className = "schedule-item-scope-badge";
+    scope.textContent = item.applies_to_all ? "All days" : "This day";
+
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "primary-button compact-button";
+    save.textContent = "Save";
+
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "ghost-button compact-button";
+    cancel.textContent = "Cancel";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "danger-ghost-button schedule-edit-delete";
+    remove.textContent = "Delete";
+    remove.title = item.applies_to_all ? "Remove from this day" : "Delete item";
+
+    save.addEventListener("click", async () => {
+      if (!title.value.trim()) {
+        setAdminScheduleStatus("Schedule activity needs a title.", true);
+        title.focus();
+        return;
+      }
+
+      const previous = {
+        item_time: item.item_time,
+        title: item.title,
+        details: item.details
+      };
+
+      item.item_time = `${time.hour.value}:${time.minute.value}`;
+      item.title = title.value.trim();
+      item.details = details.value.trim();
+
+      const saved = await upsertScheduleItem(item, dayDate);
+      if (saved) {
+        renderView();
+      } else {
+        item.item_time = previous.item_time;
+        item.title = previous.title;
+        item.details = previous.details;
+      }
+    });
+
+    cancel.addEventListener("click", renderView);
+    remove.addEventListener("click", () => deleteScheduleItemFromDay(item, dayDate));
+
+    const top = document.createElement("div");
+    top.className = "schedule-edit-top";
+    top.append(time.wrap, title, scope);
+
+    const buttons = document.createElement("div");
+    buttons.className = "schedule-edit-buttons";
+    buttons.append(save, cancel, remove);
+
+    row.append(top, details, buttons);
+  };
+
+  renderView();
   return row;
 }
 
 function buildNewScheduleItemRow(dayDate) {
   const row = document.createElement("div");
-  row.className = "schedule-new-item-row";
+  row.className = "schedule-new-item-row schedule-new-item-row-v106";
 
   const time = createScheduleTimeSelects("08:00");
 
   const title = document.createElement("input");
   title.type = "text";
   title.className = "schedule-new-item-title";
-  title.placeholder = "New activity";
-
-  const details = document.createElement("textarea");
-  details.className = "schedule-new-item-details";
-  details.rows = 2;
-  details.maxLength = 180;
-  details.placeholder = "Short details";
+  title.placeholder = "Activity name";
 
   const scope = document.createElement("select");
   scope.className = "schedule-new-item-scope";
+  scope.setAttribute("aria-label", "Schedule item days");
   scope.innerHTML = `
     <option value="day">This day</option>
     <option value="all">All days</option>
@@ -2297,7 +2367,7 @@ function buildNewScheduleItemRow(dayDate) {
 
   add.addEventListener("click", async () => {
     if (!title.value.trim()) {
-      setAdminScheduleStatus("Enter an activity title first.", true);
+      setAdminScheduleStatus("Enter an activity name first.", true);
       title.focus();
       return;
     }
@@ -2308,18 +2378,22 @@ function buildNewScheduleItemRow(dayDate) {
       applies_to_all: scope.value === "all",
       item_time: `${time.hour.value}:${time.minute.value}`,
       title: title.value.trim(),
-      details: details.value.trim(),
+      details: "",
       sort_order: scheduleItemsForDay(dayDate).length
     };
 
     await upsertScheduleItem(item, dayDate, true);
   });
 
-  const top = document.createElement("div");
-  top.className = "schedule-new-item-top";
-  top.append(time.wrap, title, scope, add);
+  const firstLine = document.createElement("div");
+  firstLine.className = "schedule-new-item-first-line";
+  firstLine.append(time.wrap, scope, add);
 
-  row.append(top, details);
+  const secondLine = document.createElement("div");
+  secondLine.className = "schedule-new-item-second-line";
+  secondLine.appendChild(title);
+
+  row.append(firstLine, secondLine);
   return row;
 }
 
