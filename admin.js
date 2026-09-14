@@ -2225,8 +2225,8 @@ function renderAdminRooms() {
 
   if (adminRoomsHint) {
     adminRoomsHint.textContent = adminRoomsData.is_hotel
-      ? "Hotel: each room can have a 3-digit hotel room number."
-      : "House: rooms are numbered automatically.";
+      ? "Hotel: use the 3-digit room number field. Add people from the list."
+      : "House: rooms are numbered automatically. Add people from the list.";
   }
 
   if (!rooms.length) {
@@ -2239,59 +2239,83 @@ function renderAdminRooms() {
       ...(room.participants || []).map(person => ({
         type: "participant",
         id: person.participant_id,
-        name: person.display_name || "Participant",
-        badge: ""
+        name: person.display_name || "Participant"
       })),
       ...(room.people || []).map(person => ({
         type: person.person_type || "other",
         id: person.id,
         key: person.person_key || "",
-        name: person.display_name || "Other person",
-        badge: person.person_type === "admin" ? "Admin" : "Other"
+        name: person.display_name || "Other person"
       }))
     ].sort((a,b) => a.name.localeCompare(b.name));
 
-    const card = document.createElement("details");
-    card.className = "admin-room-card admin-room-collapsible";
+    const row = document.createElement("div");
+    row.className = "admin-room-flat-row";
 
-    const summary = document.createElement("summary");
-    summary.className = "admin-room-card-summary";
+    const left = document.createElement("div");
+    left.className = "admin-room-flat-left";
 
-    const summaryTitle = document.createElement("div");
-    summaryTitle.className = "admin-room-summary-title";
+    const number = document.createElement("strong");
+    number.className = "admin-room-flat-number";
+    number.textContent = adminRoomsData.is_hotel
+      ? (room.room_number || String(index + 1))
+      : String(room.room_index || index + 1);
 
-    const title = document.createElement("strong");
-    title.textContent = roomDisplayLabel(room, index);
+    const names = document.createElement("div");
+    names.className = "admin-room-flat-names";
 
-    const count = document.createElement("span");
-    count.className = "room-person-count";
-    count.textContent = `${occupants.length} ${occupants.length === 1 ? "person" : "people"}`;
+    if (!occupants.length) {
+      const empty = document.createElement("span");
+      empty.className = "muted";
+      empty.textContent = "—";
+      names.appendChild(empty);
+    } else {
+      occupants.forEach((person, personIndex) => {
+        const nameWrap = document.createElement("span");
+        nameWrap.className = "admin-room-flat-name";
 
-    summaryTitle.append(title, count);
+        const nameText = document.createElement("span");
+        nameText.textContent = person.name;
 
-    const chevron = document.createElement("span");
-    chevron.className = "collapse-chevron";
-    chevron.textContent = "⌄";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "admin-room-name-remove";
+        remove.textContent = "×";
+        remove.title = `Remove ${person.name}`;
+        remove.setAttribute("aria-label", `Remove ${person.name} from room`);
 
-    summary.append(summaryTitle, chevron);
-    card.appendChild(summary);
+        remove.addEventListener("click", () => {
+          if (person.type === "participant") {
+            removeParticipantFromRoomV120(room, person.id);
+          } else {
+            removeNamedPersonFromRoomV120(room, person.id);
+          }
+        });
 
-    const body = document.createElement("div");
-    body.className = "admin-room-card-body";
+        nameWrap.append(nameText, remove);
+        names.appendChild(nameWrap);
+
+        if (personIndex < occupants.length - 1) {
+          const separator = document.createElement("span");
+          separator.className = "admin-room-name-separator";
+          separator.textContent = " · ";
+          names.appendChild(separator);
+        }
+      });
+    }
+
+    left.append(number, names);
+
+    const right = document.createElement("div");
+    right.className = "admin-room-flat-controls";
 
     if (adminRoomsData.is_hotel) {
-      const numberRow = document.createElement("label");
-      numberRow.className = "admin-room-number-row";
-
-      const label = document.createElement("span");
-      label.textContent = "Hotel room number";
-
       const roomNumber = document.createElement("input");
       roomNumber.type = "text";
       roomNumber.inputMode = "numeric";
       roomNumber.maxLength = 3;
       roomNumber.pattern = "\\d{3}";
-      roomNumber.className = "admin-room-number-input";
+      roomNumber.className = "admin-room-flat-number-input";
       roomNumber.placeholder = "000";
       roomNumber.value = room.room_number || "";
       roomNumber.setAttribute("aria-label", "Hotel room number");
@@ -2304,58 +2328,11 @@ function renderAdminRooms() {
         saveAdminRoomNumber(room, roomNumber.value);
       });
 
-      numberRow.append(label, roomNumber);
-      body.appendChild(numberRow);
+      right.appendChild(roomNumber);
     }
 
-    const peopleList = document.createElement("div");
-    peopleList.className = "admin-room-people";
-
-    occupants.forEach(person => {
-      const row = document.createElement("div");
-      row.className = "admin-room-person";
-
-      const nameWrap = document.createElement("span");
-      nameWrap.className = "admin-room-person-name";
-      nameWrap.textContent = person.name;
-
-      if (person.badge) {
-        const badge = document.createElement("small");
-        badge.className = person.type === "admin"
-          ? "room-admin-badge"
-          : "room-other-badge";
-        badge.textContent = person.badge;
-        nameWrap.appendChild(badge);
-      }
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "icon-button";
-      remove.textContent = "×";
-      remove.title = "Remove from room";
-      remove.setAttribute("aria-label", `Remove ${person.name} from room`);
-
-      remove.addEventListener("click", () => {
-        if (person.type === "participant") {
-          removeParticipantFromRoomV120(room, person.id);
-        } else {
-          removeNamedPersonFromRoomV120(room, person.id);
-        }
-      });
-
-      row.append(nameWrap, remove);
-      peopleList.appendChild(row);
-    });
-
-    body.appendChild(peopleList);
-
-    const addArea = document.createElement("div");
-    addArea.className = "admin-room-add-area";
-
-    const addRow = document.createElement("div");
-    addRow.className = "admin-room-add-person";
-
     const select = document.createElement("select");
+    select.className = "admin-room-flat-select";
     select.innerHTML = '<option value="">Select person</option>';
 
     participantOptions
@@ -2372,7 +2349,7 @@ function renderAdminRooms() {
       .forEach(person => {
         const option = document.createElement("option");
         option.value = person.key;
-        option.textContent = `${person.name} · Admin`;
+        option.textContent = person.name;
         select.appendChild(option);
       });
 
@@ -2383,13 +2360,21 @@ function renderAdminRooms() {
 
     const add = document.createElement("button");
     add.type = "button";
-    add.className = "primary-button compact-button";
+    add.className = "primary-button compact-button admin-room-flat-add";
     add.textContent = "+";
     add.title = "Add person to room";
     add.setAttribute("aria-label", "Add person to room");
 
-    const manualRow = document.createElement("div");
-    manualRow.className = "admin-room-manual-person hidden";
+    const deleteRoom = document.createElement("button");
+    deleteRoom.type = "button";
+    deleteRoom.className = "danger-ghost-button admin-room-flat-delete";
+    deleteRoom.textContent = "×";
+    deleteRoom.title = "Delete room";
+    deleteRoom.setAttribute("aria-label", "Delete room");
+    deleteRoom.addEventListener("click", () => deleteAdminRoom(room));
+
+    const manual = document.createElement("div");
+    manual.className = "admin-room-flat-manual hidden";
 
     const manualInput = document.createElement("input");
     manualInput.type = "text";
@@ -2397,11 +2382,11 @@ function renderAdminRooms() {
     manualInput.maxLength = 100;
     manualInput.setAttribute("aria-label", "Other person's name");
 
-    manualRow.appendChild(manualInput);
+    manual.appendChild(manualInput);
 
     select.addEventListener("change", () => {
       const isOther = select.value === "other";
-      manualRow.classList.toggle("hidden", !isOther);
+      manual.classList.toggle("hidden", !isOther);
       if (isOther) setTimeout(() => manualInput.focus(), 0);
     });
 
@@ -2434,24 +2419,10 @@ function renderAdminRooms() {
       }
     });
 
-    addRow.append(select, add);
-    addArea.append(addRow, manualRow);
-    body.appendChild(addArea);
+    right.append(select, add, deleteRoom);
 
-    const actions = document.createElement("div");
-    actions.className = "admin-room-bottom-actions";
-
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "danger-ghost-button";
-    deleteButton.textContent = "Delete room";
-    deleteButton.addEventListener("click", () => deleteAdminRoom(room));
-
-    actions.appendChild(deleteButton);
-    body.appendChild(actions);
-
-    card.appendChild(body);
-    adminRoomsList.appendChild(card);
+    row.append(left, right, manual);
+    adminRoomsList.appendChild(row);
   });
 }
 

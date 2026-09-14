@@ -8674,3 +8674,164 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding-right: 8px;
   }
 }
+
+
+/* ---------- V124 Admin Rooms: same flat view as Event ---------- */
+.admin-rooms-list {
+  display: grid;
+  gap: 0;
+}
+
+.admin-room-flat-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "left controls"
+    "manual manual";
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 58px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-room-flat-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-room-flat-left {
+  grid-area: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-room-flat-number {
+  min-width: 28px;
+  flex: 0 0 auto;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.admin-room-flat-names {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.admin-room-flat-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.admin-room-name-separator {
+  color: var(--muted);
+  white-space: pre;
+}
+
+.admin-room-name-remove {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-room-name-remove:hover {
+  color: var(--danger);
+}
+
+.admin-room-flat-controls {
+  grid-area: controls;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.admin-room-flat-number-input {
+  width: 72px !important;
+  min-width: 72px !important;
+  height: 42px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.admin-room-flat-select {
+  width: 180px;
+  min-width: 180px;
+  height: 42px;
+}
+
+.admin-room-flat-add {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px;
+  padding: 0 !important;
+  font-size: 18px;
+}
+
+.admin-room-flat-delete {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px;
+  padding: 0 !important;
+  font-size: 18px;
+}
+
+.admin-room-flat-manual {
+  grid-area: manual;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-room-flat-manual.hidden {
+  display: none !important;
+}
+
+.admin-room-flat-manual input {
+  width: 260px;
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .admin-room-flat-row {
+    grid-template-columns: minmax(0,1fr);
+    grid-template-areas:
+      "left"
+      "controls"
+      "manual";
+    align-items: stretch;
+    padding: 10px 2px;
+  }
+
+  .admin-room-flat-controls {
+    justify-content: flex-start;
+    padding-left: 40px;
+  }
+
+  .admin-room-flat-select {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  .admin-room-flat-manual {
+    justify-content: flex-start;
+    padding-left: 40px;
+  }
+
+  .admin-room-flat-manual input {
+    width: 100%;
+  }
+}
