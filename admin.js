@@ -2392,28 +2392,33 @@ function buildScheduleItemEditor(item, dayDate) {
     cancel.addEventListener("click", renderView);
     remove.addEventListener("click", () => deleteScheduleItemFromDay(item, dayDate));
 
-    const timeRange = document.createElement("div");
-    timeRange.className = "schedule-edit-time-range";
-
+    const fromRow = document.createElement("div");
+    fromRow.className = "schedule-edit-time-row";
     const fromLabel = document.createElement("span");
     fromLabel.className = "schedule-time-range-label";
     fromLabel.textContent = "From";
+    fromRow.append(fromLabel, startTime.wrap);
 
+    const untilRow = document.createElement("div");
+    untilRow.className = "schedule-edit-time-row";
     const untilLabel = document.createElement("span");
     untilLabel.className = "schedule-time-range-label";
     untilLabel.textContent = "Until";
+    untilRow.append(untilLabel, endTime.wrap);
 
-    timeRange.append(fromLabel, startTime.wrap, untilLabel, endTime.wrap);
+    const left = document.createElement("div");
+    left.className = "schedule-edit-left";
+    left.append(fromRow, untilRow, title, scope);
 
-    const top = document.createElement("div");
-    top.className = "schedule-edit-top";
-    top.append(timeRange, title, scope);
+    const center = document.createElement("div");
+    center.className = "schedule-edit-center";
+    center.appendChild(details);
 
     const buttons = document.createElement("div");
-    buttons.className = "schedule-edit-buttons";
+    buttons.className = "schedule-edit-buttons schedule-edit-buttons-v113";
     buttons.append(save, cancel, remove);
 
-    row.append(top, details, buttons);
+    row.append(left, center, buttons);
   };
 
   renderView();
