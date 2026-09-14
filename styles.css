@@ -8581,3 +8581,96 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     margin-left: 40px;
   }
 }
+
+
+/* ---------- V122 Event Rooms layout ---------- */
+.participant-room-flat-row {
+  min-height: 58px;
+  padding: 10px 6px;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap;
+}
+
+.participant-room-flat-info {
+  gap: 14px;
+  min-width: 0;
+}
+
+.participant-room-flat-number {
+  min-width: 28px;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.participant-room-flat-names {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.participant-room-flat-name.is-me {
+  font-weight: 850;
+}
+
+.participant-own-room-badge {
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+
+.participant-room-inline-edit {
+  margin-left: auto !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.participant-room-inline-edit input {
+  width: 76px;
+  height: 42px;
+  font-size: 16px;
+}
+
+.participant-room-inline-edit .compact-button {
+  min-width: 70px;
+  height: 42px;
+  font-size: 14px;
+}
+
+/* Keep every room on one line on mobile too. */
+@media (max-width: 600px) {
+  .participant-room-flat-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px;
+  }
+
+  .participant-room-flat-info {
+    gap: 9px;
+  }
+
+  .participant-room-flat-number {
+    min-width: 24px;
+    font-size: 16px;
+  }
+
+  .participant-room-flat-names {
+    font-size: 15px;
+  }
+
+  .participant-room-inline-edit {
+    margin-left: auto !important;
+    gap: 5px;
+  }
+
+  .participant-room-inline-edit input {
+    width: 62px;
+    min-width: 62px;
+  }
+
+  .participant-room-inline-edit .compact-button {
+    min-width: 58px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

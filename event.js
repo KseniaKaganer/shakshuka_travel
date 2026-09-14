@@ -569,12 +569,6 @@ async function loadParticipantRoom() {
           name.className = "participant-room-flat-name";
           name.textContent = person.display_name;
 
-          if (person.person_type === "admin") {
-            name.textContent += " · Admin";
-          } else if (person.person_type === "other") {
-            name.textContent += " · Guest";
-          }
-
           if (
             person.person_type === "participant" &&
             person.person_id === participantAccess?.participant_id
