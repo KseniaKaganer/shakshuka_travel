@@ -7727,3 +7727,68 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     padding-right: 6px !important;
   }
 }
+
+
+/* ---------- V112 Participant event schedule time-range layout ---------- */
+.participant-schedule-day .participant-schedule-item {
+  display: grid !important;
+  grid-template-columns: 132px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+.participant-schedule-when {
+  width: 132px !important;
+  min-width: 132px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.participant-schedule-when span {
+  display: block !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.participant-schedule-body {
+  min-width: 0 !important;
+  overflow-wrap: anywhere;
+}
+
+.participant-schedule-body strong,
+.participant-schedule-body p {
+  min-width: 0 !important;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .participant-schedule-day .participant-schedule-item {
+    grid-template-columns: 118px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .participant-schedule-when {
+    width: 118px !important;
+    min-width: 118px !important;
+  }
+
+  .participant-schedule-when span {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .participant-schedule-day .participant-schedule-item {
+    grid-template-columns: 108px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .participant-schedule-when {
+    width: 108px !important;
+    min-width: 108px !important;
+  }
+
+  .participant-schedule-when span {
+    font-size: 11px !important;
+  }
+}
