@@ -7910,3 +7910,85 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* ---------- V115 Schedule edit: everything on one line ---------- */
+.schedule-day-item-display.is-editing {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.schedule-edit-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.schedule-edit-time-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex: 0 0 auto !important;
+}
+
+.schedule-edit-time-row .schedule-time-selects {
+  width: 172px !important;
+  flex: 0 0 172px !important;
+}
+
+.schedule-edit-left .schedule-day-item-title {
+  flex: 1 1 180px !important;
+  width: auto !important;
+  min-width: 100px !important;
+  height: 42px !important;
+}
+
+.schedule-edit-left .schedule-item-scope-badge {
+  flex: 0 0 auto !important;
+  justify-self: auto !important;
+  white-space: nowrap !important;
+}
+
+.schedule-edit-buttons-v113 {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+}
+
+.schedule-edit-buttons-v113 > button {
+  min-width: 64px !important;
+  min-height: 42px !important;
+  width: auto !important;
+}
+
+/* Keep one line on normal admin widths; only stack when the screen is genuinely narrow. */
+@media (max-width: 760px) {
+  .schedule-day-item-display.is-editing {
+    flex-wrap: wrap !important;
+  }
+
+  .schedule-edit-left {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+
+  .schedule-edit-left .schedule-day-item-title {
+    flex-basis: 100% !important;
+  }
+
+  .schedule-edit-buttons-v113 {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+}
