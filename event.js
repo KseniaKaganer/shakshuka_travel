@@ -502,7 +502,7 @@ async function loadParticipantSchedule() {
   status.classList.remove("hidden", "error");
 
   try {
-    const { data, error } = await client.rpc("get_event_schedule_by_token_v105", {
+    const { data, error } = await client.rpc("get_event_schedule_by_token_v109", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });

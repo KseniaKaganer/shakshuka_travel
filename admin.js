@@ -2189,7 +2189,7 @@ async function upsertScheduleItem(item, dayDate, isNew = false) {
 
   try {
     setAdminScheduleStatus("Saving schedule…");
-    const { data, error } = await client.rpc("admin_upsert_schedule_item_v105", {
+    const { data, error } = await client.rpc("admin_upsert_schedule_item_v109", {
       p_event_id: currentEventId,
       p_item_id: item.id || null,
       p_item_date: item.applies_to_all ? null : dayDate,
