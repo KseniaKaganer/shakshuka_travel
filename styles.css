@@ -7894,3 +7894,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     min-width: 0 !important;
   }
 }
+
+
+/* ---------- V114 Schedule edit: activity only, no short details ---------- */
+.schedule-day-item-display.is-editing {
+  grid-template-columns: minmax(280px, 1fr) auto !important;
+}
+
+.schedule-edit-center {
+  display: none !important;
+}
+
+@media (max-width: 820px) {
+  .schedule-day-item-display.is-editing {
+    grid-template-columns: 1fr !important;
+  }
+}

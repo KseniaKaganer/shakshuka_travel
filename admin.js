@@ -2322,13 +2322,6 @@ function buildScheduleItemEditor(item, dayDate) {
     title.value = item.title || "";
     title.placeholder = "Activity";
 
-    const details = document.createElement("textarea");
-    details.className = "schedule-day-item-details";
-    details.rows = 2;
-    details.maxLength = 180;
-    details.value = item.details || "";
-    details.placeholder = "Short details";
-
     const scope = document.createElement("span");
     scope.className = "schedule-item-scope-badge";
     scope.textContent = item.applies_to_all ? "All days" : "This day";
@@ -2369,14 +2362,12 @@ function buildScheduleItemEditor(item, dayDate) {
       const previous = {
         item_time: item.item_time,
         end_time: item.end_time,
-        title: item.title,
-        details: item.details
+        title: item.title
       };
 
       item.item_time = nextStart;
       item.end_time = nextEnd;
       item.title = title.value.trim();
-      item.details = details.value.trim();
 
       const saved = await upsertScheduleItem(item, dayDate);
       if (saved) {
@@ -2385,7 +2376,6 @@ function buildScheduleItemEditor(item, dayDate) {
         item.item_time = previous.item_time;
         item.end_time = previous.end_time;
         item.title = previous.title;
-        item.details = previous.details;
       }
     });
 
@@ -2410,15 +2400,11 @@ function buildScheduleItemEditor(item, dayDate) {
     left.className = "schedule-edit-left";
     left.append(fromRow, untilRow, title, scope);
 
-    const center = document.createElement("div");
-    center.className = "schedule-edit-center";
-    center.appendChild(details);
-
     const buttons = document.createElement("div");
     buttons.className = "schedule-edit-buttons schedule-edit-buttons-v113";
     buttons.append(save, cancel, remove);
 
-    row.append(left, center, buttons);
+    row.append(left, buttons);
   };
 
   renderView();
