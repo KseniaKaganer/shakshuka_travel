@@ -7366,7 +7366,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .schedule-new-item-first-line {
   display: grid;
-  grid-template-columns: 172px minmax(160px,1fr) 64px;
+  grid-template-columns: 118px minmax(96px,1fr) 64px;
   gap: 7px;
   align-items: center;
 }
@@ -7409,7 +7409,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 
   .schedule-new-item-first-line {
-    grid-template-columns: 148px minmax(120px,1fr) 60px;
+    grid-template-columns: 98px minmax(88px,1fr) 60px;
     gap: 5px;
   }
 
@@ -7432,7 +7432,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 
   .schedule-new-item-first-line {
-    grid-template-columns: 136px minmax(105px,1fr) 56px;
+    grid-template-columns: 92px minmax(76px,1fr) 56px;
   }
 
   .schedule-new-item-row-v106 .schedule-add-item-button {
@@ -7440,5 +7440,53 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     min-width: 56px !important;
     padding-left: 5px !important;
     padding-right: 5px !important;
+  }
+}
+
+
+/* ---------- V107 Schedule edit time size ---------- */
+.schedule-edit-top {
+  grid-template-columns: 172px minmax(0,1fr) 82px !important;
+}
+
+.schedule-edit-top .schedule-time-selects {
+  width: 172px !important;
+  grid-template-columns: 80px auto 80px !important;
+}
+
+.schedule-edit-top .schedule-time-selects select {
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 48px !important;
+}
+
+.schedule-new-item-first-line {
+  grid-template-columns: 172px minmax(96px,1fr) 64px !important;
+}
+
+.schedule-new-item-first-line .schedule-time-selects {
+  width: 172px !important;
+  grid-template-columns: 80px auto 80px !important;
+}
+
+.schedule-new-item-first-line .schedule-time-selects select {
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 48px !important;
+}
+
+@media (max-width: 600px) {
+  .schedule-edit-top {
+    grid-template-columns: 172px minmax(0,1fr) !important;
+  }
+
+  .schedule-new-item-first-line {
+    grid-template-columns: 172px minmax(88px,1fr) 60px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .schedule-new-item-first-line {
+    grid-template-columns: 172px minmax(70px,1fr) 56px !important;
   }
 }

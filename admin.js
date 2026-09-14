@@ -2196,14 +2196,14 @@ async function deleteScheduleItemFromDay(item, dayDate) {
     if (data?.ok === false) throw new Error(data?.error || "Could not delete schedule item.");
 
     if (item.applies_to_all) {
-      if (!adminScheduleData.exclusions.some(ex => ex.item_id === item.id && ex.day_date === dayDate)) {
-        adminScheduleData.exclusions.push({ item_id: item.id, day_date: dayDate });
-      }
+      // Removing one occurrence from an All-days item converts every remaining
+      // occurrence into its own This-day item. Reload so all badges update now.
+      await loadAdminSchedule();
     } else {
       adminScheduleData.items = adminScheduleData.items.filter(existing => existing.id !== item.id);
+      renderAdminSchedule();
     }
 
-    renderAdminSchedule();
     setAdminScheduleStatus("Item removed from this day.");
     setTimeout(() => setAdminScheduleStatus(""), 900);
   } catch (error) {
