@@ -8320,3 +8320,173 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: auto 72px minmax(70px,auto);
   }
 }
+
+
+/* ---------- V118 Rooms: admin occupants ---------- */
+.admin-room-person-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.room-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 2px 7px;
+  border: 1px solid rgba(242,169,59,.38);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+
+/* ---------- V120 Rooms: collapsible + everyone can see all rooms ---------- */
+.admin-room-card.admin-room-collapsible,
+.participant-room-card.participant-room-collapsible {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.admin-room-card-summary,
+.participant-room-summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  user-select: none;
+}
+
+.admin-room-card-summary::-webkit-details-marker,
+.participant-room-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-room-summary-title,
+.participant-room-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.room-person-count {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.admin-room-collapsible[open] > .admin-room-card-summary,
+.participant-room-collapsible[open] > .participant-room-summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-room-collapsible[open] > .admin-room-card-summary .collapse-chevron,
+.participant-room-collapsible[open] > .participant-room-summary .collapse-chevron {
+  transform: rotate(180deg);
+}
+
+.admin-room-card-body,
+.participant-room-card-body {
+  display: grid;
+  gap: 10px;
+  padding: 11px;
+}
+
+.admin-room-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.admin-room-number-row > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.admin-room-add-area {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-room-manual-person {
+  display: grid;
+}
+
+.admin-room-manual-person.hidden {
+  display: none !important;
+}
+
+.admin-room-manual-person input {
+  width: 100%;
+}
+
+.admin-room-bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.room-other-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.participant-room-content {
+  gap: 8px;
+}
+
+.participant-room-collapsible.is-own-room {
+  border-color: rgba(242,169,59,.48);
+}
+
+.participant-own-room-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 2px 7px;
+  border: 1px solid rgba(242,169,59,.4);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .admin-room-card-summary,
+  .participant-room-summary {
+    padding: 10px;
+  }
+
+  .admin-room-card-body,
+  .participant-room-card-body {
+    padding: 10px;
+  }
+
+  .admin-room-number-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

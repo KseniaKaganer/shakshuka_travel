@@ -2005,6 +2005,11 @@ const adminRoomsHint = document.getElementById("adminRoomsHint");
 const adminRoomsList = document.getElementById("adminRoomsList");
 const addRoomButton = document.getElementById("addRoomButton");
 
+const ROOM_ADMIN_OPTIONS = [
+  { key: "admin:ksenia", name: "Ksenia" },
+  { key: "admin:ilya", name: "Ilya" }
+];
+
 let adminRoomsData = {
   is_hotel: false,
   rooms: []
@@ -2022,27 +2027,36 @@ function currentRoomParticipants() {
 
   [...participantsList.querySelectorAll(".participant-row")]
     .map(row => ({
-      participant_id: row.querySelector(".participant-id")?.value || "",
+      person_type: "participant",
+      person_id: row.querySelector(".participant-id")?.value || "",
       name: row.querySelector(".participant-name")?.value.trim() || "Participant"
     }))
-    .filter(item => item.participant_id)
+    .filter(item => item.person_id)
     .forEach(item => {
-      if (!unique.has(item.participant_id)) unique.set(item.participant_id, item);
+      if (!unique.has(item.person_id)) unique.set(item.person_id, item);
     });
 
   return [...unique.values()].sort((a,b) => a.name.localeCompare(b.name));
 }
 
-function assignedRoomParticipantIds() {
-  return new Set(
-    (adminRoomsData.rooms || []).flatMap(room =>
-      (room.participants || []).map(person => person.participant_id)
-    )
-  );
+function assignedRoomKeys() {
+  const keys = new Set();
+
+  (adminRoomsData.rooms || []).forEach(room => {
+    (room.participants || []).forEach(person => {
+      keys.add(`participant:${person.participant_id}`);
+    });
+
+    (room.people || []).forEach(person => {
+      if (person.person_key) keys.add(person.person_key);
+    });
+  });
+
+  return keys;
 }
 
 async function saveAdminRoomNumber(room, value) {
-  if (!currentEventId || !room?.id) return;
+  if (!currentEventId || !room?.id) return false;
 
   const clean = String(value || "").trim();
   if (adminRoomsData.is_hotel && clean && !/^\d{3}$/.test(clean)) {
@@ -2056,11 +2070,14 @@ async function saveAdminRoomNumber(room, value) {
       p_room_id: room.id,
       p_room_number: clean || null
     });
+
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not save room number.");
+
     room.room_number = clean || null;
-    setAdminRoomsStatus("Room saved.");
+    setAdminRoomsStatus("Room number saved.");
     setTimeout(() => setAdminRoomsStatus(""), 900);
+    renderAdminRooms();
     return true;
   } catch (error) {
     setAdminRoomsStatus(`Could not save room: ${error.message}`, true);
@@ -2078,8 +2095,10 @@ async function addAdminRoom() {
     const { data, error } = await client.rpc("admin_add_room_v117", {
       p_event_id: currentEventId
     });
+
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not add room.");
+
     await loadAdminRooms();
   } catch (error) {
     setAdminRoomsStatus(`Could not add room: ${error.message}`, true);
@@ -2088,64 +2107,125 @@ async function addAdminRoom() {
 
 async function deleteAdminRoom(room) {
   if (!currentEventId || !room?.id) return;
+
   try {
     const { data, error } = await client.rpc("admin_delete_room_v117", {
       p_event_id: currentEventId,
       p_room_id: room.id
     });
+
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not delete room.");
+
     await loadAdminRooms();
   } catch (error) {
     setAdminRoomsStatus(`Could not delete room: ${error.message}`, true);
   }
 }
 
-async function addParticipantToRoom(room, participantId) {
+async function addParticipantToRoomV120(room, participantId) {
   if (!currentEventId || !room?.id || !participantId) return;
 
   try {
-    const { data, error } = await client.rpc("admin_add_room_participant_v117", {
+    const { data, error } = await client.rpc("admin_add_room_participant_v120", {
       p_event_id: currentEventId,
       p_room_id: room.id,
       p_participant_id: participantId
     });
+
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not add participant.");
+
     await loadAdminRooms();
   } catch (error) {
     setAdminRoomsStatus(`Could not add participant: ${error.message}`, true);
   }
 }
 
-async function removeParticipantFromRoom(room, participantId) {
+async function addNamedPersonToRoomV120(room, personType, displayName, personKey = null) {
+  if (!currentEventId || !room?.id) return;
+
+  const cleanName = String(displayName || "").trim();
+  if (!cleanName) {
+    setAdminRoomsStatus("Enter a name first.", true);
+    return;
+  }
+
+  try {
+    const { data, error } = await client.rpc("admin_add_room_named_person_v120", {
+      p_event_id: currentEventId,
+      p_room_id: room.id,
+      p_person_type: personType,
+      p_display_name: cleanName,
+      p_person_key: personKey
+    });
+
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add person.");
+
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not add person: ${error.message}`, true);
+  }
+}
+
+async function removeParticipantFromRoomV120(room, participantId) {
   if (!currentEventId || !room?.id || !participantId) return;
 
   try {
-    const { data, error } = await client.rpc("admin_remove_room_participant_v117", {
+    const { data, error } = await client.rpc("admin_remove_room_participant_v120", {
       p_event_id: currentEventId,
       p_room_id: room.id,
       p_participant_id: participantId
     });
+
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not remove participant.");
+
     await loadAdminRooms();
   } catch (error) {
     setAdminRoomsStatus(`Could not remove participant: ${error.message}`, true);
   }
 }
 
+async function removeNamedPersonFromRoomV120(room, personId) {
+  if (!currentEventId || !room?.id || !personId) return;
+
+  try {
+    const { data, error } = await client.rpc("admin_remove_room_named_person_v120", {
+      p_event_id: currentEventId,
+      p_room_id: room.id,
+      p_person_id: personId
+    });
+
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not remove person.");
+
+    await loadAdminRooms();
+  } catch (error) {
+    setAdminRoomsStatus(`Could not remove person: ${error.message}`, true);
+  }
+}
+
+function roomDisplayLabel(room, index) {
+  if (adminRoomsData.is_hotel) {
+    return room.room_number ? `Room ${room.room_number}` : `Room ${index + 1}`;
+  }
+
+  return `Room ${room.room_index || index + 1}`;
+}
+
 function renderAdminRooms() {
   if (!adminRoomsList) return;
-  adminRoomsList.innerHTML = "";
 
+  adminRoomsList.innerHTML = "";
   const rooms = Array.isArray(adminRoomsData.rooms) ? adminRoomsData.rooms : [];
-  const participants = currentRoomParticipants();
-  const assignedIds = assignedRoomParticipantIds();
+  const participantOptions = currentRoomParticipants();
+  const assignedKeys = assignedRoomKeys();
 
   if (adminRoomsHint) {
     adminRoomsHint.textContent = adminRoomsData.is_hotel
-      ? "Hotel: room number is 3 digits. Participants can also update the number of their own room."
+      ? "Hotel: each room can have a 3-digit hotel room number."
       : "House: rooms are numbered automatically.";
   }
 
@@ -2155,19 +2235,57 @@ function renderAdminRooms() {
   }
 
   rooms.forEach((room, index) => {
-    const card = document.createElement("section");
-    card.className = "admin-room-card";
+    const occupants = [
+      ...(room.participants || []).map(person => ({
+        type: "participant",
+        id: person.participant_id,
+        name: person.display_name || "Participant",
+        badge: ""
+      })),
+      ...(room.people || []).map(person => ({
+        type: person.person_type || "other",
+        id: person.id,
+        key: person.person_key || "",
+        name: person.display_name || "Other person",
+        badge: person.person_type === "admin" ? "Admin" : "Other"
+      }))
+    ].sort((a,b) => a.name.localeCompare(b.name));
 
-    const head = document.createElement("div");
-    head.className = "admin-room-card-head";
+    const card = document.createElement("details");
+    card.className = "admin-room-card admin-room-collapsible";
+
+    const summary = document.createElement("summary");
+    summary.className = "admin-room-card-summary";
+
+    const summaryTitle = document.createElement("div");
+    summaryTitle.className = "admin-room-summary-title";
 
     const title = document.createElement("strong");
-    title.textContent = adminRoomsData.is_hotel ? `Room ${index + 1}` : `Room ${room.room_index || index + 1}`;
+    title.textContent = roomDisplayLabel(room, index);
 
-    const headRight = document.createElement("div");
-    headRight.className = "admin-room-head-actions";
+    const count = document.createElement("span");
+    count.className = "room-person-count";
+    count.textContent = `${occupants.length} ${occupants.length === 1 ? "person" : "people"}`;
+
+    summaryTitle.append(title, count);
+
+    const chevron = document.createElement("span");
+    chevron.className = "collapse-chevron";
+    chevron.textContent = "⌄";
+
+    summary.append(summaryTitle, chevron);
+    card.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "admin-room-card-body";
 
     if (adminRoomsData.is_hotel) {
+      const numberRow = document.createElement("label");
+      numberRow.className = "admin-room-number-row";
+
+      const label = document.createElement("span");
+      label.textContent = "Hotel room number";
+
       const roomNumber = document.createElement("input");
       roomNumber.type = "text";
       roomNumber.inputMode = "numeric";
@@ -2177,60 +2295,91 @@ function renderAdminRooms() {
       roomNumber.placeholder = "000";
       roomNumber.value = room.room_number || "";
       roomNumber.setAttribute("aria-label", "Hotel room number");
+
       roomNumber.addEventListener("input", () => {
-        roomNumber.value = roomNumber.value.replace(/\D/g, "").slice(0,3);
+        roomNumber.value = roomNumber.value.replace(/\D/g, "").slice(0, 3);
       });
-      roomNumber.addEventListener("change", () => saveAdminRoomNumber(room, roomNumber.value));
-      headRight.appendChild(roomNumber);
+
+      roomNumber.addEventListener("change", () => {
+        saveAdminRoomNumber(room, roomNumber.value);
+      });
+
+      numberRow.append(label, roomNumber);
+      body.appendChild(numberRow);
     }
 
-    const removeRoom = document.createElement("button");
-    removeRoom.type = "button";
-    removeRoom.className = "danger-ghost-button room-delete-button";
-    removeRoom.textContent = "×";
-    removeRoom.title = "Delete room";
-    removeRoom.setAttribute("aria-label", "Delete room");
-    removeRoom.addEventListener("click", () => deleteAdminRoom(room));
-    headRight.appendChild(removeRoom);
+    const peopleList = document.createElement("div");
+    peopleList.className = "admin-room-people";
 
-    head.append(title, headRight);
-
-    const people = document.createElement("div");
-    people.className = "admin-room-people";
-
-    (room.participants || []).forEach(person => {
+    occupants.forEach(person => {
       const row = document.createElement("div");
       row.className = "admin-room-person";
 
-      const name = document.createElement("span");
-      name.textContent = person.display_name || "Participant";
+      const nameWrap = document.createElement("span");
+      nameWrap.className = "admin-room-person-name";
+      nameWrap.textContent = person.name;
+
+      if (person.badge) {
+        const badge = document.createElement("small");
+        badge.className = person.type === "admin"
+          ? "room-admin-badge"
+          : "room-other-badge";
+        badge.textContent = person.badge;
+        nameWrap.appendChild(badge);
+      }
 
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "icon-button";
       remove.textContent = "×";
       remove.title = "Remove from room";
-      remove.setAttribute("aria-label", `Remove ${person.display_name || "participant"} from room`);
-      remove.addEventListener("click", () => removeParticipantFromRoom(room, person.participant_id));
+      remove.setAttribute("aria-label", `Remove ${person.name} from room`);
 
-      row.append(name, remove);
-      people.appendChild(row);
+      remove.addEventListener("click", () => {
+        if (person.type === "participant") {
+          removeParticipantFromRoomV120(room, person.id);
+        } else {
+          removeNamedPersonFromRoomV120(room, person.id);
+        }
+      });
+
+      row.append(nameWrap, remove);
+      peopleList.appendChild(row);
     });
+
+    body.appendChild(peopleList);
+
+    const addArea = document.createElement("div");
+    addArea.className = "admin-room-add-area";
 
     const addRow = document.createElement("div");
     addRow.className = "admin-room-add-person";
 
     const select = document.createElement("select");
-    select.innerHTML = '<option value="">Select participant</option>';
+    select.innerHTML = '<option value="">Select person</option>';
 
-    participants
-      .filter(person => !assignedIds.has(person.participant_id))
+    participantOptions
+      .filter(person => !assignedKeys.has(`participant:${person.person_id}`))
       .forEach(person => {
         const option = document.createElement("option");
-        option.value = person.participant_id;
+        option.value = `participant:${person.person_id}`;
         option.textContent = person.name;
         select.appendChild(option);
       });
+
+    ROOM_ADMIN_OPTIONS
+      .filter(person => !assignedKeys.has(person.key))
+      .forEach(person => {
+        const option = document.createElement("option");
+        option.value = person.key;
+        option.textContent = `${person.name} · Admin`;
+        select.appendChild(option);
+      });
+
+    const otherOption = document.createElement("option");
+    otherOption.value = "other";
+    otherOption.textContent = "Other person…";
+    select.appendChild(otherOption);
 
     const add = document.createElement("button");
     add.type = "button";
@@ -2238,14 +2387,70 @@ function renderAdminRooms() {
     add.textContent = "+";
     add.title = "Add person to room";
     add.setAttribute("aria-label", "Add person to room");
-    add.disabled = select.options.length <= 1;
-    add.addEventListener("click", () => {
-      if (select.value) addParticipantToRoom(room, select.value);
+
+    const manualRow = document.createElement("div");
+    manualRow.className = "admin-room-manual-person hidden";
+
+    const manualInput = document.createElement("input");
+    manualInput.type = "text";
+    manualInput.placeholder = "Enter name";
+    manualInput.maxLength = 100;
+    manualInput.setAttribute("aria-label", "Other person's name");
+
+    manualRow.appendChild(manualInput);
+
+    select.addEventListener("change", () => {
+      const isOther = select.value === "other";
+      manualRow.classList.toggle("hidden", !isOther);
+      if (isOther) setTimeout(() => manualInput.focus(), 0);
+    });
+
+    add.addEventListener("click", async () => {
+      const value = select.value;
+      if (!value) return;
+
+      if (value.startsWith("participant:")) {
+        await addParticipantToRoomV120(room, value.slice("participant:".length));
+        return;
+      }
+
+      if (value.startsWith("admin:")) {
+        const admin = ROOM_ADMIN_OPTIONS.find(item => item.key === value);
+        if (admin) {
+          await addNamedPersonToRoomV120(room, "admin", admin.name, admin.key);
+        }
+        return;
+      }
+
+      if (value === "other") {
+        await addNamedPersonToRoomV120(room, "other", manualInput.value, null);
+      }
+    });
+
+    manualInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        add.click();
+      }
     });
 
     addRow.append(select, add);
+    addArea.append(addRow, manualRow);
+    body.appendChild(addArea);
 
-    card.append(head, people, addRow);
+    const actions = document.createElement("div");
+    actions.className = "admin-room-bottom-actions";
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger-ghost-button";
+    deleteButton.textContent = "Delete room";
+    deleteButton.addEventListener("click", () => deleteAdminRoom(room));
+
+    actions.appendChild(deleteButton);
+    body.appendChild(actions);
+
+    card.appendChild(body);
     adminRoomsList.appendChild(card);
   });
 }
@@ -2261,9 +2466,11 @@ async function loadAdminRooms() {
 
   try {
     setAdminRoomsStatus("Loading rooms…");
-    const { data, error } = await client.rpc("admin_get_rooms_v117", {
+
+    const { data, error } = await client.rpc("admin_get_rooms_v120", {
       p_event_id: currentEventId
     });
+
     if (error) throw error;
 
     adminRoomsData = {

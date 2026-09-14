@@ -499,131 +499,194 @@ async function loadParticipantRoom() {
   const status = document.getElementById("participantRoomsStatus");
   if (!content || !status || !participantSessionToken) return;
 
-  status.textContent = "Loading room…";
+  status.textContent = "Loading rooms…";
   status.classList.remove("hidden", "error");
   content.innerHTML = "";
 
   try {
-    const { data, error } = await client.rpc("get_own_room_by_token_v117", {
+    const { data, error } = await client.rpc("get_event_rooms_by_token_v120", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });
+
     if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not load rooms.");
 
     status.classList.add("hidden");
 
-    if (!data?.assigned) {
-      content.innerHTML = '<p class="muted">You are not assigned to a room yet.</p>';
+    const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+    const ownRoomId = data?.own_room_id || null;
+    const isHotel = Boolean(data?.is_hotel);
+
+    if (!rooms.length) {
+      content.innerHTML = '<p class="muted">No rooms have been added yet.</p>';
       return;
     }
 
-    const card = document.createElement("div");
-    card.className = "participant-room-card";
+    rooms.forEach((room, index) => {
+      const occupants = [
+        ...(room.participants || []).map(person => ({
+          person_type: "participant",
+          person_id: person.participant_id,
+          display_name: person.display_name || "Participant"
+        })),
+        ...(room.people || []).map(person => ({
+          person_type: person.person_type || "other",
+          person_id: person.id,
+          display_name: person.display_name || "Other person"
+        }))
+      ].sort((a,b) => a.display_name.localeCompare(b.display_name));
 
-    const head = document.createElement("div");
-    head.className = "participant-room-head";
+      const isOwnRoom = room.id === ownRoomId;
 
-    const title = document.createElement("strong");
-    title.textContent = data.is_hotel
-      ? (data.room_number ? `Room ${data.room_number}` : "Hotel room")
-      : `Room ${data.room_index}`;
+      const card = document.createElement("details");
+      card.className = "participant-room-card participant-room-collapsible";
+      card.open = isOwnRoom;
+      card.classList.toggle("is-own-room", isOwnRoom);
 
-    head.appendChild(title);
+      const summary = document.createElement("summary");
+      summary.className = "participant-room-summary";
 
-    if (data.is_hotel) {
-      const numberWrap = document.createElement("label");
-      numberWrap.className = "participant-room-number-field";
+      const summaryTitle = document.createElement("div");
+      summaryTitle.className = "participant-room-summary-title";
 
-      const label = document.createElement("span");
-      label.textContent = "Room number";
+      const title = document.createElement("strong");
+      title.textContent = isHotel
+        ? (room.room_number ? `Room ${room.room_number}` : `Room ${index + 1}`)
+        : `Room ${room.room_index || index + 1}`;
 
-      const input = document.createElement("input");
-      input.type = "text";
-      input.inputMode = "numeric";
-      input.maxLength = 3;
-      input.pattern = "\\d{3}";
-      input.placeholder = "000";
-      input.value = data.room_number || "";
-      input.setAttribute("aria-label", "Hotel room number");
+      const count = document.createElement("span");
+      count.className = "room-person-count";
+      count.textContent = `${occupants.length} ${occupants.length === 1 ? "person" : "people"}`;
 
-      const save = document.createElement("button");
-      save.type = "button";
-      save.className = "secondary-button compact-button";
-      save.textContent = "Save";
+      if (isOwnRoom) {
+        const ownBadge = document.createElement("span");
+        ownBadge.className = "participant-own-room-badge";
+        ownBadge.textContent = "Your room";
+        summaryTitle.append(title, ownBadge, count);
+      } else {
+        summaryTitle.append(title, count);
+      }
 
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/\D/g, "").slice(0,3);
-      });
+      const chevron = document.createElement("span");
+      chevron.className = "collapse-chevron";
+      chevron.textContent = "⌄";
 
-      save.addEventListener("click", async () => {
-        const value = input.value.trim();
-        if (value && !/^\d{3}$/.test(value)) {
-          status.textContent = "Room number must be exactly 3 digits.";
-          status.classList.remove("hidden");
-          status.classList.add("error");
-          return;
-        }
+      summary.append(summaryTitle, chevron);
+      card.appendChild(summary);
 
-        save.disabled = true;
-        try {
-          const { data: result, error: updateError } = await client.rpc(
-            "set_own_room_number_by_token_v117",
-            {
-              p_event_id: eventId,
-              p_token: participantSessionToken,
-              p_room_number: value || null
+      const body = document.createElement("div");
+      body.className = "participant-room-card-body";
+
+      if (isHotel && isOwnRoom) {
+        const numberWrap = document.createElement("label");
+        numberWrap.className = "participant-room-number-field";
+
+        const label = document.createElement("span");
+        label.textContent = "Room number";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.inputMode = "numeric";
+        input.maxLength = 3;
+        input.pattern = "\\d{3}";
+        input.placeholder = "000";
+        input.value = room.room_number || "";
+        input.setAttribute("aria-label", "Hotel room number");
+
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "secondary-button compact-button";
+        save.textContent = "Save";
+
+        input.addEventListener("input", () => {
+          input.value = input.value.replace(/\D/g, "").slice(0, 3);
+        });
+
+        save.addEventListener("click", async () => {
+          const value = input.value.trim();
+
+          if (value && !/^\d{3}$/.test(value)) {
+            status.textContent = "Room number must be exactly 3 digits.";
+            status.classList.remove("hidden");
+            status.classList.add("error");
+            return;
+          }
+
+          save.disabled = true;
+
+          try {
+            const { data: result, error: updateError } = await client.rpc(
+              "set_own_room_number_by_token_v117",
+              {
+                p_event_id: eventId,
+                p_token: participantSessionToken,
+                p_room_number: value || null
+              }
+            );
+
+            if (updateError) throw updateError;
+            if (result?.ok === false) {
+              throw new Error(result?.error || "Could not save room number.");
             }
-          );
-          if (updateError) throw updateError;
-          if (result?.ok === false) throw new Error(result?.error || "Could not save room number.");
 
-          status.textContent = "Room number saved.";
-          status.classList.remove("hidden", "error");
-          setTimeout(() => status.classList.add("hidden"), 1200);
-          await loadParticipantRoom();
-        } catch (updateError) {
-          status.textContent = `Could not save room number: ${updateError.message}`;
-          status.classList.remove("hidden");
-          status.classList.add("error");
-        } finally {
-          save.disabled = false;
-        }
-      });
+            status.textContent = "Room number saved.";
+            status.classList.remove("hidden", "error");
+            setTimeout(() => status.classList.add("hidden"), 1200);
 
-      numberWrap.append(label, input, save);
-      head.appendChild(numberWrap);
-    }
+            await loadParticipantRoom();
+          } catch (updateError) {
+            status.textContent = `Could not save room number: ${updateError.message}`;
+            status.classList.remove("hidden");
+            status.classList.add("error");
+          } finally {
+            save.disabled = false;
+          }
+        });
 
-    const roommates = document.createElement("div");
-    roommates.className = "participant-roommates";
+        numberWrap.append(label, input, save);
+        body.appendChild(numberWrap);
+      }
 
-    const roommatesTitle = document.createElement("strong");
-    roommatesTitle.textContent = "Roommates";
-    roommates.appendChild(roommatesTitle);
+      const roommates = document.createElement("div");
+      roommates.className = "participant-roommates";
 
-    const names = Array.isArray(data.participants) ? data.participants : [];
-    if (!names.length) {
-      const empty = document.createElement("p");
-      empty.className = "muted";
-      empty.textContent = "No participants assigned.";
-      roommates.appendChild(empty);
-    } else {
-      names.forEach(person => {
-        const row = document.createElement("div");
-        row.className = "participant-roommate";
-        row.textContent = person.display_name || "Participant";
-        if (person.participant_id === participantAccess?.participant_id) {
-          row.classList.add("is-me");
-          row.textContent += " · You";
-        }
-        roommates.appendChild(row);
-      });
-    }
+      if (!occupants.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No people assigned.";
+        roommates.appendChild(empty);
+      } else {
+        occupants.forEach(person => {
+          const row = document.createElement("div");
+          row.className = "participant-roommate";
 
-    card.append(head, roommates);
-    content.appendChild(card);
+          row.textContent = person.display_name;
+
+          if (person.person_type === "admin") {
+            row.textContent += " · Admin";
+          } else if (person.person_type === "other") {
+            row.textContent += " · Guest";
+          }
+
+          if (
+            person.person_type === "participant" &&
+            person.person_id === participantAccess?.participant_id
+          ) {
+            row.classList.add("is-me");
+            row.textContent += " · You";
+          }
+
+          roommates.appendChild(row);
+        });
+      }
+
+      body.appendChild(roommates);
+      card.appendChild(body);
+      content.appendChild(card);
+    });
   } catch (error) {
-    status.textContent = `Could not load room: ${error.message}`;
+    status.textContent = `Could not load rooms: ${error.message}`;
     status.classList.remove("hidden");
     status.classList.add("error");
   }
