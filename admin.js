@@ -1565,6 +1565,7 @@ document.getElementById("descriptionInput").value = event.description || "";
 
   await Promise.all([
     loadEventLogbook(),
+    loadAdminSchedule(),
     loadAdminCanopyTraining(),
     loadAdminQuests(),
     loadCompetitionPlacements(),
@@ -1993,6 +1994,137 @@ function exportParticipantsToSpreadsheet() {
 
 exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsheet);
 
+
+
+
+// ---------------- Schedule ----------------
+const adminScheduleStatus = document.getElementById("adminScheduleStatus");
+const adminScheduleItems = document.getElementById("adminScheduleItems");
+const addScheduleItemButton = document.getElementById("addScheduleItemButton");
+const scheduleItemTemplate = document.getElementById("scheduleItemTemplate");
+
+function setAdminScheduleStatus(message = "", isError = false) {
+  if (!adminScheduleStatus) return;
+  adminScheduleStatus.textContent = message;
+  adminScheduleStatus.classList.toggle("hidden", !message);
+  adminScheduleStatus.classList.toggle("error", isError);
+}
+
+function scheduleUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function collectAdminScheduleItems() {
+  if (!adminScheduleItems) return [];
+  return [...adminScheduleItems.querySelectorAll(".schedule-item-editor")].map((row, index) => ({
+    id: row.dataset.itemId || scheduleUuid(),
+    item_date: row.querySelector(".schedule-item-date")?.value || null,
+    item_time: row.querySelector(".schedule-item-time")?.value || null,
+    title: row.querySelector(".schedule-item-title")?.value.trim() || "",
+    details: row.querySelector(".schedule-item-details")?.value.trim() || "",
+    sort_order: index
+  }));
+}
+
+async function saveAdminSchedule(message = "Schedule saved.") {
+  if (!currentEventId) {
+    setAdminScheduleStatus("Save the event first to store the schedule.");
+    return false;
+  }
+
+  const items = collectAdminScheduleItems();
+  if (items.some(item => !item.title)) {
+    setAdminScheduleStatus("Each schedule item needs an activity name.", true);
+    return false;
+  }
+
+  try {
+    setAdminScheduleStatus("Saving schedule…");
+    const { data, error } = await client.rpc("admin_replace_event_schedule_v104", {
+      p_event_id: currentEventId,
+      p_items: items
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not save schedule.");
+
+    setAdminScheduleStatus(message);
+    setTimeout(() => {
+      if (adminScheduleStatus?.textContent === message) setAdminScheduleStatus("");
+    }, 1200);
+    return true;
+  } catch (error) {
+    setAdminScheduleStatus(`Could not save schedule: ${error.message}`, true);
+    return false;
+  }
+}
+
+function addScheduleItem(data = {}) {
+  if (!scheduleItemTemplate || !adminScheduleItems) return;
+
+  const fragment = scheduleItemTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".schedule-item-editor");
+  row.dataset.itemId = data.id || scheduleUuid();
+
+  const dateInput = row.querySelector(".schedule-item-date");
+  const timeInput = row.querySelector(".schedule-item-time");
+  const titleInput = row.querySelector(".schedule-item-title");
+  const detailsInput = row.querySelector(".schedule-item-details");
+
+  dateInput.value = data.item_date || "";
+  timeInput.value = data.item_time ? String(data.item_time).slice(0,5) : "";
+  titleInput.value = data.title || "";
+  detailsInput.value = data.details || "";
+
+  [dateInput, timeInput, titleInput, detailsInput].forEach(input => {
+    input.addEventListener("change", () => saveAdminSchedule());
+  });
+
+  titleInput.addEventListener("blur", () => {
+    if (titleInput.value.trim()) saveAdminSchedule();
+  });
+
+  row.querySelector(".remove-schedule-item")?.addEventListener("click", async () => {
+    row.remove();
+    await saveAdminSchedule("Schedule item removed.");
+  });
+
+  adminScheduleItems.appendChild(fragment);
+  if (!data.title) titleInput.focus();
+}
+
+async function loadAdminSchedule() {
+  if (!adminScheduleItems) return;
+  adminScheduleItems.innerHTML = "";
+
+  if (!currentEventId) {
+    setAdminScheduleStatus("");
+    return;
+  }
+
+  try {
+    setAdminScheduleStatus("Loading schedule…");
+    const { data, error } = await client.rpc("admin_get_event_schedule_v104", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    rows.forEach(item => addScheduleItem(item));
+    setAdminScheduleStatus("");
+  } catch (error) {
+    setAdminScheduleStatus(`Could not load schedule: ${error.message}`, true);
+  }
+}
+
+addScheduleItemButton?.addEventListener("click", event => {
+  event.preventDefault();
+  addScheduleItem();
+});
 
 
 // ---------------- Canopy Training ----------------

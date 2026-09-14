@@ -259,7 +259,24 @@
           </label>
 
           </div>
-        </details><details id="eventLogbookSection" class="admin-event-logbook hidden">
+        </details>
+<details id="eventScheduleSection" class="admin-event-quests admin-event-schedule">
+  <summary class="quests-summary">
+    <div class="admin-box-title">
+      <span class="admin-box-icon" aria-hidden="true">📅</span>
+      <h2>Schedule</h2>
+    </div>
+    <span class="collapse-chevron" aria-hidden="true">⌄</span>
+  </summary>
+
+  <div class="quests-content schedule-admin-content">
+    <div id="adminScheduleStatus" class="status compact-status hidden"></div>
+    <div id="adminScheduleItems" class="admin-schedule-items"></div>
+    <button id="addScheduleItemButton" class="secondary-button" type="button">+ Add schedule item</button>
+  </div>
+</details>
+
+<details id="eventLogbookSection" class="admin-event-logbook hidden">
 <summary class="logbook-summary">
   <div class="admin-box-title">
     <span class="admin-box-icon" aria-hidden="true">📖</span>
@@ -546,6 +563,31 @@
     </section>
   </main>
 
+
+  
+  <template id="scheduleItemTemplate">
+    <div class="schedule-item-editor">
+      <div class="schedule-item-fields">
+        <label class="field">
+          <span>Date</span>
+          <input class="schedule-item-date" type="date" />
+        </label>
+        <label class="field">
+          <span>Time</span>
+          <input class="schedule-item-time" type="time" />
+        </label>
+        <label class="field schedule-item-title-field">
+          <span>Activity *</span>
+          <input class="schedule-item-title" type="text" placeholder="Breakfast / briefing / jumping…" />
+        </label>
+      </div>
+      <label class="field">
+        <span>Details</span>
+        <textarea class="schedule-item-details" rows="2" placeholder="Optional details"></textarea>
+      </label>
+      <button class="danger-ghost-button remove-schedule-item" type="button">Remove</button>
+    </div>
+  </template>
 
   <template id="canopyTaskTemplate">
     <div class="canopy-task-editor">

@@ -6827,3 +6827,209 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .canopy-course-summary {
   padding-right: 14px !important;
 }
+
+
+/* ---------- V104 Schedule + unified box spacing ---------- */
+
+/* Admin schedule editor */
+.schedule-admin-content {
+  padding-top: 14px !important;
+}
+
+.admin-schedule-items {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.schedule-item-editor {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+}
+
+.schedule-item-fields {
+  display: grid;
+  grid-template-columns: 150px 120px minmax(0,1fr);
+  gap: 8px;
+  align-items: end;
+}
+
+.schedule-item-editor .field {
+  margin: 0;
+}
+
+.schedule-item-editor textarea {
+  resize: vertical;
+}
+
+.remove-schedule-item {
+  justify-self: end;
+}
+
+/* Participant schedule */
+.participant-schedule-list {
+  display: grid;
+  gap: 7px;
+}
+
+.participant-schedule-item {
+  display: grid;
+  grid-template-columns: 105px minmax(0,1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+}
+
+.participant-schedule-when {
+  display: grid;
+  gap: 2px;
+}
+
+.participant-schedule-when strong {
+  font-size: 13px;
+}
+
+.participant-schedule-when span {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.participant-schedule-body {
+  display: grid;
+  gap: 3px;
+}
+
+.participant-schedule-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* All participant event boxes: same width/header height and one small gap. */
+.event-detail .event-info-boxes {
+  display: contents !important;
+}
+
+.event-detail .participant-collapsible {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 8px 0 0 !important;
+  border-radius: 18px !important;
+}
+
+.event-detail .participant-collapsible > summary {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 66px !important;
+  padding: 14px 16px !important;
+}
+
+.event-detail .participant-collapsible > summary h3 {
+  margin: 0 !important;
+  font-size: 18px !important;
+  line-height: 1.2 !important;
+}
+
+.event-detail .participant-collapsible > summary p {
+  margin: 2px 0 0 !important;
+  line-height: 1.15 !important;
+}
+
+.event-detail .event-summary-title {
+  min-width: 0;
+}
+
+/* All Admin top-level editor boxes: same collapsed header geometry + small gap. */
+#eventForm {
+  gap: 8px !important;
+}
+
+#eventForm > .editor-left-column {
+  gap: 8px !important;
+}
+
+#eventForm #eventDetailsSection,
+#eventForm #eventScheduleSection,
+#eventForm #eventLogbookSection,
+#eventForm #eventCanopyTrainingSection,
+#eventForm #eventQuestsSection,
+#eventForm #eventBeerFineSection,
+#eventForm #eventLandingCompetitionSection,
+#eventForm #eventSocialCompetitionSection,
+#eventForm #eventParticipantsSection {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+#eventForm #eventDetailsSection > summary,
+#eventForm #eventScheduleSection > summary,
+#eventForm #eventLogbookSection > summary,
+#eventForm #eventCanopyTrainingSection > summary,
+#eventForm #eventQuestsSection > summary,
+#eventForm #eventBeerFineSection > summary,
+#eventForm #eventLandingCompetitionSection > summary,
+#eventForm #eventSocialCompetitionSection > summary,
+#eventForm #eventParticipantsSection > summary {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 70px !important;
+  padding: 14px 16px !important;
+}
+
+/* Mobile admin order: keep Schedule near the top with the operational boxes. */
+@media (max-width: 900px) {
+  #eventLogbookSection { order: 1 !important; }
+  #eventScheduleSection { order: 2 !important; }
+  #eventCanopyTrainingSection { order: 3 !important; }
+  #eventLandingCompetitionSection { order: 4 !important; }
+  #eventSocialCompetitionSection { order: 5 !important; }
+  #eventBeerFineSection { order: 6 !important; }
+  #eventParticipantsSection { order: 7 !important; }
+  #eventDetailsSection { order: 8 !important; }
+  #eventQuestsSection { order: 9 !important; }
+}
+
+@media (max-width: 600px) {
+  .schedule-item-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .schedule-item-title-field {
+    grid-column: 1 / -1;
+  }
+
+  .participant-schedule-item {
+    grid-template-columns: 86px minmax(0,1fr);
+  }
+
+  .event-detail .participant-collapsible {
+    margin-top: 7px !important;
+  }
+
+  .event-detail .participant-collapsible > summary {
+    min-height: 62px !important;
+    padding: 12px 14px !important;
+  }
+
+  #eventForm #eventDetailsSection > summary,
+  #eventForm #eventScheduleSection > summary,
+  #eventForm #eventLogbookSection > summary,
+  #eventForm #eventCanopyTrainingSection > summary,
+  #eventForm #eventQuestsSection > summary,
+  #eventForm #eventBeerFineSection > summary,
+  #eventForm #eventLandingCompetitionSection > summary,
+  #eventForm #eventSocialCompetitionSection > summary,
+  #eventForm #eventParticipantsSection > summary {
+    min-height: 64px !important;
+    padding: 12px 14px !important;
+  }
+}

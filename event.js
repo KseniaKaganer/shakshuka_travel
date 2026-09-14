@@ -492,6 +492,74 @@ async function loadParticipantQuests() {
 
 
 
+
+async function loadParticipantSchedule() {
+  const list = document.getElementById("participantScheduleList");
+  const status = document.getElementById("participantScheduleStatus");
+  if (!list || !status || !participantSessionToken) return;
+
+  status.textContent = "Loading schedule…";
+  status.classList.remove("hidden", "error");
+
+  try {
+    const { data, error } = await client.rpc("get_event_schedule_by_token_v104", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    list.innerHTML = "";
+    status.classList.add("hidden");
+
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">No schedule has been added yet.</p>';
+      return;
+    }
+
+    rows.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "participant-schedule-item";
+
+      const when = document.createElement("div");
+      when.className = "participant-schedule-when";
+
+      if (item.item_date) {
+        const date = document.createElement("strong");
+        const [y,m,d] = String(item.item_date).split("-");
+        date.textContent = d && m ? `${d}/${m}/${String(y).slice(-2)}` : item.item_date;
+        when.appendChild(date);
+      }
+
+      if (item.item_time) {
+        const time = document.createElement("span");
+        time.textContent = String(item.item_time).slice(0,5);
+        when.appendChild(time);
+      }
+
+      const body = document.createElement("div");
+      body.className = "participant-schedule-body";
+
+      const title = document.createElement("strong");
+      title.textContent = item.title || "Activity";
+      body.appendChild(title);
+
+      if (item.details) {
+        const details = document.createElement("p");
+        details.textContent = item.details;
+        body.appendChild(details);
+      }
+
+      row.append(when, body);
+      list.appendChild(row);
+    });
+  } catch (error) {
+    status.textContent = `Could not load schedule: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+  }
+}
+
 async function loadParticipantCanopyTraining() {
   const list = document.getElementById("participantCanopyTrainingList");
   const status = document.getElementById("participantCanopyTrainingStatus");
@@ -956,6 +1024,7 @@ function showLoggedInView(data) {
   loadParticipantPaymentNotes();
   renderMissingAdminInfo(data);
   loadParticipantLogbook();
+  loadParticipantSchedule();
   loadParticipantQuests();
   loadParticipantCanopyTraining();
   loadLandingCompetitionLeaderboard();
