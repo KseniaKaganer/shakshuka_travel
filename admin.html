@@ -271,8 +271,7 @@
 
   <div class="quests-content schedule-admin-content">
     <div id="adminScheduleStatus" class="status compact-status hidden"></div>
-    <div id="adminScheduleItems" class="admin-schedule-items"></div>
-    <button id="addScheduleItemButton" class="secondary-button" type="button">+ Add schedule item</button>
+    <div id="adminScheduleDays" class="admin-schedule-days"></div>
   </div>
 </details>
 
@@ -562,34 +561,7 @@
 </form><div id="editorStatus" class="status compact-status"></div>
     </section>
   </main>
-
-
-  
-  <template id="scheduleItemTemplate">
-    <div class="schedule-item-editor">
-      <div class="schedule-item-fields">
-        <label class="field">
-          <span>Date</span>
-          <input class="schedule-item-date" type="date" />
-        </label>
-        <label class="field">
-          <span>Time</span>
-          <input class="schedule-item-time" type="time" />
-        </label>
-        <label class="field schedule-item-title-field">
-          <span>Activity *</span>
-          <input class="schedule-item-title" type="text" placeholder="Breakfast / briefing / jumping…" />
-        </label>
-      </div>
-      <label class="field">
-        <span>Details</span>
-        <textarea class="schedule-item-details" rows="2" placeholder="Optional details"></textarea>
-      </label>
-      <button class="danger-ghost-button remove-schedule-item" type="button">Remove</button>
-    </div>
-  </template>
-
-  <template id="canopyTaskTemplate">
+<template id="canopyTaskTemplate">
     <div class="canopy-task-editor">
       <input class="canopy-task-title" type="text" placeholder="Course task…" />
       <button class="danger-ghost-button canopy-task-remove" type="button" aria-label="Remove task" title="Remove task">×</button>

@@ -502,7 +502,7 @@ async function loadParticipantSchedule() {
   status.classList.remove("hidden", "error");
 
   try {
-    const { data, error } = await client.rpc("get_event_schedule_by_token_v104", {
+    const { data, error } = await client.rpc("get_event_schedule_by_token_v105", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });
@@ -517,41 +517,89 @@ async function loadParticipantSchedule() {
       return;
     }
 
-    rows.forEach(item => {
-      const row = document.createElement("div");
-      row.className = "participant-schedule-item";
+    const days = new Map();
+    rows.forEach(row => {
+      if (!days.has(row.day_date)) {
+        days.set(row.day_date, {
+          day_date: row.day_date,
+          day_title: row.day_title || "",
+          items: []
+        });
+      }
+      if (row.item_id) days.get(row.day_date).items.push(row);
+    });
 
-      const when = document.createElement("div");
-      when.className = "participant-schedule-when";
+    [...days.values()].forEach((day, dayIndex) => {
+      const dayBox = document.createElement("section");
+      dayBox.className = "participant-schedule-day";
 
-      if (item.item_date) {
-        const date = document.createElement("strong");
-        const [y,m,d] = String(item.item_date).split("-");
-        date.textContent = d && m ? `${d}/${m}/${String(y).slice(-2)}` : item.item_date;
-        when.appendChild(date);
+      const head = document.createElement("div");
+      head.className = "participant-schedule-day-head";
+
+      const label = document.createElement("div");
+      const [y,m,d] = String(day.day_date).split("-");
+      const dateText = d && m ? `${d}/${m}/${String(y).slice(-2)}` : day.day_date;
+
+      const dayNumber = document.createElement("strong");
+      dayNumber.textContent = `Day ${dayIndex} · ${dateText}`;
+
+      label.appendChild(dayNumber);
+
+      if (day.day_title) {
+        const title = document.createElement("span");
+        title.className = "participant-schedule-day-title";
+        title.textContent = day.day_title;
+        label.appendChild(title);
       }
 
-      if (item.item_time) {
-        const time = document.createElement("span");
-        time.textContent = String(item.item_time).slice(0,5);
-        when.appendChild(time);
+      head.appendChild(label);
+      dayBox.appendChild(head);
+
+      if (!day.items.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted small-text participant-schedule-empty";
+        empty.textContent = "No scheduled items.";
+        dayBox.appendChild(empty);
+      } else {
+        const items = document.createElement("div");
+        items.className = "participant-schedule-day-items";
+
+        day.items
+          .sort((a,b) => String(a.item_time || "99:99").localeCompare(String(b.item_time || "99:99")))
+          .forEach(item => {
+            const row = document.createElement("div");
+            row.className = "participant-schedule-item";
+
+            const when = document.createElement("div");
+            when.className = "participant-schedule-when";
+
+            if (item.item_time) {
+              const time = document.createElement("span");
+              time.textContent = String(item.item_time).slice(0,5);
+              when.appendChild(time);
+            }
+
+            const body = document.createElement("div");
+            body.className = "participant-schedule-body";
+
+            const title = document.createElement("strong");
+            title.textContent = item.title || "Activity";
+            body.appendChild(title);
+
+            if (item.details) {
+              const details = document.createElement("p");
+              details.textContent = item.details;
+              body.appendChild(details);
+            }
+
+            row.append(when, body);
+            items.appendChild(row);
+          });
+
+        dayBox.appendChild(items);
       }
 
-      const body = document.createElement("div");
-      body.className = "participant-schedule-body";
-
-      const title = document.createElement("strong");
-      title.textContent = item.title || "Activity";
-      body.appendChild(title);
-
-      if (item.details) {
-        const details = document.createElement("p");
-        details.textContent = item.details;
-        body.appendChild(details);
-      }
-
-      row.append(when, body);
-      list.appendChild(row);
+      list.appendChild(dayBox);
     });
   } catch (error) {
     status.textContent = `Could not load schedule: ${error.message}`;

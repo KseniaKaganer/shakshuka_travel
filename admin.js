@@ -1999,9 +1999,13 @@ exportParticipantsButton?.addEventListener("click", exportParticipantsToSpreadsh
 
 // ---------------- Schedule ----------------
 const adminScheduleStatus = document.getElementById("adminScheduleStatus");
-const adminScheduleItems = document.getElementById("adminScheduleItems");
-const addScheduleItemButton = document.getElementById("addScheduleItemButton");
-const scheduleItemTemplate = document.getElementById("scheduleItemTemplate");
+const adminScheduleDays = document.getElementById("adminScheduleDays");
+
+let adminScheduleData = {
+  days: [],
+  items: [],
+  exclusions: []
+};
 
 function setAdminScheduleStatus(message = "", isError = false) {
   if (!adminScheduleStatus) return;
@@ -2019,43 +2023,159 @@ function scheduleUuid() {
   });
 }
 
-function collectAdminScheduleItems() {
-  if (!adminScheduleItems) return [];
-  return [...adminScheduleItems.querySelectorAll(".schedule-item-editor")].map((row, index) => ({
-    id: row.dataset.itemId || scheduleUuid(),
-    item_date: row.querySelector(".schedule-item-date")?.value || null,
-    item_time: row.querySelector(".schedule-item-time")?.value || null,
-    title: row.querySelector(".schedule-item-title")?.value.trim() || "",
-    details: row.querySelector(".schedule-item-details")?.value.trim() || "",
-    sort_order: index
-  }));
-}
+function scheduleEventDates() {
+  const start = document.getElementById("startDateInput")?.value;
+  const end = document.getElementById("endDateInput")?.value;
+  if (!start || !end) return [];
 
-async function saveAdminSchedule(message = "Schedule saved.") {
-  if (!currentEventId) {
-    setAdminScheduleStatus("Save the event first to store the schedule.");
-    return false;
+  const dates = [];
+  const current = new Date(`${start}T12:00:00`);
+  const last = new Date(`${end}T12:00:00`);
+
+  while (current <= last && dates.length < 100) {
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, "0");
+    const d = String(current.getDate()).padStart(2, "0");
+    dates.push(`${y}-${m}-${d}`);
+    current.setDate(current.getDate() + 1);
   }
 
-  const items = collectAdminScheduleItems();
-  if (items.some(item => !item.title)) {
-    setAdminScheduleStatus("Each schedule item needs an activity name.", true);
+  return dates;
+}
+
+function formatScheduleAdminDate(dateValue, dayIndex) {
+  const [y,m,d] = String(dateValue || "").split("-");
+  return `Day ${dayIndex} · ${d}/${m}/${String(y).slice(-2)}`;
+}
+
+function scheduleTimeParts(timeValue) {
+  const value = String(timeValue || "");
+  const match = value.match(/^(\d{2}):(\d{2})/);
+  return {
+    hour: match ? match[1] : "08",
+    minute: match && ["00","15","30","45"].includes(match[2]) ? match[2] : "00"
+  };
+}
+
+function createScheduleTimeSelects(timeValue = "") {
+  const parts = scheduleTimeParts(timeValue);
+  const wrap = document.createElement("div");
+  wrap.className = "schedule-time-selects";
+
+  const hour = document.createElement("select");
+  hour.className = "schedule-hour-select";
+  hour.setAttribute("aria-label", "Hour");
+  for (let h = 0; h < 24; h += 1) {
+    const option = document.createElement("option");
+    option.value = String(h).padStart(2, "0");
+    option.textContent = String(h).padStart(2, "0");
+    if (option.value === parts.hour) option.selected = true;
+    hour.appendChild(option);
+  }
+
+  const colon = document.createElement("span");
+  colon.textContent = ":";
+
+  const minute = document.createElement("select");
+  minute.className = "schedule-minute-select";
+  minute.setAttribute("aria-label", "Minutes");
+  ["00","15","30","45"].forEach(value => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    if (value === parts.minute) option.selected = true;
+    minute.appendChild(option);
+  });
+
+  wrap.append(hour, colon, minute);
+  return { wrap, hour, minute };
+}
+
+function itemVisibleOnScheduleDay(item, dayDate) {
+  if (item.applies_to_all) {
+    return !adminScheduleData.exclusions.some(ex =>
+      ex.item_id === item.id && ex.day_date === dayDate
+    );
+  }
+  return item.item_date === dayDate;
+}
+
+function scheduleItemsForDay(dayDate) {
+  return adminScheduleData.items
+    .filter(item => itemVisibleOnScheduleDay(item, dayDate))
+    .sort((a,b) => {
+      const ta = String(a.item_time || "99:99");
+      const tb = String(b.item_time || "99:99");
+      if (ta !== tb) return ta.localeCompare(tb);
+      return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0);
+    });
+}
+
+async function saveScheduleDayTitle(dayDate, title) {
+  if (!currentEventId) return;
+  try {
+    const { data, error } = await client.rpc("admin_set_schedule_day_title_v105", {
+      p_event_id: currentEventId,
+      p_day_date: dayDate,
+      p_title: title.trim()
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not save day title.");
+
+    const existing = adminScheduleData.days.find(day => day.day_date === dayDate);
+    if (existing) existing.title = title.trim();
+    else adminScheduleData.days.push({ day_date: dayDate, title: title.trim() });
+    setAdminScheduleStatus("Day title saved.");
+    setTimeout(() => setAdminScheduleStatus(""), 900);
+  } catch (error) {
+    setAdminScheduleStatus(`Could not save day title: ${error.message}`, true);
+  }
+}
+
+async function upsertScheduleItem(item, dayDate, isNew = false) {
+  if (!currentEventId) return false;
+  if (!item.title?.trim()) {
+    setAdminScheduleStatus("Schedule activity needs a title.", true);
     return false;
   }
 
   try {
     setAdminScheduleStatus("Saving schedule…");
-    const { data, error } = await client.rpc("admin_replace_event_schedule_v104", {
+    const { data, error } = await client.rpc("admin_upsert_schedule_item_v105", {
       p_event_id: currentEventId,
-      p_items: items
+      p_item_id: item.id || null,
+      p_item_date: item.applies_to_all ? null : dayDate,
+      p_applies_to_all: Boolean(item.applies_to_all),
+      p_item_time: item.item_time || null,
+      p_title: item.title.trim(),
+      p_details: (item.details || "").trim()
     });
     if (error) throw error;
-    if (data?.ok === false) throw new Error(data?.error || "Could not save schedule.");
+    if (data?.ok === false) throw new Error(data?.error || "Could not save schedule item.");
 
-    setAdminScheduleStatus(message);
-    setTimeout(() => {
-      if (adminScheduleStatus?.textContent === message) setAdminScheduleStatus("");
-    }, 1200);
+    const saved = {
+      id: data.id || item.id,
+      item_date: item.applies_to_all ? null : dayDate,
+      applies_to_all: Boolean(item.applies_to_all),
+      item_time: item.item_time || null,
+      title: item.title.trim(),
+      details: (item.details || "").trim(),
+      sort_order: Number(item.sort_order) || 0
+    };
+
+    const index = adminScheduleData.items.findIndex(existing => existing.id === saved.id);
+    if (index >= 0) adminScheduleData.items[index] = saved;
+    else adminScheduleData.items.push(saved);
+
+    // If a previously excluded all-days item is explicitly added again from this day,
+    // remove that one-day exclusion.
+    adminScheduleData.exclusions = adminScheduleData.exclusions.filter(ex =>
+      !(ex.item_id === saved.id && ex.day_date === dayDate)
+    );
+
+    setAdminScheduleStatus("Schedule saved.");
+    setTimeout(() => setAdminScheduleStatus(""), 900);
+    if (isNew) renderAdminSchedule();
     return true;
   } catch (error) {
     setAdminScheduleStatus(`Could not save schedule: ${error.message}`, true);
@@ -2063,68 +2183,258 @@ async function saveAdminSchedule(message = "Schedule saved.") {
   }
 }
 
-function addScheduleItem(data = {}) {
-  if (!scheduleItemTemplate || !adminScheduleItems) return;
+async function deleteScheduleItemFromDay(item, dayDate) {
+  if (!currentEventId || !item?.id) return;
 
-  const fragment = scheduleItemTemplate.content.cloneNode(true);
-  const row = fragment.querySelector(".schedule-item-editor");
-  row.dataset.itemId = data.id || scheduleUuid();
+  try {
+    const { data, error } = await client.rpc("admin_delete_schedule_item_from_day_v105", {
+      p_event_id: currentEventId,
+      p_item_id: item.id,
+      p_day_date: dayDate
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not delete schedule item.");
 
-  const dateInput = row.querySelector(".schedule-item-date");
-  const timeInput = row.querySelector(".schedule-item-time");
-  const titleInput = row.querySelector(".schedule-item-title");
-  const detailsInput = row.querySelector(".schedule-item-details");
+    if (item.applies_to_all) {
+      if (!adminScheduleData.exclusions.some(ex => ex.item_id === item.id && ex.day_date === dayDate)) {
+        adminScheduleData.exclusions.push({ item_id: item.id, day_date: dayDate });
+      }
+    } else {
+      adminScheduleData.items = adminScheduleData.items.filter(existing => existing.id !== item.id);
+    }
 
-  dateInput.value = data.item_date || "";
-  timeInput.value = data.item_time ? String(data.item_time).slice(0,5) : "";
-  titleInput.value = data.title || "";
-  detailsInput.value = data.details || "";
+    renderAdminSchedule();
+    setAdminScheduleStatus("Item removed from this day.");
+    setTimeout(() => setAdminScheduleStatus(""), 900);
+  } catch (error) {
+    setAdminScheduleStatus(`Could not remove schedule item: ${error.message}`, true);
+  }
+}
 
-  [dateInput, timeInput, titleInput, detailsInput].forEach(input => {
-    input.addEventListener("change", () => saveAdminSchedule());
+function buildScheduleItemEditor(item, dayDate) {
+  const row = document.createElement("div");
+  row.className = "schedule-day-item-editor";
+  if (item.applies_to_all) row.classList.add("is-all-days");
+
+  const time = createScheduleTimeSelects(item.item_time);
+
+  const title = document.createElement("input");
+  title.type = "text";
+  title.className = "schedule-day-item-title";
+  title.value = item.title || "";
+  title.placeholder = "Activity";
+
+  const details = document.createElement("textarea");
+  details.className = "schedule-day-item-details";
+  details.rows = 2;
+  details.maxLength = 180;
+  details.value = item.details || "";
+  details.placeholder = "Short details";
+
+  const scope = document.createElement("span");
+  scope.className = "schedule-item-scope-badge";
+  scope.textContent = item.applies_to_all ? "All days" : "This day";
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "danger-ghost-button schedule-item-delete";
+  remove.textContent = "×";
+  remove.title = item.applies_to_all ? "Remove from this day" : "Delete item";
+  remove.setAttribute("aria-label", remove.title);
+
+  const saveChanges = async () => {
+    item.item_time = `${time.hour.value}:${time.minute.value}`;
+    item.title = title.value.trim();
+    item.details = details.value.trim();
+    await upsertScheduleItem(item, dayDate);
+  };
+
+  time.hour.addEventListener("change", saveChanges);
+  time.minute.addEventListener("change", saveChanges);
+  title.addEventListener("change", saveChanges);
+  title.addEventListener("blur", () => {
+    if (title.value.trim()) saveChanges();
+  });
+  details.addEventListener("change", saveChanges);
+  remove.addEventListener("click", () => deleteScheduleItemFromDay(item, dayDate));
+
+  const top = document.createElement("div");
+  top.className = "schedule-day-item-top";
+  top.append(time.wrap, title, scope, remove);
+
+  row.append(top, details);
+  return row;
+}
+
+function buildNewScheduleItemRow(dayDate) {
+  const row = document.createElement("div");
+  row.className = "schedule-new-item-row";
+
+  const time = createScheduleTimeSelects("08:00");
+
+  const title = document.createElement("input");
+  title.type = "text";
+  title.className = "schedule-new-item-title";
+  title.placeholder = "New activity";
+
+  const details = document.createElement("textarea");
+  details.className = "schedule-new-item-details";
+  details.rows = 2;
+  details.maxLength = 180;
+  details.placeholder = "Short details";
+
+  const scope = document.createElement("select");
+  scope.className = "schedule-new-item-scope";
+  scope.innerHTML = `
+    <option value="day">This day</option>
+    <option value="all">All days</option>
+  `;
+
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "primary-button schedule-add-item-button";
+  add.textContent = "+ Add";
+
+  add.addEventListener("click", async () => {
+    if (!title.value.trim()) {
+      setAdminScheduleStatus("Enter an activity title first.", true);
+      title.focus();
+      return;
+    }
+
+    const item = {
+      id: null,
+      item_date: scope.value === "all" ? null : dayDate,
+      applies_to_all: scope.value === "all",
+      item_time: `${time.hour.value}:${time.minute.value}`,
+      title: title.value.trim(),
+      details: details.value.trim(),
+      sort_order: scheduleItemsForDay(dayDate).length
+    };
+
+    await upsertScheduleItem(item, dayDate, true);
   });
 
-  titleInput.addEventListener("blur", () => {
-    if (titleInput.value.trim()) saveAdminSchedule();
-  });
+  const top = document.createElement("div");
+  top.className = "schedule-new-item-top";
+  top.append(time.wrap, title, scope, add);
 
-  row.querySelector(".remove-schedule-item")?.addEventListener("click", async () => {
-    row.remove();
-    await saveAdminSchedule("Schedule item removed.");
-  });
+  row.append(top, details);
+  return row;
+}
 
-  adminScheduleItems.appendChild(fragment);
-  if (!data.title) titleInput.focus();
+function renderAdminSchedule() {
+  if (!adminScheduleDays) return;
+  adminScheduleDays.innerHTML = "";
+
+  const dates = scheduleEventDates();
+  if (!dates.length) {
+    adminScheduleDays.innerHTML = '<p class="muted">Choose the event start and end dates first.</p>';
+    return;
+  }
+
+  dates.forEach((dayDate, index) => {
+    const day = document.createElement("details");
+    day.className = "schedule-day-card";
+    if (index === 0) day.open = true;
+
+    const summary = document.createElement("summary");
+    summary.className = "schedule-day-summary";
+
+    const summaryLeft = document.createElement("div");
+    summaryLeft.className = "schedule-day-summary-text";
+
+    const dayLabel = document.createElement("strong");
+    dayLabel.textContent = formatScheduleAdminDate(dayDate, index);
+
+    const storedTitle = adminScheduleData.days.find(item => item.day_date === dayDate)?.title || "";
+    const titlePreview = document.createElement("span");
+    titlePreview.className = "muted small-text";
+    titlePreview.textContent = storedTitle || "No day title";
+
+    summaryLeft.append(dayLabel, titlePreview);
+
+    const count = document.createElement("span");
+    count.className = "count-pill";
+    count.textContent = String(scheduleItemsForDay(dayDate).length);
+
+    summary.append(summaryLeft, count);
+
+    const body = document.createElement("div");
+    body.className = "schedule-day-body";
+
+    const dayTitleField = document.createElement("label");
+    dayTitleField.className = "field schedule-day-title-field";
+    dayTitleField.innerHTML = "<span>Day title</span>";
+
+    const dayTitleInput = document.createElement("input");
+    dayTitleInput.type = "text";
+    dayTitleInput.maxLength = 80;
+    dayTitleInput.placeholder = "Travel day / Jump day / Free day…";
+    dayTitleInput.value = storedTitle;
+    dayTitleInput.addEventListener("change", async () => {
+      await saveScheduleDayTitle(dayDate, dayTitleInput.value);
+      titlePreview.textContent = dayTitleInput.value.trim() || "No day title";
+    });
+    dayTitleInput.addEventListener("blur", async () => {
+      if (dayTitleInput.value.trim() !== storedTitle) {
+        await saveScheduleDayTitle(dayDate, dayTitleInput.value);
+        titlePreview.textContent = dayTitleInput.value.trim() || "No day title";
+      }
+    });
+    dayTitleField.appendChild(dayTitleInput);
+
+    const items = document.createElement("div");
+    items.className = "schedule-day-items";
+    const dayItems = scheduleItemsForDay(dayDate);
+    if (!dayItems.length) {
+      items.innerHTML = '<p class="muted small-text schedule-empty-day">No items for this day.</p>';
+    } else {
+      dayItems.forEach(item => items.appendChild(buildScheduleItemEditor(item, dayDate)));
+    }
+
+    const addLabel = document.createElement("div");
+    addLabel.className = "schedule-add-label";
+    addLabel.textContent = "Add schedule item";
+
+    body.append(dayTitleField, items, addLabel, buildNewScheduleItemRow(dayDate));
+    day.append(summary, body);
+    adminScheduleDays.appendChild(day);
+  });
 }
 
 async function loadAdminSchedule() {
-  if (!adminScheduleItems) return;
-  adminScheduleItems.innerHTML = "";
+  if (!adminScheduleDays) return;
+  adminScheduleDays.innerHTML = "";
 
   if (!currentEventId) {
     setAdminScheduleStatus("");
+    renderAdminSchedule();
     return;
   }
 
   try {
     setAdminScheduleStatus("Loading schedule…");
-    const { data, error } = await client.rpc("admin_get_event_schedule_v104", {
+    const { data, error } = await client.rpc("admin_get_event_schedule_v105", {
       p_event_id: currentEventId
     });
     if (error) throw error;
 
-    const rows = Array.isArray(data) ? data : [];
-    rows.forEach(item => addScheduleItem(item));
+    adminScheduleData = {
+      days: Array.isArray(data?.days) ? data.days : [],
+      items: Array.isArray(data?.items) ? data.items : [],
+      exclusions: Array.isArray(data?.exclusions) ? data.exclusions : []
+    };
+
+    renderAdminSchedule();
     setAdminScheduleStatus("");
   } catch (error) {
     setAdminScheduleStatus(`Could not load schedule: ${error.message}`, true);
   }
 }
 
-addScheduleItemButton?.addEventListener("click", event => {
-  event.preventDefault();
-  addScheduleItem();
-});
+document.getElementById("startDateInput")?.addEventListener("change", renderAdminSchedule);
+document.getElementById("endDateInput")?.addEventListener("change", renderAdminSchedule);
 
 
 // ---------------- Canopy Training ----------------
