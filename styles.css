@@ -9215,3 +9215,54 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* ---------- V130 Transportation time controls ---------- */
+.admin-transport-time-row {
+  grid-template-columns: 160px 172px 180px 172px;
+}
+
+.transport-time-selects {
+  display: grid;
+  grid-template-columns: 76px auto 76px;
+  align-items: center;
+  gap: 5px;
+  height: 46px;
+}
+
+.transport-time-selects > select {
+  width: 76px;
+  min-width: 76px;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 28px 0 10px;
+  font-size: 15px;
+  line-height: 44px;
+}
+
+.transport-time-selects > span {
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .admin-transport-time-row {
+    grid-template-columns: repeat(4, minmax(0,1fr));
+  }
+
+  .transport-time-selects {
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  }
+
+  .transport-time-selects > select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-transport-time-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

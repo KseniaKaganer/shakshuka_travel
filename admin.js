@@ -2636,6 +2636,50 @@ async function removeTransportationTraveler(item, person) {
   }
 }
 
+function createTransportTimeSelects(timeValue = "", defaultTime = "07:00") {
+  const value = String(timeValue || defaultTime);
+  const match = value.match(/^(\d{2}):(\d{2})/);
+  const selectedHour = match ? match[1] : "07";
+  const rawMinute = match ? match[2] : "00";
+  const selectedMinute = ["00","15","30","45"].includes(rawMinute) ? rawMinute : "00";
+
+  const wrap = document.createElement("div");
+  wrap.className = "transport-time-selects";
+
+  const hour = document.createElement("select");
+  hour.setAttribute("aria-label", "Hour");
+  for (let h = 0; h < 24; h += 1) {
+    const text = String(h).padStart(2, "0");
+    const option = document.createElement("option");
+    option.value = text;
+    option.textContent = text;
+    option.selected = text === selectedHour;
+    hour.appendChild(option);
+  }
+
+  const colon = document.createElement("span");
+  colon.textContent = ":";
+
+  const minute = document.createElement("select");
+  minute.setAttribute("aria-label", "Minutes");
+  ["00","15","30","45"].forEach(text => {
+    const option = document.createElement("option");
+    option.value = text;
+    option.textContent = text;
+    option.selected = text === selectedMinute;
+    minute.appendChild(option);
+  });
+
+  wrap.append(hour, colon, minute);
+
+  return {
+    wrap,
+    hour,
+    minute,
+    value: () => `${hour.value}:${minute.value}`
+  };
+}
+
 function renderAdminTransportation() {
   if (!adminTransportationList) return;
   adminTransportationList.innerHTML = "";
@@ -2684,21 +2728,31 @@ function renderAdminTransportation() {
     destination.maxLength = 120;
     destination.value = item.destination || "";
 
-    const start = document.createElement("input");
-    start.type = "time";
-    start.className = "admin-transport-time";
-    start.value = item.departure_time ? String(item.departure_time).slice(0,5) : "";
+    const startTime = createTransportTimeSelects(
+      item.departure_time ? String(item.departure_time).slice(0,5) : "",
+      "07:00"
+    );
 
-    const arrival = document.createElement("input");
-    arrival.type = "time";
-    arrival.className = "admin-transport-time";
-    arrival.value = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
+    const arrivalTime = createTransportTimeSelects(
+      item.arrival_time ? String(item.arrival_time).slice(0,5) : "",
+      "07:00"
+    );
 
     const arrivalDate = document.createElement("input");
     arrivalDate.type = "date";
     arrivalDate.className = "admin-transport-date admin-transport-arrival-date";
-    arrivalDate.value = item.arrival_date || "";
-    arrivalDate.title = "Arrival date (only needed if arrival is on another day)";
+    arrivalDate.value = item.arrival_date || item.travel_date || "";
+    arrivalDate.title = "End date";
+
+    let endDateTracksStart = !item.arrival_date || item.arrival_date === item.travel_date;
+    date.addEventListener("change", () => {
+      if (endDateTracksStart || !arrivalDate.value) {
+        arrivalDate.value = date.value;
+      }
+    });
+    arrivalDate.addEventListener("change", () => {
+      endDateTracksStart = !arrivalDate.value || arrivalDate.value === date.value;
+    });
 
     const save = document.createElement("button");
     save.type = "button";
@@ -2709,8 +2763,8 @@ function renderAdminTransportation() {
     save.addEventListener("click", () => saveAdminTransportation(item, {
       transport_type: type.value,
       travel_date: date.value,
-      departure_time: start.value,
-      arrival_time: arrival.value,
+      departure_time: startTime.value(),
+      arrival_time: arrivalTime.value(),
       arrival_date: arrivalDate.value,
       from_location: fromLocation.value.trim(),
       destination: destination.value.trim()
@@ -2747,16 +2801,16 @@ function renderAdminTransportation() {
     const startField = document.createElement("label");
     startField.className = "transport-mini-field";
     startField.innerHTML = "<span>Start</span>";
-    startField.appendChild(start);
+    startField.appendChild(startTime.wrap);
 
     const arrivalField = document.createElement("label");
     arrivalField.className = "transport-mini-field transport-arrival-time-field";
     arrivalField.innerHTML = "<span>End time</span>";
-    arrivalField.appendChild(arrival);
+    arrivalField.appendChild(arrivalTime.wrap);
 
     const arrivalDateField = document.createElement("label");
     arrivalDateField.className = "transport-mini-field transport-arrival-date-field";
-    arrivalDateField.innerHTML = "<span>End date <small>(optional)</small></span>";
+    arrivalDateField.innerHTML = "<span>End date</span>";
     arrivalDateField.appendChild(arrivalDate);
 
     const routeRow = document.createElement("div");
@@ -2765,7 +2819,7 @@ function renderAdminTransportation() {
 
     const timeRow = document.createElement("div");
     timeRow.className = "admin-transport-time-row";
-    timeRow.append(dateField, startField, arrivalField, arrivalDateField);
+    timeRow.append(dateField, startField, arrivalDateField, arrivalField);
 
     form.append(routeRow, timeRow);
     card.appendChild(form);
@@ -2951,7 +3005,7 @@ function scheduleTimeParts(timeValue) {
   const value = String(timeValue || "");
   const match = value.match(/^(\d{2}):(\d{2})/);
   return {
-    hour: match ? match[1] : "08",
+    hour: match ? match[1] : "07",
     minute: match && ["00","15","30","45"].includes(match[2]) ? match[2] : "00"
   };
 }
