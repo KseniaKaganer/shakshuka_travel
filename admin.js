@@ -2395,6 +2395,17 @@ function renderAdminRooms() {
       const value = select.value;
       if (!value) return;
 
+      // Adding a traveler must NOT finish editing or discard unsaved fields.
+      rememberTransportationDraft(item, {
+        type,
+        date,
+        startTime,
+        arrivalDate,
+        arrivalTime,
+        fromLocation,
+        destination
+      });
+
       if (value.startsWith("participant:")) {
         await addParticipantToRoomV120(room, value.slice("participant:".length));
         return;
@@ -2475,6 +2486,27 @@ const TRANSPORT_LABELS = {
 };
 
 let adminTransportationData = [];
+const transportationEditingIds = new Set();
+const transportationDrafts = new Map();
+
+function rememberTransportationDraft(item, controls) {
+  transportationEditingIds.add(item.id);
+  transportationDrafts.set(item.id, {
+    transport_type: controls.type.value,
+    travel_date: controls.date.value,
+    departure_time: controls.startTime.value(),
+    arrival_date: controls.arrivalDate.value,
+    arrival_time: controls.arrivalTime.value(),
+    from_location: controls.fromLocation.value,
+    destination: controls.destination.value
+  });
+}
+
+function transportationItemWithDraft(item) {
+  const draft = transportationDrafts.get(item.id);
+  return draft ? { ...item, ...draft } : item;
+}
+
 
 function setAdminTransportationStatus(message = "", isError = false) {
   if (!adminTransportationStatus) return;
@@ -2530,6 +2562,7 @@ async function addAdminTransportation() {
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not add transportation.");
+    if (data?.id) transportationEditingIds.add(data.id);
     await loadAdminTransportation();
   } catch (error) {
     setAdminTransportationStatus(`Could not add transportation: ${error.message}`, true);
@@ -2551,6 +2584,8 @@ async function saveAdminTransportation(item, values) {
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not save transportation.");
+    transportationEditingIds.delete(item.id);
+    transportationDrafts.delete(item.id);
     await loadAdminTransportation();
   } catch (error) {
     setAdminTransportationStatus(`Could not save transportation: ${error.message}`, true);
@@ -2565,6 +2600,8 @@ async function deleteAdminTransportation(item) {
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not delete transportation.");
+    transportationEditingIds.delete(item.id);
+    transportationDrafts.delete(item.id);
     await loadAdminTransportation();
   } catch (error) {
     setAdminTransportationStatus(`Could not delete transportation: ${error.message}`, true);
@@ -2704,7 +2741,8 @@ function renderAdminTransportation() {
     return String(a.id || "").localeCompare(String(b.id || ""));
   });
 
-  sortedTransportation.forEach((item, index) => {
+  sortedTransportation.forEach((rawItem, index) => {
+    const item = transportationItemWithDraft(rawItem);
     const card = document.createElement("div");
     card.className = "admin-transport-card";
 
@@ -2961,7 +2999,7 @@ function renderAdminTransportation() {
       item.departure_time || item.arrival_time || travelers.length
     );
 
-    if (hasSavedDetails) {
+    if (hasSavedDetails && !transportationEditingIds.has(item.id)) {
       const editorChildren = [...card.children];
       const summary = document.createElement("div");
       summary.className = "admin-transport-summary";
@@ -3001,8 +3039,17 @@ function renderAdminTransportation() {
       edit.className = "secondary-button compact-button admin-transport-edit-button";
       edit.textContent = "Edit";
       edit.addEventListener("click", () => {
-        card.innerHTML = "";
-        editorChildren.forEach(child => card.appendChild(child));
+        transportationEditingIds.add(item.id);
+        transportationDrafts.set(item.id, {
+          transport_type: item.transport_type || "car",
+          travel_date: item.travel_date || "",
+          departure_time: item.departure_time ? String(item.departure_time).slice(0,5) : "07:00",
+          arrival_date: item.arrival_date || item.travel_date || "",
+          arrival_time: item.arrival_time ? String(item.arrival_time).slice(0,5) : "07:00",
+          from_location: item.from_location || "",
+          destination: item.destination || ""
+        });
+        renderAdminTransportation();
       });
 
       summaryMain.append(summaryType, summaryRoute, summaryPeople);
