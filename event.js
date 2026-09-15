@@ -781,9 +781,17 @@ async function loadParticipantTransportation() {
 
       const travelingWith = document.createElement("div");
       travelingWith.className = "participant-transport-travelers";
-      travelingWith.textContent = fellowTravelers.length
-        ? `Traveling with: ${fellowTravelers.map(person => person.display_name).join(" · ")}`
-        : "Traveling with: —";
+
+      const peopleIcon = document.createElement("span");
+      peopleIcon.className = "participant-transport-travelers-icon";
+      peopleIcon.textContent = "👥";
+
+      const peopleText = document.createElement("span");
+      peopleText.textContent = fellowTravelers.length
+        ? fellowTravelers.map(person => person.display_name).filter(Boolean).join(" · ")
+        : "No other people";
+
+      travelingWith.append(peopleIcon, peopleText);
       info.appendChild(travelingWith);
 
       main.append(icon, info);

@@ -9319,3 +9319,38 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .participant-transport-travelers{margin-top:4px;font-size:12px;color:var(--text);line-height:1.4}
 .luggage-icon{display:inline-flex;width:27px;height:29px;align-items:center;justify-content:center}
 .luggage-icon svg{width:27px;height:29px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+
+/* ---------- V133 Event Transportation readability ---------- */
+/* Date/time now matches the From → Destination text size. */
+.participant-transport-time-text {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+/* People on the same ride are clearly visible under the route/time. */
+.participant-transport-travelers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.participant-transport-travelers-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  .participant-transport-route,
+  .participant-transport-time-text,
+  .participant-transport-travelers {
+    font-size: 15px;
+  }
+}
