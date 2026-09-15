@@ -1567,6 +1567,7 @@ document.getElementById("descriptionInput").value = event.description || "";
     loadEventLogbook(),
     loadAdminSchedule(),
     loadAdminRooms(),
+    loadAdminTransportation(),
     loadAdminCanopyTraining(),
     loadAdminQuests(),
     loadCompetitionPlacements(),
@@ -2457,6 +2458,391 @@ async function loadAdminRooms() {
 }
 
 addRoomButton?.addEventListener("click", addAdminRoom);
+
+
+// ---------------- Transportation ----------------
+const adminTransportationStatus = document.getElementById("adminTransportationStatus");
+const adminTransportationList = document.getElementById("adminTransportationList");
+const addTransportationButton = document.getElementById("addTransportationButton");
+
+const TRANSPORT_TYPES = ["car", "train", "bus", "flight", "taxi"];
+const TRANSPORT_LABELS = {
+  car: "Car",
+  train: "Train",
+  bus: "Bus",
+  flight: "Flight",
+  taxi: "Taxi"
+};
+
+let adminTransportationData = [];
+
+function setAdminTransportationStatus(message = "", isError = false) {
+  if (!adminTransportationStatus) return;
+  adminTransportationStatus.textContent = message;
+  adminTransportationStatus.classList.toggle("hidden", !message);
+  adminTransportationStatus.classList.toggle("error", isError);
+}
+
+function transportAssignedKeys() {
+  const keys = new Set();
+  (adminTransportationData || []).forEach(item => {
+    (item.participants || []).forEach(person => {
+      keys.add(`${item.id}:participant:${person.participant_id}`);
+    });
+    (item.people || []).forEach(person => {
+      if (person.person_key) keys.add(`${item.id}:${person.person_key}`);
+    });
+  });
+  return keys;
+}
+
+async function loadAdminTransportation() {
+  if (!adminTransportationList) return;
+  if (!currentEventId) {
+    adminTransportationData = [];
+    renderAdminTransportation();
+    return;
+  }
+
+  try {
+    setAdminTransportationStatus("Loading transportation…");
+    const { data, error } = await client.rpc("admin_get_transportation_v127", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+    adminTransportationData = Array.isArray(data) ? data : [];
+    renderAdminTransportation();
+    setAdminTransportationStatus("");
+  } catch (error) {
+    setAdminTransportationStatus(`Could not load transportation: ${error.message}`, true);
+  }
+}
+
+async function addAdminTransportation() {
+  if (!currentEventId) {
+    setAdminTransportationStatus("Save the event first, then add transportation.", true);
+    return;
+  }
+
+  try {
+    const { data, error } = await client.rpc("admin_add_transportation_v127", {
+      p_event_id: currentEventId
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add transportation.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not add transportation: ${error.message}`, true);
+  }
+}
+
+async function saveAdminTransportation(item, values) {
+  try {
+    const { data, error } = await client.rpc("admin_update_transportation_v127", {
+      p_event_id: currentEventId,
+      p_transport_id: item.id,
+      p_transport_type: values.transport_type,
+      p_travel_date: values.travel_date || null,
+      p_departure_time: values.departure_time || null,
+      p_arrival_time: values.arrival_time || null
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not save transportation.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not save transportation: ${error.message}`, true);
+  }
+}
+
+async function deleteAdminTransportation(item) {
+  try {
+    const { data, error } = await client.rpc("admin_delete_transportation_v127", {
+      p_event_id: currentEventId,
+      p_transport_id: item.id
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not delete transportation.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not delete transportation: ${error.message}`, true);
+  }
+}
+
+async function addTransportationParticipant(item, participantId) {
+  try {
+    const { data, error } = await client.rpc("admin_add_transport_participant_v127", {
+      p_event_id: currentEventId,
+      p_transport_id: item.id,
+      p_participant_id: participantId
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add traveler.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not add traveler: ${error.message}`, true);
+  }
+}
+
+async function addTransportationNamedPerson(item, personType, displayName, personKey = null) {
+  const clean = String(displayName || "").trim();
+  if (!clean) {
+    setAdminTransportationStatus("Enter a name first.", true);
+    return;
+  }
+
+  try {
+    const { data, error } = await client.rpc("admin_add_transport_person_v127", {
+      p_event_id: currentEventId,
+      p_transport_id: item.id,
+      p_person_type: personType,
+      p_display_name: clean,
+      p_person_key: personKey
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not add traveler.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not add traveler: ${error.message}`, true);
+  }
+}
+
+async function removeTransportationTraveler(item, person) {
+  try {
+    const rpc = person.type === "participant"
+      ? "admin_remove_transport_participant_v127"
+      : "admin_remove_transport_person_v127";
+
+    const args = person.type === "participant"
+      ? {
+          p_event_id: currentEventId,
+          p_transport_id: item.id,
+          p_participant_id: person.id
+        }
+      : {
+          p_event_id: currentEventId,
+          p_transport_id: item.id,
+          p_person_id: person.id
+        };
+
+    const { data, error } = await client.rpc(rpc, args);
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not remove traveler.");
+    await loadAdminTransportation();
+  } catch (error) {
+    setAdminTransportationStatus(`Could not remove traveler: ${error.message}`, true);
+  }
+}
+
+function renderAdminTransportation() {
+  if (!adminTransportationList) return;
+  adminTransportationList.innerHTML = "";
+
+  if (!adminTransportationData.length) {
+    adminTransportationList.innerHTML = '<p class="muted">No transportation added yet.</p>';
+    return;
+  }
+
+  const participants = currentRoomParticipants();
+  const assigned = transportAssignedKeys();
+
+  adminTransportationData.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "admin-transport-card";
+
+    const form = document.createElement("div");
+    form.className = "admin-transport-form";
+
+    const type = document.createElement("select");
+    type.className = "admin-transport-type";
+    TRANSPORT_TYPES.forEach(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = TRANSPORT_LABELS[value];
+      option.selected = value === item.transport_type;
+      type.appendChild(option);
+    });
+
+    const date = document.createElement("input");
+    date.type = "date";
+    date.className = "admin-transport-date";
+    date.value = item.travel_date || "";
+
+    const start = document.createElement("input");
+    start.type = "time";
+    start.className = "admin-transport-time";
+    start.value = item.departure_time ? String(item.departure_time).slice(0,5) : "";
+
+    const arrival = document.createElement("input");
+    arrival.type = "time";
+    arrival.className = "admin-transport-time";
+    arrival.value = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
+
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "secondary-button compact-button";
+    save.textContent = "Save";
+    save.addEventListener("click", () => saveAdminTransportation(item, {
+      transport_type: type.value,
+      travel_date: date.value,
+      departure_time: start.value,
+      arrival_time: arrival.value
+    }));
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "danger-ghost-button transport-delete-button";
+    del.textContent = "×";
+    del.title = "Delete transportation";
+    del.setAttribute("aria-label", "Delete transportation");
+    del.addEventListener("click", () => deleteAdminTransportation(item));
+
+    const typeField = document.createElement("label");
+    typeField.className = "transport-mini-field";
+    typeField.innerHTML = "<span>Type</span>";
+    typeField.appendChild(type);
+
+    const dateField = document.createElement("label");
+    dateField.className = "transport-mini-field";
+    dateField.innerHTML = "<span>Date</span>";
+    dateField.appendChild(date);
+
+    const startField = document.createElement("label");
+    startField.className = "transport-mini-field";
+    startField.innerHTML = "<span>Start</span>";
+    startField.appendChild(start);
+
+    const arrivalField = document.createElement("label");
+    arrivalField.className = "transport-mini-field";
+    arrivalField.innerHTML = "<span>Est. arrival</span>";
+    arrivalField.appendChild(arrival);
+
+    form.append(typeField, dateField, startField, arrivalField, save, del);
+    card.appendChild(form);
+
+    const travelers = [
+      ...(item.participants || []).map(person => ({
+        type: "participant",
+        id: person.participant_id,
+        name: person.display_name || "Participant"
+      })),
+      ...(item.people || []).map(person => ({
+        type: person.person_type || "other",
+        id: person.id,
+        key: person.person_key || "",
+        name: person.display_name || "Other person"
+      }))
+    ].sort((a,b) => a.name.localeCompare(b.name));
+
+    const peopleRow = document.createElement("div");
+    peopleRow.className = "admin-transport-people";
+
+    const names = document.createElement("div");
+    names.className = "admin-transport-names";
+
+    travelers.forEach((person, personIndex) => {
+      const pill = document.createElement("span");
+      pill.className = "admin-transport-person";
+      pill.textContent = person.name;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.title = `Remove ${person.name}`;
+      remove.addEventListener("click", () => removeTransportationTraveler(item, person));
+
+      pill.appendChild(remove);
+      names.appendChild(pill);
+
+      if (personIndex < travelers.length - 1) {
+        const separator = document.createElement("span");
+        separator.className = "transport-name-separator";
+        separator.textContent = " · ";
+        names.appendChild(separator);
+      }
+    });
+
+    if (!travelers.length) {
+      const empty = document.createElement("span");
+      empty.className = "muted";
+      empty.textContent = "No travelers";
+      names.appendChild(empty);
+    }
+
+    const addWrap = document.createElement("div");
+    addWrap.className = "admin-transport-add-person";
+
+    const select = document.createElement("select");
+    select.innerHTML = '<option value="">Select person</option>';
+
+    participants
+      .filter(person => !assigned.has(`${item.id}:participant:${person.person_id}`))
+      .forEach(person => {
+        const option = document.createElement("option");
+        option.value = `participant:${person.person_id}`;
+        option.textContent = person.name;
+        select.appendChild(option);
+      });
+
+    ROOM_ADMIN_OPTIONS
+      .filter(person => !assigned.has(`${item.id}:${person.key}`))
+      .forEach(person => {
+        const option = document.createElement("option");
+        option.value = person.key;
+        option.textContent = person.name;
+        select.appendChild(option);
+      });
+
+    const other = document.createElement("option");
+    other.value = "other";
+    other.textContent = "Other person…";
+    select.appendChild(other);
+
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "primary-button compact-button";
+    add.textContent = "+";
+
+    const manual = document.createElement("input");
+    manual.type = "text";
+    manual.placeholder = "Enter name";
+    manual.maxLength = 100;
+    manual.className = "admin-transport-manual hidden";
+
+    select.addEventListener("change", () => {
+      manual.classList.toggle("hidden", select.value !== "other");
+      if (select.value === "other") setTimeout(() => manual.focus(), 0);
+    });
+
+    add.addEventListener("click", async () => {
+      const value = select.value;
+      if (!value) return;
+
+      if (value.startsWith("participant:")) {
+        await addTransportationParticipant(item, value.slice("participant:".length));
+      } else if (value.startsWith("admin:")) {
+        const admin = ROOM_ADMIN_OPTIONS.find(entry => entry.key === value);
+        if (admin) await addTransportationNamedPerson(item, "admin", admin.name, admin.key);
+      } else if (value === "other") {
+        await addTransportationNamedPerson(item, "other", manual.value, null);
+      }
+    });
+
+    manual.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        add.click();
+      }
+    });
+
+    addWrap.append(select, add, manual);
+    peopleRow.append(names, addWrap);
+    card.appendChild(peopleRow);
+
+    adminTransportationList.appendChild(card);
+  });
+}
+
+addTransportationButton?.addEventListener("click", addAdminTransportation);
 
 
 // ---------------- Schedule ----------------

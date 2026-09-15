@@ -8868,3 +8868,250 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   padding-top: 0;
   padding-bottom: 0;
 }
+
+
+/* ---------- V127 Transportation ---------- */
+.transportation-admin-content,
+.admin-transportation-list,
+.participant-transportation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.transportation-add-button {
+  width: 100%;
+}
+
+.admin-transport-card {
+  display: grid;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.admin-transport-form {
+  display: grid;
+  grid-template-columns: 120px 150px 105px 105px auto 42px;
+  gap: 8px;
+  align-items: end;
+}
+
+.transport-mini-field {
+  display: grid;
+  gap: 4px;
+}
+
+.transport-mini-field > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-transport-form select,
+.admin-transport-form input {
+  height: 44px;
+  min-height: 44px;
+}
+
+.transport-delete-button {
+  width: 42px;
+  min-width: 42px;
+  height: 44px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.admin-transport-people {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-transport-names {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.admin-transport-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.admin-transport-person button {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.admin-transport-person button:hover {
+  color: var(--danger);
+}
+
+.transport-name-separator {
+  color: var(--muted);
+  white-space: pre;
+}
+
+.admin-transport-add-person {
+  display: grid;
+  grid-template-columns: 190px 42px;
+  gap: 7px;
+  align-items: center;
+}
+
+.admin-transport-add-person select {
+  height: 46px;
+  min-height: 46px;
+  padding-right: 38px;
+}
+
+.admin-transport-add-person .compact-button {
+  width: 42px;
+  min-width: 42px;
+  height: 46px;
+  padding: 0;
+}
+
+.admin-transport-manual {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.admin-transport-manual.hidden {
+  display: none !important;
+}
+
+.participant-transport-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 66px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.participant-transport-card:last-child {
+  border-bottom: 0;
+}
+
+.participant-transport-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.participant-transport-icon {
+  width: 32px;
+  flex: 0 0 32px;
+  font-size: 23px;
+  text-align: center;
+}
+
+.participant-transport-info {
+  display: grid;
+  gap: 3px;
+}
+
+.participant-transport-info strong {
+  font-size: 16px;
+}
+
+.participant-transport-time-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.participant-transport-luggage {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.luggage-counter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 38px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.luggage-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.luggage-counter input {
+  width: 32px;
+  min-width: 32px;
+  height: 28px;
+  min-height: 28px;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .admin-transport-form {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .admin-transport-form > button {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-transport-people {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-transport-add-person {
+    grid-template-columns: minmax(0,1fr) 46px;
+  }
+
+  .participant-transport-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .participant-transport-luggage {
+    margin-left: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-transport-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .participant-transport-luggage {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .luggage-counter {
+    flex: 1;
+    justify-content: center;
+  }
+}

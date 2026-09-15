@@ -675,6 +675,166 @@ async function loadParticipantRoom() {
 }
 
 
+async function loadParticipantTransportation() {
+  const list = document.getElementById("participantTransportationList");
+  const status = document.getElementById("participantTransportationStatus");
+  if (!list || !status || !participantSessionToken) return;
+
+  list.innerHTML = "";
+  status.textContent = "Loading transportation…";
+  status.classList.remove("hidden", "error");
+
+  try {
+    const { data, error } = await client.rpc("get_my_transportation_by_token_v127", {
+      p_event_id: eventId,
+      p_token: participantSessionToken
+    });
+
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error || "Could not load transportation.");
+
+    status.classList.add("hidden");
+    const items = Array.isArray(data?.transportation) ? data.transportation : [];
+
+    if (!items.length) {
+      list.innerHTML = '<p class="muted">No transportation assigned to you.</p>';
+      return;
+    }
+
+    const typeIcons = {
+      car: "🚗",
+      train: "🚆",
+      bus: "🚌",
+      flight: "✈️",
+      taxi: "🚕"
+    };
+
+    const typeLabels = {
+      car: "Car",
+      train: "Train",
+      bus: "Bus",
+      flight: "Flight",
+      taxi: "Taxi"
+    };
+
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "participant-transport-card";
+
+      const main = document.createElement("div");
+      main.className = "participant-transport-main";
+
+      const icon = document.createElement("span");
+      icon.className = "participant-transport-icon";
+      icon.textContent = typeIcons[item.transport_type] || "🚐";
+
+      const info = document.createElement("div");
+      info.className = "participant-transport-info";
+
+      const title = document.createElement("strong");
+      title.textContent = typeLabels[item.transport_type] || "Transportation";
+
+      const timing = document.createElement("div");
+      timing.className = "participant-transport-time-text";
+
+      const dateText = item.travel_date
+        ? new Date(`${item.travel_date}T12:00:00`).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "2-digit"
+          })
+        : "";
+
+      const startText = item.departure_time ? String(item.departure_time).slice(0,5) : "";
+      const arrivalText = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
+      timing.textContent = [
+        dateText,
+        startText && arrivalText ? `${startText} – ${arrivalText}` : startText
+      ].filter(Boolean).join(" · ");
+
+      info.append(title, timing);
+      main.append(icon, info);
+
+      const luggage = document.createElement("div");
+      luggage.className = "participant-transport-luggage";
+
+      const luggageTypes = [
+        { key: "suitcase", icon: "🧳", label: "Suitcase" },
+        { key: "trolley", icon: "🛄", label: "Trolley" },
+        { key: "backpack", icon: "🎒", label: "Backpack" }
+      ];
+
+      luggageTypes.forEach(entry => {
+        const field = document.createElement("label");
+        field.className = "luggage-counter";
+        field.title = entry.label;
+
+        const luggageIcon = document.createElement("span");
+        luggageIcon.className = "luggage-icon";
+        luggageIcon.textContent = entry.icon;
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "9";
+        input.step = "1";
+        input.inputMode = "numeric";
+        input.value = String(Math.max(0, Number(item.luggage?.[entry.key] || 0)));
+        input.setAttribute("aria-label", entry.label);
+
+        input.addEventListener("focus", () => {
+          if (input.value === "0") input.select();
+        });
+
+        input.addEventListener("change", async () => {
+          const value = Math.max(0, Math.min(9, Number.parseInt(input.value || "0", 10) || 0));
+          input.value = String(value);
+
+          const current = {
+            suitcase: Number(item.luggage?.suitcase || 0),
+            trolley: Number(item.luggage?.trolley || 0),
+            backpack: Number(item.luggage?.backpack || 0)
+          };
+          current[entry.key] = value;
+
+          try {
+            const { data: result, error: saveError } = await client.rpc(
+              "set_my_transport_luggage_by_token_v127",
+              {
+                p_event_id: eventId,
+                p_token: participantSessionToken,
+                p_transport_id: item.id,
+                p_suitcase: current.suitcase,
+                p_trolley: current.trolley,
+                p_backpack: current.backpack
+              }
+            );
+
+            if (saveError) throw saveError;
+            if (result?.ok === false) throw new Error(result?.error || "Could not save luggage.");
+            item.luggage = current;
+          } catch (saveError) {
+            status.textContent = `Could not save luggage: ${saveError.message}`;
+            status.classList.remove("hidden");
+            status.classList.add("error");
+          }
+        });
+
+        field.append(luggageIcon, input);
+        luggage.appendChild(field);
+      });
+
+      card.append(main, luggage);
+      list.appendChild(card);
+    });
+  } catch (error) {
+    status.textContent = `Could not load transportation: ${error.message}`;
+    status.classList.remove("hidden");
+    status.classList.add("error");
+  }
+}
+
+
 async function loadParticipantSchedule() {
   const list = document.getElementById("participantScheduleList");
   const status = document.getElementById("participantScheduleStatus");
