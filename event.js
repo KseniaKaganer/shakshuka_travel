@@ -685,7 +685,7 @@ async function loadParticipantTransportation() {
   status.classList.remove("hidden", "error");
 
   try {
-    const { data, error } = await client.rpc("get_my_transportation_by_token_v127", {
+    const { data, error } = await client.rpc("get_my_transportation_by_token_v128", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });
@@ -734,6 +734,14 @@ async function loadParticipantTransportation() {
       const title = document.createElement("strong");
       title.textContent = typeLabels[item.transport_type] || "Transportation";
 
+      const route = document.createElement("div");
+      route.className = "participant-transport-route";
+      const fromText = String(item.from_location || "").trim();
+      const destinationText = String(item.destination || "").trim();
+      route.textContent = fromText && destinationText
+        ? `${fromText} → ${destinationText}`
+        : (fromText || destinationText);
+
       const timing = document.createElement("div");
       timing.className = "participant-transport-time-text";
 
@@ -752,7 +760,9 @@ async function loadParticipantTransportation() {
         startText && arrivalText ? `${startText} – ${arrivalText}` : startText
       ].filter(Boolean).join(" · ");
 
-      info.append(title, timing);
+            info.appendChild(title);
+      if (route.textContent) info.appendChild(route);
+      info.appendChild(timing);
       main.append(icon, info);
 
       const luggage = document.createElement("div");

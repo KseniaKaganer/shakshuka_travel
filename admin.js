@@ -2506,7 +2506,7 @@ async function loadAdminTransportation() {
 
   try {
     setAdminTransportationStatus("Loading transportation…");
-    const { data, error } = await client.rpc("admin_get_transportation_v127", {
+    const { data, error } = await client.rpc("admin_get_transportation_v128", {
       p_event_id: currentEventId
     });
     if (error) throw error;
@@ -2538,13 +2538,15 @@ async function addAdminTransportation() {
 
 async function saveAdminTransportation(item, values) {
   try {
-    const { data, error } = await client.rpc("admin_update_transportation_v127", {
+    const { data, error } = await client.rpc("admin_update_transportation_v128", {
       p_event_id: currentEventId,
       p_transport_id: item.id,
       p_transport_type: values.transport_type,
       p_travel_date: values.travel_date || null,
       p_departure_time: values.departure_time || null,
-      p_arrival_time: values.arrival_time || null
+      p_arrival_time: values.arrival_time || null,
+      p_from_location: values.from_location || null,
+      p_destination: values.destination || null
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error || "Could not save transportation.");
@@ -2667,6 +2669,20 @@ function renderAdminTransportation() {
     date.className = "admin-transport-date";
     date.value = item.travel_date || "";
 
+    const fromLocation = document.createElement("input");
+    fromLocation.type = "text";
+    fromLocation.className = "admin-transport-location";
+    fromLocation.placeholder = "From";
+    fromLocation.maxLength = 120;
+    fromLocation.value = item.from_location || "";
+
+    const destination = document.createElement("input");
+    destination.type = "text";
+    destination.className = "admin-transport-location";
+    destination.placeholder = "Destination";
+    destination.maxLength = 120;
+    destination.value = item.destination || "";
+
     const start = document.createElement("input");
     start.type = "time";
     start.className = "admin-transport-time";
@@ -2679,13 +2695,17 @@ function renderAdminTransportation() {
 
     const save = document.createElement("button");
     save.type = "button";
-    save.className = "secondary-button compact-button";
-    save.textContent = "Save";
+    save.className = "secondary-button compact-button transport-save-icon";
+    save.textContent = "💾";
+    save.title = "Save transportation";
+    save.setAttribute("aria-label", "Save transportation");
     save.addEventListener("click", () => saveAdminTransportation(item, {
       transport_type: type.value,
       travel_date: date.value,
       departure_time: start.value,
-      arrival_time: arrival.value
+      arrival_time: arrival.value,
+      from_location: fromLocation.value.trim(),
+      destination: destination.value.trim()
     }));
 
     const del = document.createElement("button");
@@ -2706,6 +2726,16 @@ function renderAdminTransportation() {
     dateField.innerHTML = "<span>Date</span>";
     dateField.appendChild(date);
 
+    const fromField = document.createElement("label");
+    fromField.className = "transport-mini-field transport-location-field";
+    fromField.innerHTML = "<span>From</span>";
+    fromField.appendChild(fromLocation);
+
+    const destinationField = document.createElement("label");
+    destinationField.className = "transport-mini-field transport-location-field";
+    destinationField.innerHTML = "<span>Destination</span>";
+    destinationField.appendChild(destination);
+
     const startField = document.createElement("label");
     startField.className = "transport-mini-field";
     startField.innerHTML = "<span>Start</span>";
@@ -2716,7 +2746,7 @@ function renderAdminTransportation() {
     arrivalField.innerHTML = "<span>Est. arrival</span>";
     arrivalField.appendChild(arrival);
 
-    form.append(typeField, dateField, startField, arrivalField, save, del);
+    form.append(typeField, dateField, fromField, destinationField, startField, arrivalField, save, del);
     card.appendChild(form);
 
     const travelers = [
