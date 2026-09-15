@@ -2692,7 +2692,19 @@ function renderAdminTransportation() {
   const participants = currentRoomParticipants();
   const assigned = transportAssignedKeys();
 
-  adminTransportationData.forEach((item, index) => {
+  const sortedTransportation = [...adminTransportationData].sort((a, b) => {
+    const aDate = String(a.travel_date || "9999-12-31");
+    const bDate = String(b.travel_date || "9999-12-31");
+    if (aDate !== bDate) return aDate.localeCompare(bDate);
+
+    const aTime = String(a.departure_time || "23:59");
+    const bTime = String(b.departure_time || "23:59");
+    if (aTime !== bTime) return aTime.localeCompare(bTime);
+
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
+
+  sortedTransportation.forEach((item, index) => {
     const card = document.createElement("div");
     card.className = "admin-transport-card";
 

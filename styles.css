@@ -9266,3 +9266,45 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* ---------- V131 Transportation: mobile actions on top ---------- */
+@media (max-width: 600px) {
+  .admin-transport-route-row {
+    grid-template-columns: minmax(0,1fr) 44px 42px;
+    grid-template-areas:
+      "type save delete"
+      "from from from"
+      "destination destination destination";
+    align-items: end;
+  }
+
+  .admin-transport-route-row .transport-mini-field:nth-child(1) {
+    grid-area: type;
+    grid-column: auto;
+  }
+
+  .admin-transport-route-row .transport-mini-field:nth-child(2) {
+    grid-area: from;
+  }
+
+  .admin-transport-route-row .transport-mini-field:nth-child(3) {
+    grid-area: destination;
+  }
+
+  .admin-transport-route-row .transport-save-icon {
+    grid-area: save;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 46px;
+    padding: 0 !important;
+  }
+
+  .admin-transport-route-row .transport-delete-button {
+    grid-area: delete;
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 46px;
+    padding: 0 !important;
+  }
+}

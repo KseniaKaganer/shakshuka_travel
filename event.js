@@ -1436,6 +1436,7 @@ function showLoggedInView(data) {
   loadParticipantLogbook();
   loadParticipantSchedule();
   loadParticipantRoom();
+  loadParticipantTransportation();
   loadParticipantQuests();
   loadParticipantCanopyTraining();
   loadLandingCompetitionLeaderboard();
