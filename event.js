@@ -771,16 +771,37 @@ async function loadParticipantTransportation() {
             info.appendChild(title);
       if (route.textContent) info.appendChild(route);
       info.appendChild(timing);
+
+      const fellowTravelers = Array.isArray(item.travelers)
+        ? item.travelers.filter(person =>
+            !(person.person_type === "participant" &&
+              person.participant_id === participantAccess?.participant_id)
+          )
+        : [];
+
+      const travelingWith = document.createElement("div");
+      travelingWith.className = "participant-transport-travelers";
+      travelingWith.textContent = fellowTravelers.length
+        ? `Traveling with: ${fellowTravelers.map(person => person.display_name).join(" · ")}`
+        : "Traveling with: —";
+      info.appendChild(travelingWith);
+
       main.append(icon, info);
 
       const luggage = document.createElement("div");
       luggage.className = "participant-transport-luggage";
 
       const luggageTypes = [
-        { key: "suitcase", icon: "🧳", label: "Suitcase" },
-        { key: "trolley", icon: "🛄", label: "Trolley" },
-        { key: "backpack", icon: "🎒", label: "Backpack" }
+        { key: "suitcase", icon: "checked", label: "Checked suitcase" },
+        { key: "trolley", icon: "carryon", label: "Carry-on trolley" },
+        { key: "backpack", icon: "backpack", label: "Backpack" }
       ];
+
+      const luggageSvg = {
+        checked: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 8V5.5A2.5 2.5 0 0 1 13.5 3h5A2.5 2.5 0 0 1 21 5.5V8"/><rect x="7" y="8" width="18" height="19" rx="3"/><path d="M11 12v11M21 12v11M11 29v-2M21 29v-2"/></svg>',
+        carryon: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M13 9V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3"/><rect x="10" y="9" width="12" height="16" rx="2.5"/><path d="M13 13v8M19 13v8M13 28v-3M19 28v-3"/></svg>',
+        backpack: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 10V8a5 5 0 0 1 10 0v2"/><path d="M9 13a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v14H9V13Z"/><path d="M12 18h8v6h-8zM9 15H6v8h3M23 15h3v8h-3"/></svg>'
+      };
 
       luggageTypes.forEach(entry => {
         const field = document.createElement("label");
@@ -789,7 +810,7 @@ async function loadParticipantTransportation() {
 
         const luggageIcon = document.createElement("span");
         luggageIcon.className = "luggage-icon";
-        luggageIcon.textContent = entry.icon;
+        luggageIcon.innerHTML = luggageSvg[entry.icon] || "";
 
         const input = document.createElement("input");
         input.type = "number";

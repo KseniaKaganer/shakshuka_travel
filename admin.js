@@ -2955,6 +2955,62 @@ function renderAdminTransportation() {
     peopleRow.append(names, addWrap);
     card.appendChild(peopleRow);
 
+    // Saved transportation is shown as a compact summary until Edit is pressed.
+    const hasSavedDetails = Boolean(
+      item.travel_date || item.from_location || item.destination ||
+      item.departure_time || item.arrival_time || travelers.length
+    );
+
+    if (hasSavedDetails) {
+      const editorChildren = [...card.children];
+      const summary = document.createElement("div");
+      summary.className = "admin-transport-summary";
+
+      const summaryMain = document.createElement("div");
+      summaryMain.className = "admin-transport-summary-main";
+
+      const summaryType = document.createElement("strong");
+      summaryType.textContent = TRANSPORT_LABELS[item.transport_type] || "Transportation";
+
+      const routeText = [item.from_location, item.destination].filter(Boolean).join(" → ");
+      const dateText = item.travel_date
+        ? item.travel_date.split("-").reverse().join("/")
+        : "";
+      const startText = item.departure_time ? String(item.departure_time).slice(0,5) : "";
+      const endDateText = item.arrival_date && item.arrival_date !== item.travel_date
+        ? item.arrival_date.split("-").reverse().join("/")
+        : "";
+      const endText = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
+
+      const summaryRoute = document.createElement("div");
+      summaryRoute.className = "admin-transport-summary-route";
+      summaryRoute.textContent = [
+        routeText,
+        [dateText, startText].filter(Boolean).join(" "),
+        endText ? `→ ${[endDateText, endText].filter(Boolean).join(" ")}` : ""
+      ].filter(Boolean).join(" · ");
+
+      const summaryPeople = document.createElement("div");
+      summaryPeople.className = "admin-transport-summary-people";
+      summaryPeople.textContent = travelers.length
+        ? travelers.map(person => person.name).join(" · ")
+        : "No travelers";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "secondary-button compact-button admin-transport-edit-button";
+      edit.textContent = "Edit";
+      edit.addEventListener("click", () => {
+        card.innerHTML = "";
+        editorChildren.forEach(child => card.appendChild(child));
+      });
+
+      summaryMain.append(summaryType, summaryRoute, summaryPeople);
+      summary.append(summaryMain, edit);
+      card.innerHTML = "";
+      card.appendChild(summary);
+    }
+
     adminTransportationList.appendChild(card);
   });
 }
