@@ -2506,7 +2506,7 @@ async function loadAdminTransportation() {
 
   try {
     setAdminTransportationStatus("Loading transportation…");
-    const { data, error } = await client.rpc("admin_get_transportation_v128", {
+    const { data, error } = await client.rpc("admin_get_transportation_v129", {
       p_event_id: currentEventId
     });
     if (error) throw error;
@@ -2538,13 +2538,14 @@ async function addAdminTransportation() {
 
 async function saveAdminTransportation(item, values) {
   try {
-    const { data, error } = await client.rpc("admin_update_transportation_v128", {
+    const { data, error } = await client.rpc("admin_update_transportation_v129", {
       p_event_id: currentEventId,
       p_transport_id: item.id,
       p_transport_type: values.transport_type,
       p_travel_date: values.travel_date || null,
       p_departure_time: values.departure_time || null,
       p_arrival_time: values.arrival_time || null,
+      p_arrival_date: values.arrival_date || null,
       p_from_location: values.from_location || null,
       p_destination: values.destination || null
     });
@@ -2693,6 +2694,12 @@ function renderAdminTransportation() {
     arrival.className = "admin-transport-time";
     arrival.value = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
 
+    const arrivalDate = document.createElement("input");
+    arrivalDate.type = "date";
+    arrivalDate.className = "admin-transport-date admin-transport-arrival-date";
+    arrivalDate.value = item.arrival_date || "";
+    arrivalDate.title = "Arrival date (only needed if arrival is on another day)";
+
     const save = document.createElement("button");
     save.type = "button";
     save.className = "secondary-button compact-button transport-save-icon";
@@ -2704,6 +2711,7 @@ function renderAdminTransportation() {
       travel_date: date.value,
       departure_time: start.value,
       arrival_time: arrival.value,
+      arrival_date: arrivalDate.value,
       from_location: fromLocation.value.trim(),
       destination: destination.value.trim()
     }));
@@ -2742,11 +2750,24 @@ function renderAdminTransportation() {
     startField.appendChild(start);
 
     const arrivalField = document.createElement("label");
-    arrivalField.className = "transport-mini-field";
-    arrivalField.innerHTML = "<span>Est. arrival</span>";
+    arrivalField.className = "transport-mini-field transport-arrival-time-field";
+    arrivalField.innerHTML = "<span>End time</span>";
     arrivalField.appendChild(arrival);
 
-    form.append(typeField, dateField, fromField, destinationField, startField, arrivalField, save, del);
+    const arrivalDateField = document.createElement("label");
+    arrivalDateField.className = "transport-mini-field transport-arrival-date-field";
+    arrivalDateField.innerHTML = "<span>End date <small>(optional)</small></span>";
+    arrivalDateField.appendChild(arrivalDate);
+
+    const routeRow = document.createElement("div");
+    routeRow.className = "admin-transport-route-row";
+    routeRow.append(typeField, fromField, destinationField, save, del);
+
+    const timeRow = document.createElement("div");
+    timeRow.className = "admin-transport-time-row";
+    timeRow.append(dateField, startField, arrivalField, arrivalDateField);
+
+    form.append(routeRow, timeRow);
     card.appendChild(form);
 
     const travelers = [

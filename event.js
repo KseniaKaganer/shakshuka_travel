@@ -685,7 +685,7 @@ async function loadParticipantTransportation() {
   status.classList.remove("hidden", "error");
 
   try {
-    const { data, error } = await client.rpc("get_my_transportation_by_token_v128", {
+    const { data, error } = await client.rpc("get_my_transportation_by_token_v129", {
       p_event_id: eventId,
       p_token: participantSessionToken
     });
@@ -753,12 +753,20 @@ async function loadParticipantTransportation() {
           })
         : "";
 
+      const arrivalDateText = item.arrival_date && item.arrival_date !== item.travel_date
+        ? new Date(`${item.arrival_date}T12:00:00`).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "2-digit"
+          })
+        : "";
+
       const startText = item.departure_time ? String(item.departure_time).slice(0,5) : "";
       const arrivalText = item.arrival_time ? String(item.arrival_time).slice(0,5) : "";
-      timing.textContent = [
-        dateText,
-        startText && arrivalText ? `${startText} – ${arrivalText}` : startText
-      ].filter(Boolean).join(" · ");
+      const timeText = startText && arrivalText
+        ? (arrivalDateText ? `${startText} – ${arrivalDateText} ${arrivalText}` : `${startText} – ${arrivalText}`)
+        : startText;
+      timing.textContent = [dateText, timeText].filter(Boolean).join(" · ");
 
             info.appendChild(title);
       if (route.textContent) info.appendChild(route);

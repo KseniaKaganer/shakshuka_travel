@@ -9152,3 +9152,66 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: repeat(2, minmax(0,1fr));
   }
 }
+
+/* ---------- V129 Transportation: two-row desktop editor ---------- */
+.admin-transport-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.admin-transport-route-row,
+.admin-transport-time-row {
+  display: grid;
+  gap: 8px;
+  align-items: end;
+}
+
+.admin-transport-route-row {
+  grid-template-columns: 120px minmax(150px,1fr) minmax(150px,1fr) 44px 42px;
+}
+
+.admin-transport-time-row {
+  grid-template-columns: 160px 120px 120px 180px;
+  justify-content: start;
+}
+
+.transport-mini-field > span small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.admin-transport-route-row .transport-save-icon,
+.admin-transport-route-row .transport-delete-button {
+  align-self: end;
+}
+
+@media (max-width: 800px) {
+  .admin-transport-route-row {
+    grid-template-columns: 105px minmax(0,1fr) minmax(0,1fr) 44px 42px;
+  }
+
+  .admin-transport-time-row {
+    grid-template-columns: repeat(4, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-transport-route-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-transport-route-row .transport-mini-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-transport-route-row .transport-save-icon,
+  .admin-transport-route-row .transport-delete-button {
+    width: 100% !important;
+  }
+
+  .admin-transport-time-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
